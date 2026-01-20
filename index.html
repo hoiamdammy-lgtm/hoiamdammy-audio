@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
+    <title>Kho Truyện Đam Mỹ</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #000000;
+            --bg-card: #121212;
+            --bg-hover: #282828;
+            --primary: #1db954;
+            --text-main: #ffffff;
+            --text-sub: #b3b3b3;
+            --bar-height: 90px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            overflow: hidden;
+            display: flex; height: 100vh;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 240px; background: #000; padding: 24px;
+            display: flex; flex-direction: column; gap: 20px;
+            border-right: 1px solid #1a1a1a;
+        }
+        .logo { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 20px;}
+        .nav-item { color: var(--text-sub); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 15px; padding: 10px 0; transition: 0.2s; }
+        .nav-item:hover, .nav-item.active { color: var(--text-main); }
+        .nav-item.active i { color: var(--primary); }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+            background: linear-gradient(180deg, #1e1e1e 0%, var(--bg-dark) 100%);
+            overflow-y: auto; padding: 30px; padding-bottom: 120px;
+        }
+        h2 { margin-top: 0; margin-bottom: 20px; font-size: 24px;}
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
+        
+        /* Card chứa Iframe */
+        .card { 
+            background: var(--bg-card); padding: 16px; border-radius: 8px; 
+            cursor: pointer; transition: 0.3s; position: relative; 
+            border: 1px solid transparent;
+        }
+        .card:hover { background: var(--bg-hover); border-color: #333; }
+        
+        /* Khung video trong card */
+        .card-video-box { 
+            width: 100%; aspect-ratio: 16/9; 
+            background: #000; border-radius: 4px; 
+            margin-bottom: 12px; overflow: hidden; position: relative; 
+        }
+        
+        /* Iframe này chỉ để hiển thị ảnh, ta chặn click chuột để bấm vào Card thì phát ở Player chính */
+        .card-video-box iframe { 
+            width: 100%; height: 100%; border: 0; 
+            pointer-events: none; /* QUAN TRỌNG: Chặn click vào video nhỏ */
+        }
+        
+        /* Nút Play to đùng khi hover */
+        .play-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: 0.2s;
+        }
+        .card:hover .play-overlay { opacity: 1; }
+        .play-icon-big { 
+            font-size: 40px; color: var(--primary); 
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            transform: scale(0.8); transition: 0.2s;
+        }
+        .card:hover .play-icon-big { transform: scale(1); }
+
+        .card-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;}
+        .card-desc { font-size: 12px; color: var(--text-sub); }
+
+        /* --- PLAYER BAR --- */
+        .player-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; height: var(--bar-height);
+            background: #000; border-top: 1px solid #282828;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; z-index: 100;
+        }
+        
+        /* Góc trái: Video đang phát */
+        .player-left { display: flex; align-items: center; width: 30%; gap: 15px; }
+        .mini-player-wrapper { 
+            width: 120px; height: 68px; /* Tỷ lệ 16:9 */
+            background: #000; border-radius: 4px; overflow: hidden; position: relative; flex-shrink: 0; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .mini-player-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: 0; }
+        
+        .current-info h4 { margin: 0; font-size: 14px; color: white; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .current-info p { margin: 4px 0 0; font-size: 11px; color: var(--primary); }
+
+        /* Ở giữa: Nút điều khiển */
+        .player-center { width: 40%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .controls { display: flex; align-items: center; gap: 20px; }
+        .btn-control { background: none; border: none; color: #b3b3b3; font-size: 20px; cursor: pointer; transition: 0.2s; }
+        .btn-control:hover { color: white; transform: scale(1.1); }
+        .btn-play { 
+            width: 40px; height: 40px; background: white; border-radius: 50%; 
+            color: black; display: flex; align-items: center; justify-content: center; font-size: 18px; 
+            transition: 0.2s;
+        }
+        .btn-play:hover { transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+
+        /* Bên phải: Tốc độ */
+        .player-right { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
+        .speed-control {
+            display: flex; align-items: center; gap: 8px; 
+            background: #222; padding: 5px 10px; border-radius: 20px; border: 1px solid #333;
+        }
+        .speed-label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: bold; }
+        .speed-val { font-size: 14px; color: var(--primary); font-weight: bold; cursor: pointer; min-width: 30px; text-align: center; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .player-bar { flex-direction: column; height: auto; padding: 10px 15px; background: #121212; border-top: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
+            .player-left { width: 100%; margin-bottom: 10px; }
+            .mini-player-wrapper { width: 80px; height: 45px; }
+            .player-center { width: 100%; flex-direction: row; justify-content: space-between; }
+            .player-right { display: none; } /* Ẩn chỉnh tốc độ trên mobile cho gọn */
+        }
+        
+        #loading { text-align: center; margin-top: 50px; color: #666; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo"><i class="fa-solid fa-headphones-simple" style="color: var(--primary);"></i> HỒI ÂM</div>
+        <div class="nav-item active"><i class="fa-solid fa-house"></i> Trang chủ</div>
+        <div class="nav-item"><i class="fa-solid fa-layer-group"></i> Thư viện</div>
+    </div>
+
+    <div class="main-content">
+        <h2>Chào buổi chiều 👋</h2>
+        <div id="loading">Đang tải kho truyện...</div>
+        <div class="grid" id="playlist-container">
+            </div>
+    </div>
+
+    <div class="player-bar">
+        <div class="player-left">
+            <div class="mini-player-wrapper">
+                <div id="youtube-iframe"></div>
+            </div>
+            <div class="current-info">
+                <h4 id="track-name">Chưa chọn truyện</h4>
+                <p id="track-status">Sẵn sàng</p>
+            </div>
+        </div>
+
+        <div class="player-center">
+            <div class="controls">
+                <button class="btn-control" title="Tập trước" onclick="prevTrack()">
+                    <i class="fa-solid fa-backward-step"></i>
+                </button>
+                
+                <button class="btn-control" title="Lùi 10s" onclick="seek(-10)">
+                    <i class="fa-solid fa-rotate-left" style="font-size: 16px;"></i>
+                </button>
+                
+                <button class="btn-play" id="play-btn" onclick="togglePlay()">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+                
+                <button class="btn-control" title="Tới 10s" onclick="seek(10)">
+                    <i class="fa-solid fa-rotate-right" style="font-size: 16px;"></i>
+                </button>
+                
+                <button class="btn-control" title="Tập sau" onclick="nextTrack()">
+                    <i class="fa-solid fa-forward-step"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="player-right">
+            <div class="speed-control" onclick="changeSpeed()" title="Bấm để tăng tốc độ">
+                <span class="speed-label">Speed</span>
+                <span class="speed-val" id="speed-display">1.0x</span>
+            </div>
+            <i class="fa-solid fa-volume-high" style="color: #666; font-size: 14px;"></i>
+        </div>
+    </div>
+
+<script>
+    // --- CẤU HÌNH SUPABASE ---
+    const SUPABASE_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let player;
+    let isPlaying = false;
+    
+    // DANH SÁCH TỐC ĐỘ (Thêm 2.5x, 3.0x như bạn yêu cầu)
+    const speeds = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0];
+    let speedIndex = 0;
+
+    // --- 1. TẢI DANH SÁCH & HIỂN THỊ IFRAME THAY VÌ ẢNH ---
+    async function loadLibrary() {
+        const { data, error } = await db.from('playlists').select('*').order('id', { ascending: false });
+        document.getElementById('loading').style.display = 'none';
+        const container = document.getElementById('playlist-container');
+
+        if (data && data.length > 0) {
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                
+                // --- THỦ THUẬT QUAN TRỌNG ---
+                // Dùng chính link embed của Youtube để làm "ảnh bìa động".
+                // videoseries?list=ID sẽ tự hiện ảnh thumbnail tập 1.
+                // loading="lazy" giúp web tải nhanh, không bị lag dù có nhiều truyện.
+                // controls=0 để ẩn nút bấm của youtube đi cho đẹp.
+                const embedUrl = `https://www.youtube.com/embed/videoseries?list=${item.playlist_id}&controls=0&showinfo=0&rel=0`;
+
+                div.innerHTML = `
+                    <div class="card-video-box">
+                        <iframe src="${embedUrl}" loading="lazy" title="${item.name}"></iframe>
+                        <div class="play-overlay">
+                            <i class="fa-solid fa-circle-play play-icon-big"></i>
+                        </div>
+                    </div>
+                    <div class="card-title">${item.name}</div>
+                    <div class="card-desc">Danh sách phát</div>
+                `;
+
+                // Khi bấm vào thẻ card -> Load truyện đó vào Player chính ở dưới đáy
+                div.onclick = () => loadTrackToPlayer(item.playlist_id, item.name);
+                
+                container.appendChild(div);
+            });
+        }
+    }
+
+    // --- 2. YOUTUBE API ---
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('youtube-iframe', {
+            height: '100%', width: '100%',
+            playerVars: { 'playsinline': 1, 'controls': 1, 'disablekb': 0, 'fs': 0, 'rel': 0 }, // controls=1 để bạn có thể bấm vào video nhỏ chọn tập nếu thích
+            events: { 'onStateChange': onPlayerStateChange }
+        });
+    }
+
+    function loadTrackToPlayer(playlistId, name) {
+        document.getElementById('track-name').innerText = name;
+        document.getElementById('track-status').innerText = "Đang tải...";
+        
+        if(player && player.loadPlaylist) {
+            player.loadPlaylist({list: playlistId, listType: 'playlist'});
+            player.setLoop(true); // Tự động chuyển bài liên tục
+            isPlaying = true;
+            updatePlayButton();
+            
+            // Reset tốc độ
+            speedIndex = 0;
+            updateSpeedDisplay();
+        }
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING) {
+            isPlaying = true;
+            document.getElementById('track-status').innerText = "Đang phát";
+            // Set lại tốc độ người dùng đang chọn
+            player.setPlaybackRate(speeds[speedIndex]);
+        } else if (event.data == YT.PlayerState.PAUSED) {
+            isPlaying = false;
+            document.getElementById('track-status').innerText = "Tạm dừng";
+        }
+        updatePlayButton();
+    }
+
+    // --- 3. CÁC NÚT ĐIỀU KHIỂN ---
+    function togglePlay() {
+        if(!player) return;
+        isPlaying ? player.pauseVideo() : player.playVideo();
+    }
+
+    function updatePlayButton() {
+        const btn = document.getElementById('play-btn');
+        btn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+    }
+
+    function seek(sec) {
+        if(player && player.getCurrentTime) player.seekTo(player.getCurrentTime() + sec, true);
+    }
+
+    function prevTrack() {
+        if(player && player.previousVideo) player.previousVideo();
+    }
+
+    function nextTrack() {
+        if(player && player.nextVideo) player.nextVideo();
+    }
+
+    function changeSpeed() {
+        // Tăng index, nếu hết mảng thì quay về 0
+        speedIndex = (speedIndex + 1) % speeds.length;
+        updateSpeedDisplay();
+        
+        if(player && player.setPlaybackRate) {
+            player.setPlaybackRate(speeds[speedIndex]);
+        }
+    }
+    
+    function updateSpeedDisplay() {
+        document.getElementById('speed-display').innerText = speeds[speedIndex] + "x";
+    }
+
+    loadLibrary();
+</script>
+
+</body>
+</html>

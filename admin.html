@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin V4 - Trình Quản Lý</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f4f6f8; display: flex; justify-content: center; padding: 40px 20px; }
+        .container { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #555; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        input:focus { border-color: #007bff; outline: none; }
+        
+        /* Khu vực nhập tay (Mặc định ẩn) */
+        #manualSection { display: none; border-top: 1px dashed #ccc; padding-top: 20px; margin-top: 20px; }
+        
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; background: #007bff; transition: 0.2s; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        #status { margin-top: 15px; text-align: center; font-size: 14px; min-height: 20px; }
+        .error-text { color: #d63031; font-size: 13px; margin-top: 5px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚀 Thêm Truyện Mới</h2>
+    
+    <div class="form-group">
+        <label>1. Link Playlist / Video Youtube</label>
+        <input type="text" id="urlInput" placeholder="Dán link vào đây..." oninput="handleInput()">
+        <div id="corb-msg" class="error-text">⚠️ Không thể tự lấy tên do trình duyệt chặn (CORB). Vui lòng nhập tên bên dưới.</div>
+    </div>
+
+    <div id="manualSection">
+        <div class="form-group">
+            <label>2. Tên Truyện</label>
+            <input type="text" id="nameInput" placeholder="Nhập tên truyện...">
+        </div>
+    </div>
+
+    <button id="saveBtn" onclick="saveData()" disabled>Lưu Truyện</button>
+    <div id="status"></div>
+</div>
+
+<script>
+    // --- CẤU HÌNH SUPABASE ---
+    const SUPABASE_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT'; 
+    
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let finalPlaylistId = '';
+
+    async function handleInput() {
+        const url = document.getElementById('urlInput').value.trim();
+        const status = document.getElementById('status');
+        const manualSection = document.getElementById('manualSection');
+        const saveBtn = document.getElementById('saveBtn');
+        const corbMsg = document.getElementById('corb-msg');
+
+        // Reset trạng thái
+        status.innerText = "";
+        corbMsg.style.display = 'none';
+
+        // 1. Regex để lấy ID Playlist (list=...)
+        const listMatch = url.match(/[?&]list=([^#\&\?]+)/);
+
+        if (!listMatch) {
+            manualSection.style.display = 'none';
+            saveBtn.disabled = true;
+            return;
+        }
+
+        finalPlaylistId = listMatch[1];
+        status.innerText = "⏳ Đang lấy thông tin...";
+        
+        // 2. Thử lấy tên tự động (Có xử lý lỗi CORB)
+        try {
+            // Đặt timeout 3 giây, nếu mạng lag hoặc bị chặn thì hủy luôn cho nhanh
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+            const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/playlist?list=${finalPlaylistId}`, {
+                signal: controller.signal
+            });
+            
+            const data = await response.json();
+            
+            if (data.title) {
+                document.getElementById('nameInput').value = data.title;
+                status.innerText = "✅ Đã tìm thấy tên truyện!";
+                status.style.color = "green";
+            } else {
+                throw new Error("No title");
+            }
+        } catch (error) {
+            // ==> NẾU BỊ LỖI CORB HOẶC MẠNG:
+            console.warn("Tự động lấy tên thất bại, chuyển sang nhập tay.");
+            status.innerText = "";
+            corbMsg.style.display = 'block'; // Báo cho người dùng biết
+            document.getElementById('nameInput').focus(); // Chuyển con trỏ chuột vào ô nhập tên
+        } finally {
+            // Dù thành công hay thất bại, luôn hiện ô nhập liệu để người dùng kiểm soát
+            manualSection.style.display = 'block';
+            saveBtn.disabled = false;
+        }
+    }
+
+    async function saveData() {
+        const name = document.getElementById('nameInput').value;
+        const btn = document.getElementById('saveBtn');
+        const status = document.getElementById('status');
+
+        if(!name) { alert("Vui lòng nhập tên truyện!"); return; }
+
+        btn.innerText = "Đang lưu...";
+        btn.disabled = true;
+
+        // Lưu vào Supabase (Chỉ cần Tên và ID Playlist)
+        const { error } = await db.from('playlists').insert([{
+            name: name,
+            playlist_id: finalPlaylistId
+        }]);
+
+        if (error) {
+            status.innerText = "❌ Lỗi: " + error.message;
+            status.style.color = "red";
+            btn.innerText = "Lưu Truyện";
+            btn.disabled = false;
+        } else {
+            status.innerText = "🎉 Lưu thành công!";
+            status.style.color = "green";
+            document.getElementById('urlInput').value = '';
+            document.getElementById('manualSection').style.display = 'none';
+            document.getElementById('nameInput').value = '';
+            btn.innerText = "Lưu Truyện";
+        }
+    }
+</script>
+
+</body>
+</html>
