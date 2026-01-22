@@ -3,116 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Quản Lý Kho Truyện</title>
+    <title>Admin - Quản Lý Truyện</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { background: #090909; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .container { background: #181818; padding: 40px; border-radius: 12px; width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 1px solid #333; }
-        h2 { margin-top: 0; text-align: center; color: #1db954; margin-bottom: 25px; }
-        label { display: block; margin-bottom: 8px; font-size: 14px; color: #ccc; }
-        input { width: 100%; padding: 12px; margin-bottom: 20px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; outline: none; transition: 0.2s; }
-        input:focus { border-color: #1db954; background: #333; }
-        button { width: 100%; padding: 14px; background: #1db954; color: black; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 15px; }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; justify-content: center; align-items: center; margin: 0; }
+        .box { background: #111; padding: 30px; border-radius: 12px; width: 350px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,255,100,0.1); }
+        h3 { text-align: center; color: #1db954; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
+        label { display: block; margin-top: 15px; font-size: 13px; color: #aaa; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        input:focus, select:focus { border-color: #1db954; background: #2a2a2a; }
+        button { width: 100%; padding: 14px; background: #1db954; color: black; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-top: 25px; transition: 0.2s; }
         button:hover { background: #1ed760; transform: scale(1.02); }
         .hidden { display: none; }
-        .error { color: #ff5555; font-size: 13px; margin-bottom: 15px; display: none; text-align: center; background: rgba(255,85,85,0.1); padding: 10px; border-radius: 4px; }
-        .success { color: #1db954; font-size: 13px; margin-bottom: 15px; display: none; text-align: center; background: rgba(29,185,84,0.1); padding: 10px; border-radius: 4px;}
-        .note { font-size: 12px; color: #888; margin-top: -15px; margin-bottom: 20px; line-height: 1.4; }
+        .msg { margin-top: 15px; text-align: center; font-size: 13px; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="login-form">
-        <h2>Đăng Nhập Admin</h2>
-        <div class="error" id="login-error">Mật khẩu không đúng!</div>
-        <label>Nhập mật khẩu quản trị:</label>
-        <input type="password" id="password" placeholder="••••••••">
-        <button onclick="checkLogin()">Truy cập hệ thống</button>
+    <div class="box" id="login-box">
+        <h3>Đăng Nhập</h3>
+        <input type="password" id="pass" placeholder="Nhập mật khẩu...">
+        <button onclick="login()">VÀO HỆ THỐNG</button>
+        <div class="msg" id="login-msg" style="color: #ff5555;"></div>
     </div>
 
-    <div class="container hidden" id="admin-panel">
-        <h2>Thêm Truyện Mới</h2>
-        <div class="success" id="add-success"><i class="fa-solid fa-check"></i> Thêm thành công!</div>
-        <div class="error" id="add-error">Lỗi kết nối!</div>
+    <div class="box hidden" id="admin-box">
+        <h3>Thêm Truyện Mới</h3>
         
-        <label>Tên truyện hiển thị</label>
-        <input type="text" id="story-name" placeholder="VD: Xuyên Việt Chi Toàn Năng...">
+        <label>Tên truyện:</label>
+        <input type="text" id="name" placeholder="VD: Hệ Thống...">
         
-        <label>Playlist ID (Youtube)</label>
-        <input type="text" id="playlist-id" placeholder="VD: PLvKEblqLpPd...">
-        <p class="note">Copy phần mã sau chữ <b>list=</b> trên link Youtube.</p>
+        <label>Phân loại:</label>
+        <select id="category">
+            <option value="Khác">-- Chọn thể loại --</option>
+            <option value="Chủ Thụ">Chủ Thụ</option>
+            <option value="Chủ Công">Chủ Công</option>
+            <option value="Hỗ Công">Hỗ Công</option>
+            <option value="Vô CP">Vô CP</option>
+        </select>
 
-        <button id="btn-save" onclick="addStory()">Lưu vào Database</button>
+        <label>Playlist ID (Youtube):</label>
+        <input type="text" id="pid" placeholder="Sau chữ list=...">
+        
+        <button onclick="add()">LƯU VÀO KHO</button>
+        <div class="msg" id="add-msg" style="color: #1db954;"></div>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
-        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const db = supabase.createClient('https://lpeijpxqelyljkdjyfil.supabase.co', 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT');
 
-        // --- 1. XỬ LÝ ĐĂNG NHẬP ---
-        function checkLogin() {
-            const pass = document.getElementById('password').value;
-            // Mật khẩu bạn yêu cầu
-            if(pass === 'hoiam20102003') {
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('admin-panel').classList.remove('hidden');
+        function login() {
+            if(document.getElementById('pass').value === 'hoiam20102003') {
+                document.getElementById('login-box').classList.add('hidden');
+                document.getElementById('admin-box').classList.remove('hidden');
             } else {
-                document.getElementById('login-error').style.display = 'block';
-                // Rung nhẹ form để báo lỗi
-                const container = document.getElementById('login-form');
-                container.style.animation = "shake 0.3s";
-                setTimeout(() => container.style.animation = "", 300);
+                document.getElementById('login-msg').innerText = 'Sai mật khẩu!';
             }
         }
 
-        // --- 2. XỬ LÝ THÊM VÀO DB ---
-        async function addStory() {
-            const name = document.getElementById('story-name').value;
-            const pid = document.getElementById('playlist-id').value;
-            const btn = document.getElementById('btn-save');
+        async function add() {
+            const name = document.getElementById('name').value;
+            const cat = document.getElementById('category').value;
+            const pid = document.getElementById('pid').value;
+            const btn = document.querySelector('#admin-box button');
 
-            if(!name || !pid) {
-                alert("Vui lòng nhập đủ Tên và ID Playlist!");
-                return;
-            }
+            if(!name || !pid) return alert('Thiếu thông tin!');
+            
+            btn.innerText = "Đang xử lý...";
+            const { error } = await db.from('playlists').insert([{ name: name, category: cat, playlist_id: pid }]);
+            btn.innerText = "LƯU VÀO KHO";
 
-            // Hiệu ứng đang lưu
-            btn.innerText = "Đang lưu...";
-            btn.style.opacity = "0.7";
-            btn.disabled = true;
-
-            // Gửi dữ liệu lên Supabase (khớp với ảnh bạn gửi)
-            const { data, error } = await db
-                .from('playlists')
-                .insert([{ 
-                    name: name, 
-                    playlist_id: pid 
-                    // id và created_at tự động sinh ra
-                }]);
-
-            btn.disabled = false;
-            btn.innerText = "Lưu vào Database";
-            btn.style.opacity = "1";
-
-            if (error) {
-                console.error(error);
-                document.getElementById('add-error').innerText = "Lỗi: " + error.message;
-                document.getElementById('add-error').style.display = 'block';
-            } else {
-                document.getElementById('add-success').style.display = 'block';
-                // Reset form
-                document.getElementById('story-name').value = '';
-                document.getElementById('playlist-id').value = '';
-                // Ẩn thông báo sau 3s
-                setTimeout(() => document.getElementById('add-success').style.display = 'none', 3000);
+            if(error) alert('Lỗi: ' + error.message);
+            else {
+                document.getElementById('add-msg').innerText = 'Thêm thành công: ' + name;
+                setTimeout(() => document.getElementById('add-msg').innerText = '', 3000);
+                document.getElementById('name').value = '';
+                document.getElementById('pid').value = '';
             }
         }
     </script>
-
-    <style>
-        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
-    </style>
 </body>
 </html>
