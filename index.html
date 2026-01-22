@@ -18,7 +18,6 @@
             --primary: #1db954;
             --text: #ffffff;
             --text-sub: #b3b3b3;
-            --glass: rgba(20, 20, 20, 0.8);
         }
 
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -34,6 +33,7 @@
             font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: 0.2s; 
         }
         .filter-chip.active { background: var(--primary); color: #000; border-color: var(--primary); font-weight: 700; }
+        .filter-chip i { margin-right: 5px; }
 
         /* LIST CONTENT */
         .main-content { flex: 1; overflow-y: auto; padding: 10px 20px; padding-bottom: 140px; }
@@ -56,6 +56,7 @@
         .card-info { flex: 1; min-width: 0; }
         .card-title { font-size: 15px; font-weight: 600; line-height: 1.4; color: #eee; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .card-tag { font-size: 11px; color: var(--text-sub); display: inline-block; background: #222; padding: 2px 6px; border-radius: 4px; margin-right: 5px; }
+        .history-tag { color: var(--primary); font-weight: bold; font-size: 11px; display: flex; align-items: center; gap: 5px; margin-top: 4px;}
 
         /* PLAYER BAR */
         .player-bar { 
@@ -67,14 +68,12 @@
         .progress-bar { height: 100%; background: var(--primary); width: 0%; border-radius: 0 4px 4px 0; }
         
         .player-controls { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: 0 20px; gap: 10px; }
-        
         .track-display { text-align: center; }
         .track-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .track-status { font-size: 11px; color: var(--primary); margin-top: 2px; letter-spacing: 0.5px; }
 
         .btn-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
         .main-btns { display: flex; align-items: center; gap: 25px; flex: 1; justify-content: center; }
-        
         .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 5px; transition: 0.2s; }
         .btn:hover { color: #fff; }
         .btn-play { width: 48px; height: 48px; background: #fff; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.2s; }
@@ -93,10 +92,7 @@
         .chapter-row:hover { background: #1a1a1a; color: #fff; }
         .chapter-row.active { color: var(--primary); background: #1a1a1a; font-weight: 600; }
 
-        @media (min-width: 768px) {
-            .grid { grid-template-columns: repeat(2, 1fr); }
-            .drawer { width: 350px; }
-        }
+        @media (min-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); } .drawer { width: 350px; } }
     </style>
 </head>
 <body>
@@ -104,12 +100,12 @@
     <div class="header-container">
         <div class="brand"><i class="fa-solid fa-bolt"></i> HỒI ÂM AUDIO</div>
         <div class="filter-scroll">
+            <div class="filter-chip" onclick="showHistory(this)"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
             <div class="filter-chip active" onclick="filterData('all', this)">Tất cả</div>
             <div class="filter-chip" onclick="filterData('Chủ Thụ', this)">Chủ Thụ</div>
             <div class="filter-chip" onclick="filterData('Chủ Công', this)">Chủ Công</div>
             <div class="filter-chip" onclick="filterData('Hỗ Công', this)">Hỗ Công</div>
             <div class="filter-chip" onclick="filterData('Vô CP', this)">Vô CP</div>
-            <div class="filter-chip" onclick="filterData('Khác', this)">Khác</div>
         </div>
     </div>
 
@@ -159,8 +155,24 @@
     let updateTimer;
     let currentId = "";
     let currentName = "";
+    
+    // HISTORY SYSTEM
+    function getHistory() {
+        return JSON.parse(localStorage.getItem('hoiam_history_v5') || '{}');
+    }
+    
+    function saveToHistory(pid, name, chapterIdx, time) {
+        const history = getHistory();
+        history[pid] = { 
+            name: name, 
+            chapter: chapterIdx, 
+            time: time, 
+            lastPlayed: new Date().getTime() 
+        };
+        localStorage.setItem('hoiam_history_v5', JSON.stringify(history));
+    }
 
-    // 1. DATA & FILTER
+    // INIT
     async function init() {
         const { data } = await db.from('playlists').select('*').order('id', {ascending: false});
         fullData = data || [];
@@ -168,27 +180,49 @@
         renderList(fullData);
     }
 
-    function renderList(list) {
+    function renderList(list, isHistoryMode = false) {
         const container = document.getElementById('playlist-container');
         container.innerHTML = "";
+        
+        if(list.length === 0) {
+            container.innerHTML = `<div style="text-align:center; color:#555; padding:20px;">Chưa có dữ liệu</div>`;
+            return;
+        }
+
+        const history = getHistory();
+
         list.forEach(item => {
             const el = document.createElement('div');
             el.className = 'story-card';
-            // Tự động gán nhãn nếu chưa có category (dự phòng)
             let cat = item.category || 'Truyện';
             
+            // Check history
+            const histItem = history[item.playlist_id];
+            let subInfo = `<span class="card-tag">${cat}</span>`;
+            
+            if(histItem) {
+                // Nếu có lịch sử, hiển thị tiến độ
+                subInfo += `<div class="history-tag"><i class="fa-solid fa-clock"></i> Nghe tiếp Tập ${histItem.chapter + 1}</div>`;
+            }
+
             el.innerHTML = `
                 <div class="card-icon"><i class="fa-solid fa-headphones"></i></div>
                 <div class="card-info">
                     <div class="card-title">${item.name}</div>
-                    <span class="card-tag">${cat}</span>
+                    ${subInfo}
                 </div>
                 <i class="fa-solid fa-play" style="color: #333; font-size: 12px;"></i>
             `;
             el.onclick = () => {
                 document.querySelectorAll('.story-card').forEach(e => e.classList.remove('playing'));
                 el.classList.add('playing');
-                loadTrack(item.playlist_id, item.name, 0, 0);
+                
+                // RESUME LOGIC: Nếu có trong lịch sử, lấy time cũ. Nếu không, bắt đầu từ 0.
+                if(histItem) {
+                    loadTrack(item.playlist_id, item.name, histItem.chapter, histItem.time);
+                } else {
+                    loadTrack(item.playlist_id, item.name, 0, 0);
+                }
             };
             container.appendChild(el);
         });
@@ -201,7 +235,19 @@
         else renderList(fullData.filter(i => i.category === type));
     }
 
-    // 2. YOUTUBE CORE
+    function showHistory(btn) {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const history = getHistory();
+        // Lọc ra những truyện có trong history, sắp xếp theo thời gian nghe gần nhất
+        const historyList = fullData.filter(item => history[item.playlist_id])
+            .sort((a, b) => history[b.playlist_id].lastPlayed - history[a.playlist_id].lastPlayed);
+            
+        renderList(historyList, true);
+    }
+
+    // YOUTUBE CORE
     var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
 
@@ -209,17 +255,9 @@
         player = new YT.Player('youtube-iframe', {
             height: '10', width: '10',
             playerVars: { 'playsinline': 1, 'controls': 0 },
-            events: { 'onStateChange': onStateChange, 'onReady': checkSave }
+            events: { 'onStateChange': onStateChange }
         });
-        
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('play', () => player.playVideo());
-            navigator.mediaSession.setActionHandler('pause', () => player.pauseVideo());
-            navigator.mediaSession.setActionHandler('previoustrack', () => player.previousVideo());
-            navigator.mediaSession.setActionHandler('nexttrack', () => player.nextVideo());
-            navigator.mediaSession.setActionHandler('seekbackward', () => seek(-10));
-            navigator.mediaSession.setActionHandler('seekforward', () => seek(10));
-        }
+        setupMediaSession();
     }
 
     function loadTrack(pid, name, idx, time, auto=true) {
@@ -237,14 +275,8 @@
             isPlaying = true;
             document.getElementById('play-btn').innerHTML = '<i class="fa-solid fa-pause"></i>';
             startTimer();
-            save();
             highlightChapter(player.getPlaylistIndex());
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: `Tập ${player.getPlaylistIndex() + 1}`, artist: currentName,
-                    artwork: [{ src: 'https://via.placeholder.com/512.png?text=AUDIO', type: 'image/png' }]
-                });
-            }
+            if ('mediaSession' in navigator) updateMediaSession();
         } else {
             isPlaying = false;
             document.getElementById('play-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -252,18 +284,24 @@
         }
     }
 
-    // 3. UTILS
     function startTimer() {
         clearInterval(updateTimer);
         updateTimer = setInterval(() => {
             if(!player || !player.getCurrentTime) return;
             const cur = player.getCurrentTime();
             const dur = player.getDuration();
+            const idx = player.getPlaylistIndex();
+            
+            // Save history every second (localstorage is fast enough)
+            if(currentId && isPlaying) {
+                saveToHistory(currentId, currentName, idx, cur);
+            }
+
             if(dur) {
                 document.getElementById('progress-bar').style.width = (cur/dur*100) + "%";
-                document.getElementById('track-info').innerText = `Tập ${player.getPlaylistIndex()+1} • ${fmt(cur)} / ${fmt(dur)}`;
+                document.getElementById('track-info').innerText = `Tập ${idx+1} • ${fmt(cur)} / ${fmt(dur)}`;
             }
-        }, 500);
+        }, 1000);
     }
 
     function togglePlay() { isPlaying ? player.pauseVideo() : player.playVideo(); }
@@ -300,12 +338,23 @@
         if(el) { el.classList.add('active'); el.scrollIntoView({block:'center'}); }
     }
 
-    function save() { 
-        localStorage.setItem('hoiam_v4', JSON.stringify({id: currentId, name: currentName, idx: player.getPlaylistIndex(), t: player.getCurrentTime()})); 
+    function setupMediaSession() {
+        if (!('mediaSession' in navigator)) return;
+        const ms = navigator.mediaSession;
+        ms.setActionHandler('play', () => player.playVideo());
+        ms.setActionHandler('pause', () => player.pauseVideo());
+        ms.setActionHandler('previoustrack', () => player.previousVideo());
+        ms.setActionHandler('nexttrack', () => player.nextVideo());
+        ms.setActionHandler('seekbackward', () => seek(-10));
+        ms.setActionHandler('seekforward', () => seek(10));
     }
-    function checkSave() {
-        const s = JSON.parse(localStorage.getItem('hoiam_v4'));
-        if(s) loadTrack(s.id, s.name, s.idx, s.t, false);
+    
+    function updateMediaSession() {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: `Tập ${player.getPlaylistIndex() + 1}`, 
+            artist: currentName,
+            artwork: [{ src: 'https://via.placeholder.com/512.png?text=AUDIO', type: 'image/png' }]
+        });
     }
 
     init();
