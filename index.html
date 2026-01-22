@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
-    <title>Hồi Âm Player V6</title>
+    <title>Hồi Âm Pro V7</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,20 +18,28 @@
             --primary: #1db954;
             --text: #fff;
             --text-sub: #aaa;
-            --bar-height: 130px; /* Tăng chiều cao để chứa thanh tua xịn */
+            --bar-height: 140px;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* HEADER */
-        .header { padding: 15px 20px; background: rgba(0,0,0,0.9); z-index: 10; border-bottom: 1px solid #222; }
-        .brand { font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; display: flex; justify-content: space-between; align-items: center; }
+        /* HEADER & SEARCH */
+        .header { padding: 15px 20px; background: rgba(0,0,0,0.95); z-index: 10; border-bottom: 1px solid #222; display: flex; flex-direction: column; gap: 10px; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; display: flex; gap: 8px; align-items: center;}
         
+        .search-box { position: relative; width: 100%; }
+        .search-box input { 
+            width: 100%; background: #222; border: none; padding: 10px 40px 10px 15px; border-radius: 20px; color: #fff; font-size: 14px; outline: none; transition: 0.2s;
+        }
+        .search-box input:focus { background: #333; box-shadow: 0 0 0 1px var(--primary); }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
+
         /* FILTERS */
-        .filter-row { display: flex; gap: 10px; overflow-x: auto; padding: 10px 20px; background: var(--bg); scrollbar-width: none; }
+        .filter-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 20px; background: var(--bg); scrollbar-width: none; flex-shrink: 0; }
         .filter-row::-webkit-scrollbar { display: none; }
-        .chip { background: var(--surface-light); border: 1px solid #333; color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; }
+        .chip { background: var(--surface-light); border: 1px solid #333; color: #ccc; padding: 6px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 5px;}
         .chip.active { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); }
 
         /* CONTENT */
@@ -39,111 +47,84 @@
         .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
         
         .card { 
-            background: var(--surface); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; 
-            border: 1px solid #222; transition: 0.2s; cursor: pointer;
+            background: var(--surface); padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 12px; 
+            border: 1px solid #222; transition: 0.2s; cursor: pointer; position: relative;
         }
-        .card:active { transform: scale(0.98); }
+        .card:active { transform: scale(0.98); background: #222; }
         .card.playing { border-color: var(--primary); background: rgba(29, 185, 84, 0.1); }
-        .card-icon { width: 40px; height: 40px; background: #222; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #666; }
+        .card-icon { width: 45px; height: 45px; background: #222; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #555; flex-shrink: 0; }
         .card.playing .card-icon { color: var(--primary); background: #000; }
         .card-info { flex: 1; overflow: hidden; }
-        .card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; color: #eee; }
         .card-sub { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 6px; }
-        .tag-cat { background: #333; padding: 2px 6px; border-radius: 4px; color: #ddd; }
-        .tag-hist { color: var(--primary); font-weight: bold; }
+        .tag-cat { background: #333; padding: 2px 6px; border-radius: 4px; color: #bbb; }
+        
+        /* Favorite Button on Card */
+        .fav-btn { padding: 8px; background: none; border: none; color: #444; font-size: 16px; cursor: pointer; z-index: 2; }
+        .fav-btn.active { color: #e74c3c; }
 
-        /* PLAYER BAR (RE-DESIGNED) */
+        /* PLAYER BAR */
         .player-bar { 
             position: fixed; bottom: 0; left: 0; right: 0; height: var(--bar-height); 
             background: rgba(15, 15, 15, 0.98); backdrop-filter: blur(20px); border-top: 1px solid #333;
             padding: 10px 20px; display: flex; flex-direction: column; justify-content: space-evenly; z-index: 100;
         }
 
-        /* 1. Track Info */
         .track-info { text-align: center; }
         .t-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-        .t-chap { font-size: 12px; color: var(--primary); }
+        .t-chap { font-size: 11px; color: var(--primary); font-weight: 600; }
 
-        /* 2. Slider (Input Range) - The Upgrade */
+        /* SLIDER */
         .seek-wrapper { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 5px; }
-        .time-txt { font-size: 11px; color: #888; font-variant-numeric: tabular-nums; width: 35px; text-align: center; }
-        
-        input[type=range] {
-            -webkit-appearance: none; width: 100%; background: transparent; height: 20px; cursor: pointer;
-        }
-        /* Track */
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
-        input[type=range]::-moz-range-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
-        /* Thumb (Cục tròn để kéo) */
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #fff; 
-            margin-top: -6px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition: 0.2s;
-        }
-        input[type=range]::-moz-range-thumb {
-            height: 16px; width: 16px; border-radius: 50%; background: #fff; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-        }
-        /* Active State */
-        input[type=range]:active::-webkit-slider-thumb { transform: scale(1.3); background: var(--primary); }
+        .time-txt { font-size: 10px; color: #888; font-variant-numeric: tabular-nums; width: 30px; text-align: center; }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; height: 15px; cursor: pointer; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 3px; background: #333; border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4.5px; box-shadow: 0 1px 3px black; }
 
-        /* 3. Controls */
+        /* CONTROLS */
         .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
         .main-ctrl { display: flex; align-items: center; gap: 20px; justify-content: center; flex: 1; }
+        .btn { background: none; border: none; color: #ccc; font-size: 18px; padding: 10px; cursor: pointer; transition: 0.2s; }
+        .btn:active { color: #fff; transform: scale(0.9); }
+        .btn-play { width: 45px; height: 45px; background: #fff; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         
-        .btn { background: none; border: none; color: #ccc; font-size: 20px; padding: 10px; cursor: pointer; }
-        .btn:active { color: var(--primary); transform: scale(0.9); }
-        .btn-play { 
-            width: 50px; height: 50px; background: #fff; border-radius: 50%; color: #000; 
-            display: flex; align-items: center; justify-content: center; font-size: 22px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .btn-sm { font-size: 12px; font-weight: 700; border: 1px solid #444; border-radius: 6px; padding: 5px 10px; width: 50px;}
+        .timer-active { color: var(--primary) !important; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* SPEED MENU & DRAWER (Overlays) */
-        .overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; 
-            opacity: 0; pointer-events: none; transition: 0.3s;
-        }
+        /* OVERLAYS (MENU) */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s; display: flex; align-items: flex-end; justify-content: center; }
         .overlay.open { opacity: 1; pointer-events: auto; }
+        .bottom-sheet { background: #1a1a1a; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 70vh; overflow-y: auto; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .overlay.open .bottom-sheet { transform: translateY(0); }
+        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: bold; color: #fff; border-bottom: 1px solid #333; padding-bottom: 15px; }
         
-        .bottom-sheet {
-            position: absolute; bottom: -100%; left: 0; right: 0; 
-            background: #181818; border-radius: 20px 20px 0 0; padding: 20px; 
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 70vh; display: flex; flex-direction: column;
-        }
-        .overlay.open .bottom-sheet { bottom: 0; }
-
-        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: bold; font-size: 16px; color: #fff; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .sheet-content { overflow-y: auto; }
-
-        /* Speed Options */
-        .speed-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .speed-item { 
-            background: #333; text-align: center; padding: 15px; border-radius: 8px; color: #ddd; font-weight: 600; cursor: pointer; 
-        }
-        .speed-item.active { background: var(--primary); color: #000; }
-
-        /* Chapter List */
-        .chap-item { padding: 15px; border-bottom: 1px solid #222; color: #ccc; cursor: pointer; }
-        .chap-item.active { color: var(--primary); font-weight: bold; background: #222; }
+        .option-list { display: flex; flex-direction: column; gap: 5px; }
+        .option-item { padding: 12px; background: #222; border-radius: 8px; color: #ddd; cursor: pointer; display: flex; justify-content: space-between; }
+        .option-item:hover, .option-item.active { background: var(--primary); color: #000; font-weight: bold; }
 
         @media (min-width: 768px) {
             .grid { grid-template-columns: repeat(2, 1fr); }
-            .bottom-sheet { width: 400px; left: 50%; transform: translateX(-50%); bottom: 20px !important; border-radius: 20px; top: auto; opacity: 0; pointer-events: none; }
-            .overlay.open .bottom-sheet { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+            .bottom-sheet { border-radius: 12px; bottom: 20px; position: relative; }
+            .overlay { align-items: center; }
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="brand">
-            <span><i class="fa-solid fa-layer-group"></i> KHO TRUYỆN V6</span>
-            <span id="status-text" style="font-size: 12px; color: #666;">Ready</span>
+        <div class="top-row">
+            <div class="brand"><i class="fa-solid fa-headphones-simple"></i> HỒI ÂM PRO</div>
+            <div id="sleep-status" style="font-size: 11px; color: var(--primary); font-weight: bold;"></div>
+        </div>
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Tìm truyện..." onkeyup="handleSearch()">
+            <i class="fa-solid fa-magnifying-glass"></i>
         </div>
     </div>
 
     <div class="filter-row">
         <div class="chip" onclick="showHistory()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
+        <div class="chip" onclick="showFavorites()"><i class="fa-solid fa-heart"></i> Yêu thích</div>
         <div class="chip active" onclick="filter('all', this)">Tất cả</div>
         <div class="chip" onclick="filter('Chủ Thụ', this)">Chủ Thụ</div>
         <div class="chip" onclick="filter('Chủ Công', this)">Chủ Công</div>
@@ -152,7 +133,7 @@
     </div>
 
     <div class="main-content">
-        <div id="loading" style="text-align: center; margin-top: 50px; color: #666;">Loading database...</div>
+        <div id="loading" style="text-align: center; margin-top: 50px; color: #666;">Đang tải dữ liệu...</div>
         <div class="grid" id="list"></div>
     </div>
 
@@ -166,108 +147,122 @@
 
         <div class="seek-wrapper">
             <div class="time-txt" id="t-curr">00:00</div>
-            <input type="range" id="seek-bar" min="0" max="100" value="0" step="1">
+            <input type="range" id="seek-bar" min="0" max="100" value="0" step="0.1">
             <div class="time-txt" id="t-dur">00:00</div>
         </div>
 
         <div class="controls">
-            <button class="btn btn-sm" onclick="toggleMenu('menu-list')"><i class="fa-solid fa-list-ul"></i></button>
+            <button class="btn" id="btn-timer" onclick="toggleMenu('menu-timer')"><i class="fa-solid fa-moon"></i></button>
             
             <div class="main-ctrl">
-                <button class="btn" onclick="seekStep(-15)"><i class="fa-solid fa-rotate-left"></i> 15s</button>
+                <button class="btn" onclick="seekStep(-15)"><i class="fa-solid fa-rotate-left"></i></button>
                 <button class="btn-play" id="btn-play" onclick="togglePlay()"><i class="fa-solid fa-play"></i></button>
-                <button class="btn" onclick="seekStep(15)">15s <i class="fa-solid fa-rotate-right"></i></button>
+                <button class="btn" onclick="seekStep(15)"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
 
-            <button class="btn btn-sm" id="btn-speed" onclick="toggleMenu('menu-speed')">1x</button>
+            <button class="btn" onclick="toggleMenu('menu-more')"><i class="fa-solid fa-ellipsis-vertical"></i></button>
         </div>
     </div>
 
-    <div class="overlay" id="menu-list" onclick="closeMenu(event)">
+    <div class="overlay" id="menu-more" onclick="closeMenu(event)">
         <div class="bottom-sheet">
-            <div class="sheet-header">
-                <span>Danh sách tập</span>
-                <i class="fa-solid fa-xmark" onclick="toggleMenu('menu-list')"></i>
-            </div>
-            <div class="sheet-content" id="chapter-content"></div>
-        </div>
-    </div>
-
-    <div class="overlay" id="menu-speed" onclick="closeMenu(event)">
-        <div class="bottom-sheet" style="height: auto;">
-            <div class="sheet-header">
-                <span>Tốc độ phát</span>
-                <i class="fa-solid fa-xmark" onclick="toggleMenu('menu-speed')"></i>
-            </div>
-            <div class="sheet-content">
-                <div class="speed-grid">
-                    <div class="speed-item" onclick="setSpd(0.5)">0.5x</div>
-                    <div class="speed-item" onclick="setSpd(0.75)">0.75x</div>
-                    <div class="speed-item active" onclick="setSpd(1.0)" id="spd-1">1.0x</div>
-                    <div class="speed-item" onclick="setSpd(1.25)">1.25x</div>
-                    <div class="speed-item" onclick="setSpd(1.5)">1.5x</div>
-                    <div class="speed-item" onclick="setSpd(1.75)">1.75x</div>
-                    <div class="speed-item" onclick="setSpd(2.0)">2.0x</div>
-                    <div class="speed-item" onclick="setSpd(2.5)">2.5x</div>
-                    <div class="speed-item" onclick="setSpd(3.0)">3.0x</div>
+            <div class="sheet-header"><span>Tùy chọn</span></div>
+            <div class="option-list">
+                <div class="option-item" onclick="toggleMenu('menu-list'); toggleMenu('menu-more')">
+                    <span><i class="fa-solid fa-list-ol"></i> Danh sách tập</span> <i class="fa-solid fa-chevron-right"></i>
+                </div>
+                <div class="option-item" onclick="toggleMenu('menu-speed'); toggleMenu('menu-more')">
+                    <span id="txt-speed-label"><i class="fa-solid fa-gauge-high"></i> Tốc độ</span> <span id="txt-speed-val">1.0x</span>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="overlay" id="menu-timer" onclick="closeMenu(event)">
+        <div class="bottom-sheet">
+            <div class="sheet-header"><span>Hẹn giờ tắt</span></div>
+            <div class="option-list">
+                <div class="option-item" onclick="setTimer(0)">Tắt hẹn giờ</div>
+                <div class="option-item" onclick="setTimer(15)">15 phút</div>
+                <div class="option-item" onclick="setTimer(30)">30 phút</div>
+                <div class="option-item" onclick="setTimer(45)">45 phút</div>
+                <div class="option-item" onclick="setTimer(60)">60 phút</div>
+                <div class="option-item" onclick="setTimer(90)">90 phút</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="menu-speed" onclick="closeMenu(event)">
+        <div class="bottom-sheet">
+            <div class="sheet-header"><span>Tốc độ phát</span></div>
+            <div class="option-list" id="speed-options"></div>
+        </div>
+    </div>
+
+    <div class="overlay" id="menu-list" onclick="closeMenu(event)">
+        <div class="bottom-sheet" style="height: 70vh;">
+            <div class="sheet-header"><span>Danh sách tập</span></div>
+            <div class="option-list" id="chapter-content"></div>
+        </div>
+    </div>
+
 <script>
-    // --- CONFIG ---
+    // --- DATABASE ---
     const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
     const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
     const db = supabase.createClient(DB_URL, DB_KEY);
 
     // --- STATE ---
-    let player, fullData = [];
-    let isPlaying = false;
-    let updateInterval;
-    let isDragging = false; // Cờ kiểm tra đang kéo thanh tua
+    let player, fullData = [], currentList = [];
+    let isPlaying = false, updateInterval, isDragging = false;
     let curId, curName;
+    let sleepTimer = null;
 
     // --- INIT ---
     async function init() {
         const { data } = await db.from('playlists').select('*').order('id', {ascending: false});
         fullData = data || [];
+        currentList = fullData; // Backup for search
         document.getElementById('loading').style.display = 'none';
         render(fullData);
         loadYTApi();
+        generateSpeedMenu();
     }
 
-    // --- RENDER ---
-    function render(list, isHist = false) {
+    // --- RENDER & LOGIC ---
+    function render(list) {
         const div = document.getElementById('list');
         div.innerHTML = "";
-        const hist = JSON.parse(localStorage.getItem('hoiam_v6_hist') || '{}');
+        const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
+        const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
 
-        if(list.length === 0) div.innerHTML = `<div style="text-align:center; padding:30px; color:#555">Trống</div>`;
+        if(list.length === 0) div.innerHTML = `<div style="text-align:center; padding:30px; color:#555">Không tìm thấy truyện</div>`;
 
         list.forEach(item => {
             const el = document.createElement('div');
             el.className = 'card';
             let cat = item.category || 'Truyện';
+            let isFav = favs.includes(item.playlist_id);
             
-            // Check history info
-            let hInfo = "";
+            let statusHTML = `<span class="tag-cat">${cat}</span>`;
             if (hist[item.playlist_id]) {
-                const h = hist[item.playlist_id];
-                hInfo = `<span class="tag-hist">• Nghe tiếp Tập ${h.chap + 1}</span>`;
+                statusHTML += `<span style="color:var(--primary); font-size:11px; font-weight:bold;">• Tập ${hist[item.playlist_id].chap + 1}</span>`;
             }
 
             el.innerHTML = `
                 <div class="card-icon"><i class="fa-solid fa-music"></i></div>
                 <div class="card-info">
                     <div class="card-title">${item.name}</div>
-                    <div class="card-sub">
-                        <span class="tag-cat">${cat}</span>
-                        ${hInfo}
-                    </div>
+                    <div class="card-sub">${statusHTML}</div>
                 </div>
+                <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav(event, '${item.playlist_id}')">
+                    <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                </button>
             `;
-            el.onclick = () => {
+            
+            // Click card -> Play
+            el.onclick = (e) => {
+                if(e.target.closest('.fav-btn')) return; // Ignore fav button click
                 document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
                 el.classList.add('playing');
                 // Resume logic
@@ -278,52 +273,67 @@
         });
     }
 
+    // --- SEARCH & FILTER ---
+    function handleSearch() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const filtered = currentList.filter(item => item.name.toLowerCase().includes(query));
+        render(filtered);
+    }
+
     function filter(type, btn) {
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
-        if(type==='all') render(fullData);
-        else render(fullData.filter(x => x.category === type));
+        document.getElementById('search-input').value = ''; // Reset search
+        
+        if(type==='all') currentList = fullData;
+        else currentList = fullData.filter(x => x.category === type);
+        render(currentList);
     }
 
     function showHistory() {
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        const hist = JSON.parse(localStorage.getItem('hoiam_v6_hist') || '{}');
-        const list = fullData.filter(x => hist[x.playlist_id]).sort((a,b) => hist[b.playlist_id].at - hist[a.playlist_id].at);
-        render(list, true);
+        const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
+        currentList = fullData.filter(x => hist[x.playlist_id]).sort((a,b) => hist[b.playlist_id].at - hist[a.playlist_id].at);
+        render(currentList);
     }
 
-    // --- PLAYER CORE ---
-    function loadYTApi() {
-        var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
-        document.head.appendChild(tag);
+    function showFavorites() {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
+        currentList = fullData.filter(x => favs.includes(x.playlist_id));
+        render(currentList);
     }
 
+    function toggleFav(e, pid) {
+        e.stopPropagation();
+        let favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
+        if(favs.includes(pid)) favs = favs.filter(id => id !== pid);
+        else favs.push(pid);
+        localStorage.setItem('hoiam_favs', JSON.stringify(favs));
+        
+        // UI Feedback
+        const btn = e.currentTarget;
+        const icon = btn.querySelector('i');
+        btn.classList.toggle('active');
+        icon.classList.toggle('fa-solid');
+        icon.classList.toggle('fa-regular');
+    }
+
+    // --- PLAYER ---
+    function loadYTApi() { var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(tag); }
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('yt-player', {
-            height: '10', width: '10',
-            playerVars: { 'playsinline': 1, 'controls': 0, 'fs': 0 },
+            height: '1', width: '1', playerVars: { 'playsinline': 1, 'controls': 0 },
             events: { 'onStateChange': onStateChange }
         });
-        
-        // Media Session Setup
-        if('mediaSession' in navigator) {
-            const ms = navigator.mediaSession;
-            ms.setActionHandler('play', () => player.playVideo());
-            ms.setActionHandler('pause', () => player.pauseVideo());
-            ms.setActionHandler('previoustrack', () => player.previousVideo());
-            ms.setActionHandler('nexttrack', () => player.nextVideo());
-            ms.setActionHandler('seekbackward', () => seekStep(-15));
-            ms.setActionHandler('seekforward', () => seekStep(15));
-        }
+        if('mediaSession' in navigator) setupMediaSession();
     }
 
     function playTrack(pid, name, idx, time) {
         curId = pid; curName = name;
         document.getElementById('p-name').innerText = name;
-        
         if(player && player.loadPlaylist) {
             player.loadPlaylist({list: pid, listType: 'playlist', index: idx, startSeconds: time});
-            // Update UI list
             setTimeout(genChapters, 1500);
         }
     }
@@ -332,36 +342,21 @@
         if(e.data === YT.PlayerState.PLAYING) {
             isPlaying = true;
             document.getElementById('btn-play').innerHTML = '<i class="fa-solid fa-pause"></i>';
-            document.getElementById('status-text').innerText = "Playing...";
             startTimer();
-            // Update highlight
             highlightChap(player.getPlaylistIndex());
-            // Media Session
-            if('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: `Tập ${player.getPlaylistIndex() + 1}`, artist: curName,
-                    artwork: [{ src: 'https://via.placeholder.com/512.png?text=AUDIO', type: 'image/png' }]
-                });
-            }
+            if('mediaSession' in navigator) updateMediaSession();
         } else {
             isPlaying = false;
             document.getElementById('btn-play').innerHTML = '<i class="fa-solid fa-play"></i>';
-            document.getElementById('status-text').innerText = "Paused";
             clearInterval(updateInterval);
         }
     }
 
-    // --- TIMING & SEEKING LOGIC (NÂNG CẤP) ---
+    // --- TIMING ---
     const slider = document.getElementById('seek-bar');
-    
-    // Sự kiện kéo thả
-    slider.addEventListener('input', () => { isDragging = true; }); // Đang kéo -> Dừng update tự động
+    slider.addEventListener('input', () => isDragging = true);
     slider.addEventListener('change', () => { 
-        // Thả tay ra -> Tua video
-        const dur = player.getDuration();
-        const val = slider.value;
-        const newTime = (val / 100) * dur;
-        player.seekTo(newTime, true);
+        player.seekTo((slider.value / 100) * player.getDuration(), true);
         isDragging = false; 
     });
 
@@ -369,62 +364,71 @@
         clearInterval(updateInterval);
         updateInterval = setInterval(() => {
             if(!player || !player.getCurrentTime) return;
-            
             const cur = player.getCurrentTime();
             const dur = player.getDuration();
-            const idx = player.getPlaylistIndex();
-
-            // Update Text
+            
             document.getElementById('t-curr').innerText = fmt(cur);
             document.getElementById('t-dur').innerText = fmt(dur);
-            document.getElementById('p-chap').innerText = `Đang phát Tập ${idx + 1}`;
+            document.getElementById('p-chap').innerText = `Tập ${player.getPlaylistIndex() + 1}`;
 
-            // Update Slider (Chỉ update nếu người dùng KHÔNG đang kéo)
             if(!isDragging && dur > 0) {
-                const percent = (cur / dur) * 100;
-                slider.value = percent;
-                // Tô màu background cho thanh slider (Chrome/Safari trick)
-                slider.style.background = `linear-gradient(to right, var(--primary) ${percent}%, #333 ${percent}%)`;
+                const pct = (cur / dur) * 100;
+                slider.value = pct;
+                slider.style.background = `linear-gradient(to right, var(--primary) ${pct}%, #333 ${pct}%)`;
             }
 
-            // Save History
             if(curId) {
-                const hist = JSON.parse(localStorage.getItem('hoiam_v6_hist') || '{}');
-                hist[curId] = { chap: idx, time: cur, at: Date.now() };
-                localStorage.setItem('hoiam_v6_hist', JSON.stringify(hist));
+                const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
+                hist[curId] = { chap: player.getPlaylistIndex(), time: cur, at: Date.now() };
+                localStorage.setItem('hoiam_hist', JSON.stringify(hist));
             }
-
         }, 500);
     }
 
-    // --- CONTROLS ---
-    function togglePlay() { isPlaying ? player.pauseVideo() : player.playVideo(); }
-    function seekStep(sec) { 
-        const cur = player.getCurrentTime();
-        player.seekTo(cur + sec, true); 
-    }
-    
-    // SPEED CONTROL
-    function setSpd(rate) {
-        if(player) player.setPlaybackRate(rate);
-        document.getElementById('btn-speed').innerText = rate + "x";
+    // --- SLEEP TIMER ---
+    function setTimer(min) {
+        clearTimeout(sleepTimer);
+        document.getElementById('btn-timer').classList.remove('timer-active');
+        document.getElementById('sleep-status').innerText = "";
         
-        // Update UI active class
-        document.querySelectorAll('.speed-item').forEach(el => el.classList.remove('active'));
-        // Tìm element chứa text rate + "x" nhưng ở đây ta tìm theo onclick value cho dễ, 
-        // hoặc đơn giản là set active thủ công nếu muốn.
-        // Ở đây mình close menu luôn
-        toggleMenu('menu-speed');
+        if (min > 0) {
+            document.getElementById('btn-timer').classList.add('timer-active');
+            // Show countdown visual logic is complex, just simple timeout here
+            document.getElementById('sleep-status').innerText = `Hẹn giờ: ${min}p`;
+            sleepTimer = setTimeout(() => {
+                player.pauseVideo();
+                document.getElementById('btn-timer').classList.remove('timer-active');
+                document.getElementById('sleep-status').innerText = "";
+            }, min * 60 * 1000);
+        }
+        toggleMenu('menu-timer');
     }
 
-    // --- MENUS ---
-    function toggleMenu(id) {
-        const el = document.getElementById(id);
-        el.classList.toggle('open');
+    // --- CONTROLS & HELPERS ---
+    function togglePlay() { isPlaying ? player.pauseVideo() : player.playVideo(); }
+    function seekStep(s) { player.seekTo(player.getCurrentTime() + s, true); }
+    function setSpd(rate) { 
+        player.setPlaybackRate(rate); 
+        document.getElementById('txt-speed-val').innerText = rate + "x";
+        toggleMenu('menu-speed');
+        document.querySelectorAll('.speed-item').forEach(e => e.classList.remove('active'));
     }
-    function closeMenu(e) {
-        if(e.target.classList.contains('overlay')) e.target.classList.remove('open');
+    
+    function generateSpeedMenu() {
+        const rates = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0];
+        const container = document.getElementById('speed-options');
+        rates.forEach(r => {
+            const div = document.createElement('div');
+            div.className = `option-item speed-item ${r===1?'active':''}`;
+            div.innerText = r + "x";
+            div.onclick = () => { setSpd(r); div.classList.add('active'); };
+            container.appendChild(div);
+        });
     }
+
+    function toggleMenu(id) { document.getElementById(id).classList.toggle('open'); }
+    function closeMenu(e) { if(e.target.classList.contains('overlay')) e.target.classList.remove('open'); }
+    function fmt(s) { return Math.floor(s/60) + ":" + (Math.floor(s%60)<10?"0":"") + Math.floor(s%60); }
 
     function genChapters() {
         const list = player.getPlaylist();
@@ -432,27 +436,29 @@
         div.innerHTML = "";
         if(list) list.forEach((_, i) => {
             const row = document.createElement('div');
-            row.className = 'chap-item';
-            row.id = 'ch-' + i;
+            row.className = 'option-item';
             row.innerText = `Tập ${i+1}`;
-            row.onclick = () => { player.playVideoAt(i); toggleMenu('menu-list'); };
+            if(i === player.getPlaylistIndex()) row.style.color = "var(--primary)";
+            row.onclick = () => { player.playVideoAt(i); toggleMenu('menu-list'); toggleMenu('menu-more'); };
             div.appendChild(row);
         });
-        highlightChap(player.getPlaylistIndex());
     }
+    function highlightChap(i) { /* Simple update handled in genChapters via re-render if needed, or CSS */ }
 
-    function highlightChap(i) {
-        document.querySelectorAll('.chap-item').forEach(e => e.classList.remove('active'));
-        const el = document.getElementById('ch-' + i);
-        if(el) {
-            el.classList.add('active');
-            el.scrollIntoView({block:'center'});
-        }
+    function setupMediaSession() {
+        const ms = navigator.mediaSession;
+        ms.setActionHandler('play', () => player.playVideo());
+        ms.setActionHandler('pause', () => player.pauseVideo());
+        ms.setActionHandler('previoustrack', () => player.previousVideo());
+        ms.setActionHandler('nexttrack', () => player.nextVideo());
+        ms.setActionHandler('seekbackward', () => seekStep(-15));
+        ms.setActionHandler('seekforward', () => seekStep(15));
     }
-
-    function fmt(s) {
-        const m = Math.floor(s/60); const sc = Math.floor(s%60);
-        return m + ":" + (sc<10?"0":"") + sc;
+    function updateMediaSession() {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: `Tập ${player.getPlaylistIndex() + 1}`, artist: curName,
+            artwork: [{ src: 'https://via.placeholder.com/512?text=AUDIO', type: 'image/png' }]
+        });
     }
 
     init();
