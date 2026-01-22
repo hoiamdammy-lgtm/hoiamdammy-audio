@@ -5,356 +5,310 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
-    <title>Kho Truyện Đam Mỹ - Audio Player</title>
-    
+    <title>Hồi Âm Đam Mỹ - Audio</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --bg-dark: #000000;
-            --bg-item: #121212;
-            --bg-hover: #1e1e1e;
+            --bg: #050505;
+            --surface: #121212;
+            --surface-hover: #1e1e1e;
             --primary: #1db954;
-            --text-main: #ffffff;
-            --text-sub: #a7a7a7;
-            --bar-height: 110px; /* Tăng chiều cao để dễ bấm trên mobile */
+            --text: #ffffff;
+            --text-sub: #b3b3b3;
+            --glass: rgba(20, 20, 20, 0.8);
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0; padding: 0;
-            overflow: hidden;
-            display: flex; height: 100vh;
-            flex-direction: column;
-        }
-
-        /* --- HEADER & LIST --- */
-        .header {
-            padding: 20px;
-            border-bottom: 1px solid #333;
-            background: #000;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .header h1 { margin: 0; font-size: 18px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-
-        .main-content {
-            flex: 1;
-            overflow-y: auto; 
-            padding: 10px;
-            padding-bottom: 150px; /* Chừa chỗ cho Player */
-        }
-
-        /* Danh sách dạng Text */
-        .story-list { display: flex; flex-direction: column; gap: 8px; }
-        .story-item { 
-            background: var(--bg-item); 
-            padding: 15px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            border: 1px solid #222;
-            display: flex; align-items: flex-start; gap: 12px;
-            transition: 0.2s;
-        }
-        .story-item:hover { background: var(--bg-hover); border-color: #444; }
-        .story-item.playing { border-left: 4px solid var(--primary); background: #1a1a1a; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        .story-icon { color: #555; margin-top: 3px; font-size: 14px; }
-        .story-item.playing .story-icon { color: var(--primary); animation: pulse 1s infinite; }
+        /* HEADER & FILTER */
+        .header-container { padding: 20px 20px 10px; background: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%); z-index: 10; }
+        .brand { font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         
-        .story-info { flex: 1; }
-        .story-name { font-size: 14px; font-weight: 500; line-height: 1.5; color: #eee; }
-        .story-meta { font-size: 12px; color: #777; margin-top: 4px; }
+        .filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+        .filter-scroll::-webkit-scrollbar { display: none; }
+        .filter-chip { 
+            background: #222; border: 1px solid #333; color: var(--text); padding: 8px 16px; border-radius: 20px; 
+            font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: 0.2s; 
+        }
+        .filter-chip.active { background: var(--primary); color: #000; border-color: var(--primary); font-weight: 700; }
 
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        /* LIST CONTENT */
+        .main-content { flex: 1; overflow-y: auto; padding: 10px 20px; padding-bottom: 140px; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        
+        .story-card {
+            background: var(--surface); border-radius: 12px; padding: 16px; 
+            display: flex; align-items: center; gap: 15px; cursor: pointer;
+            border: 1px solid #222; transition: 0.2s; position: relative; overflow: hidden;
+        }
+        .story-card:hover { background: var(--surface-hover); border-color: #333; transform: translateY(-2px); }
+        .story-card.playing { border-color: var(--primary); background: rgba(29, 185, 84, 0.1); }
+        
+        .card-icon { 
+            width: 45px; height: 45px; background: #222; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: #555; flex-shrink: 0;
+        }
+        .story-card.playing .card-icon { color: var(--primary); background: #000; }
+        
+        .card-info { flex: 1; min-width: 0; }
+        .card-title { font-size: 15px; font-weight: 600; line-height: 1.4; color: #eee; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-tag { font-size: 11px; color: var(--text-sub); display: inline-block; background: #222; padding: 2px 6px; border-radius: 4px; margin-right: 5px; }
 
-        /* --- PLAYER BAR --- */
-        .player-bar {
-            position: fixed; bottom: 0; left: 0; right: 0; height: var(--bar-height);
-            background: #090909; border-top: 1px solid #333;
+        /* PLAYER BAR */
+        .player-bar { 
+            position: fixed; bottom: 0; left: 0; right: 0; height: 110px; 
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(20px); border-top: 1px solid #222;
             display: flex; flex-direction: column; z-index: 100;
-            padding-bottom: env(safe-area-inset-bottom);
         }
-        .progress-container { width: 100%; height: 4px; background: #333; cursor: pointer; position: relative; }
-        .progress-filled { height: 100%; background: var(--primary); width: 0%; position: relative; }
-        .progress-thumb { width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; right: -6px; top: -4px; opacity: 1; }
+        .progress-area { width: 100%; height: 4px; background: #333; cursor: pointer; position: relative; }
+        .progress-bar { height: 100%; background: var(--primary); width: 0%; border-radius: 0 4px 4px 0; }
+        
+        .player-controls { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: 0 20px; gap: 10px; }
+        
+        .track-display { text-align: center; }
+        .track-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-status { font-size: 11px; color: var(--primary); margin-top: 2px; letter-spacing: 0.5px; }
 
-        .player-controls-wrapper { display: flex; flex-direction: column; padding: 10px 15px; gap: 8px; height: 100%; justify-content: center; }
+        .btn-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
+        .main-btns { display: flex; align-items: center; gap: 25px; flex: 1; justify-content: center; }
         
-        /* Dòng thông tin bài hát */
-        .track-info-line { text-align: center; margin-bottom: 5px; }
-        .track-name-display { font-size: 13px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .track-status-display { font-size: 11px; color: var(--primary); margin-top: 2px; }
+        .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 5px; transition: 0.2s; }
+        .btn:hover { color: #fff; }
+        .btn-play { width: 48px; height: 48px; background: #fff; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.2s; }
+        .btn-play:hover { transform: scale(1.05); }
 
-        /* Dòng nút bấm */
-        .controls-line { display: flex; align-items: center; justify-content: space-between; }
-        .main-controls { display: flex; align-items: center; gap: 20px; justify-content: center; flex: 1; }
-        
-        .btn-icon { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 10px; }
-        .btn-play { width: 45px; height: 45px; background: white; border-radius: 50%; color: black; font-size: 20px; display: flex; align-items: center; justify-content: center; }
-        
-        /* Drawer danh sách tập */
-        .chapter-drawer {
-            position: fixed; right: -100%; top: 0; bottom: 0; width: 80%;
-            background: #111; z-index: 200; transition: 0.3s;
-            display: flex; flex-direction: column; box-shadow: -5px 0 20px black;
+        /* DRAWER */
+        .drawer { 
+            position: fixed; top: 0; right: -100%; width: 85%; height: 100%; 
+            background: #111; z-index: 200; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column;
         }
-        .chapter-drawer.open { right: 0; }
-        .drawer-header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-        .drawer-list { flex: 1; overflow-y: auto; }
-        .chapter-item { padding: 12px 15px; border-bottom: 1px solid #222; color: #ccc; font-size: 14px; cursor: pointer; }
-        .chapter-item.active { color: var(--primary); background: #1a1a1a; }
+        .drawer.open { right: 0; }
+        .drawer-header { padding: 20px; border-bottom: 1px solid #222; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .drawer-content { flex: 1; overflow-y: auto; padding: 10px; }
+        .chapter-row { padding: 14px; border-bottom: 1px solid #1a1a1a; cursor: pointer; color: #bbb; font-size: 14px; border-radius: 6px; }
+        .chapter-row:hover { background: #1a1a1a; color: #fff; }
+        .chapter-row.active { color: var(--primary); background: #1a1a1a; font-weight: 600; }
 
-        /* Nút ẩn hiện menu */
-        .menu-btn { font-size: 12px; border: 1px solid #444; padding: 4px 8px; border-radius: 4px; color: #aaa; background: none; }
+        @media (min-width: 768px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .drawer { width: 350px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1><i class="fa-solid fa-book-open"></i> KHO TRUYỆN</h1>
-        <button class="menu-btn" onclick="location.reload()">Tải lại</button>
+    <div class="header-container">
+        <div class="brand"><i class="fa-solid fa-bolt"></i> HỒI ÂM AUDIO</div>
+        <div class="filter-scroll">
+            <div class="filter-chip active" onclick="filterData('all', this)">Tất cả</div>
+            <div class="filter-chip" onclick="filterData('Chủ Thụ', this)">Chủ Thụ</div>
+            <div class="filter-chip" onclick="filterData('Chủ Công', this)">Chủ Công</div>
+            <div class="filter-chip" onclick="filterData('Hỗ Công', this)">Hỗ Công</div>
+            <div class="filter-chip" onclick="filterData('Vô CP', this)">Vô CP</div>
+            <div class="filter-chip" onclick="filterData('Khác', this)">Khác</div>
+        </div>
     </div>
 
     <div class="main-content">
-        <div id="loading" style="text-align: center; padding: 20px; color: #666;">Đang tải dữ liệu...</div>
-        <div class="story-list" id="playlist-container"></div>
+        <div id="loading" style="text-align: center; margin-top: 50px; color: #666;">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải kho truyện...
+        </div>
+        <div class="grid" id="playlist-container"></div>
     </div>
 
-    <div id="youtube-iframe" style="position: absolute; top: -9999px; left: -9999px;"></div>
+    <div id="youtube-iframe" style="position: absolute; top: -9999px;"></div>
 
     <div class="player-bar">
-        <div class="progress-container" id="progress-container" onclick="seekTo(event)">
-            <div class="progress-filled" id="progress-filled"><div class="progress-thumb"></div></div>
+        <div class="progress-area" id="progress-area" onclick="seekTo(event)">
+            <div class="progress-bar" id="progress-bar"></div>
         </div>
-
-        <div class="player-controls-wrapper">
-            <div class="track-info-line">
-                <div class="track-name-display" id="track-name">Chưa chọn truyện</div>
-                <div class="track-status-display" id="track-info">--:--</div>
+        <div class="player-controls">
+            <div class="track-display">
+                <div class="track-name" id="track-name">Sẵn sàng phát</div>
+                <div class="track-status" id="track-info">--:--</div>
             </div>
-
-            <div class="controls-line">
-                <button class="btn-icon" onclick="toggleDrawer()"><i class="fa-solid fa-list-ol"></i></button>
-                
-                <div class="main-controls">
-                    <button class="btn-icon" onclick="seek(-10)"><i class="fa-solid fa-rotate-left"></i></button>
+            <div class="btn-row">
+                <button class="btn" onclick="toggleDrawer()"><i class="fa-solid fa-list-ul"></i></button>
+                <div class="main-btns">
+                    <button class="btn" onclick="seek(-10)"><i class="fa-solid fa-rotate-left"></i></button>
                     <button class="btn-play" id="play-btn" onclick="togglePlay()"><i class="fa-solid fa-play"></i></button>
-                    <button class="btn-icon" onclick="seek(10)"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button class="btn" onclick="seek(10)"><i class="fa-solid fa-rotate-right"></i></button>
                 </div>
-
-                <button class="btn-icon" id="speed-btn" onclick="cycleSpeed()" style="font-size: 14px; font-weight: bold; width: 40px;">1x</button>
+                <button class="btn" id="speed-btn" onclick="changeSpeed()" style="font-size: 13px; font-weight: 700; width: 40px;">1x</button>
             </div>
         </div>
     </div>
 
-    <div class="chapter-drawer" id="chapter-drawer">
+    <div class="drawer" id="drawer">
         <div class="drawer-header">
-            <span>Danh sách tập</span>
-            <i class="fa-solid fa-xmark" onclick="toggleDrawer()"></i>
+            <span>Danh Sách Tập</span>
+            <i class="fa-solid fa-xmark" onclick="toggleDrawer()" style="cursor: pointer; padding: 5px;"></i>
         </div>
-        <div class="drawer-list" id="chapter-list-content"></div>
+        <div class="drawer-content" id="chapter-list"></div>
     </div>
 
 <script>
-    const SUPABASE_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    const db = supabase.createClient('https://lpeijpxqelyljkdjyfil.supabase.co', 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT');
+    let fullData = [];
     let player;
     let isPlaying = false;
     let updateTimer;
-    let currentPlaylistName = "";
-    let currentPlaylistId = "";
-    
-    // --- LOAD DANH SÁCH (TEXT ONLY) ---
-    async function loadLibrary() {
-        const { data, error } = await db.from('playlists').select('*').order('id', { ascending: false });
-        document.getElementById('loading').style.display = 'none';
-        const container = document.getElementById('playlist-container');
+    let currentId = "";
+    let currentName = "";
 
-        if (data && data.length > 0) {
-            data.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'story-item';
-                div.innerHTML = `
-                    <div class="story-icon"><i class="fa-solid fa-circle-play"></i></div>
-                    <div class="story-info">
-                        <div class="story-name">${item.name}</div>
-                        <div class="story-meta">ID: ${item.id} • Click để nghe</div>
-                    </div>
-                `;
-                div.onclick = () => {
-                    // Xóa class playing cũ
-                    document.querySelectorAll('.story-item').forEach(el => el.classList.remove('playing'));
-                    div.classList.add('playing');
-                    loadTrackToPlayer(item.playlist_id, item.name, 0, 0);
-                };
-                container.appendChild(div);
-            });
-        }
+    // 1. DATA & FILTER
+    async function init() {
+        const { data } = await db.from('playlists').select('*').order('id', {ascending: false});
+        fullData = data || [];
+        document.getElementById('loading').style.display = 'none';
+        renderList(fullData);
     }
 
-    // --- YOUTUBE & BACKGROUND PLAY SETUP ---
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    function renderList(list) {
+        const container = document.getElementById('playlist-container');
+        container.innerHTML = "";
+        list.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'story-card';
+            // Tự động gán nhãn nếu chưa có category (dự phòng)
+            let cat = item.category || 'Truyện';
+            
+            el.innerHTML = `
+                <div class="card-icon"><i class="fa-solid fa-headphones"></i></div>
+                <div class="card-info">
+                    <div class="card-title">${item.name}</div>
+                    <span class="card-tag">${cat}</span>
+                </div>
+                <i class="fa-solid fa-play" style="color: #333; font-size: 12px;"></i>
+            `;
+            el.onclick = () => {
+                document.querySelectorAll('.story-card').forEach(e => e.classList.remove('playing'));
+                el.classList.add('playing');
+                loadTrack(item.playlist_id, item.name, 0, 0);
+            };
+            container.appendChild(el);
+        });
+    }
+
+    function filterData(type, btn) {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        if(type === 'all') renderList(fullData);
+        else renderList(fullData.filter(i => i.category === type));
+    }
+
+    // 2. YOUTUBE CORE
+    var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
 
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('youtube-iframe', {
-            height: '200', width: '200', // Kích thước nhỏ, nhưng phải có để browser render
-            playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 0 },
-            events: { 
-                'onStateChange': onPlayerStateChange,
-                'onReady': checkSavedProgress
-            }
+            height: '10', width: '10',
+            playerVars: { 'playsinline': 1, 'controls': 0 },
+            events: { 'onStateChange': onStateChange, 'onReady': checkSave }
         });
         
-        // Kích hoạt Media Session (Hiện control ngoài màn hình khóa)
         if ('mediaSession' in navigator) {
             navigator.mediaSession.setActionHandler('play', () => player.playVideo());
             navigator.mediaSession.setActionHandler('pause', () => player.pauseVideo());
             navigator.mediaSession.setActionHandler('previoustrack', () => player.previousVideo());
             navigator.mediaSession.setActionHandler('nexttrack', () => player.nextVideo());
-            navigator.mediaSession.setActionHandler('seekbackward', () => { 
-                player.seekTo(player.getCurrentTime() - 10, true); 
-            });
-            navigator.mediaSession.setActionHandler('seekforward', () => { 
-                player.seekTo(player.getCurrentTime() + 10, true); 
-            });
+            navigator.mediaSession.setActionHandler('seekbackward', () => seek(-10));
+            navigator.mediaSession.setActionHandler('seekforward', () => seek(10));
         }
     }
 
-    function loadTrackToPlayer(playlistId, name, index, startSeconds, autoPlay = true) {
-        currentPlaylistId = playlistId;
-        currentPlaylistName = name;
+    function loadTrack(pid, name, idx, time, auto=true) {
+        currentId = pid; currentName = name;
         document.getElementById('track-name').innerText = name;
-        document.getElementById('track-info').innerText = "Đang tải...";
-        
         if(player && player.loadPlaylist) {
-            if(autoPlay) player.loadPlaylist({list: playlistId, listType: 'playlist', index: index, startSeconds: startSeconds});
-            else player.cuePlaylist({list: playlistId, listType: 'playlist', index: index, startSeconds: startSeconds});
-            
-            setTimeout(renderChapterList, 1500);
+            const func = auto ? 'loadPlaylist' : 'cuePlaylist';
+            player[func]({list: pid, listType: 'playlist', index: idx, startSeconds: time});
+            setTimeout(renderChapters, 1500);
         }
     }
 
-    function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.PLAYING) {
+    function onStateChange(e) {
+        if (e.data == YT.PlayerState.PLAYING) {
             isPlaying = true;
             document.getElementById('play-btn').innerHTML = '<i class="fa-solid fa-pause"></i>';
             startTimer();
-            if(!window.saveInterval) window.saveInterval = setInterval(saveProgress, 10000);
-            
-            // Cập nhật màn hình khóa
+            save();
+            highlightChapter(player.getPlaylistIndex());
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: `Tập ${player.getPlaylistIndex() + 1}`,
-                    artist: currentPlaylistName,
-                    artwork: [{ src: 'https://via.placeholder.com/512?text=AUDIO', sizes: '512x512', type: 'image/png' }]
+                    title: `Tập ${player.getPlaylistIndex() + 1}`, artist: currentName,
+                    artwork: [{ src: 'https://via.placeholder.com/512.png?text=AUDIO', type: 'image/png' }]
                 });
             }
-            highlightChapter(player.getPlaylistIndex());
-
         } else {
             isPlaying = false;
             document.getElementById('play-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
             clearInterval(updateTimer);
-            if(event.data == YT.PlayerState.PAUSED) saveProgress();
         }
     }
 
+    // 3. UTILS
     function startTimer() {
         clearInterval(updateTimer);
         updateTimer = setInterval(() => {
-            if (player && player.getCurrentTime) {
-                const current = player.getCurrentTime();
-                const duration = player.getDuration();
-                if (duration > 0) {
-                    const percent = (current / duration) * 100;
-                    document.getElementById('progress-filled').style.width = percent + "%";
-                    document.getElementById('track-info').innerText = `Tập ${player.getPlaylistIndex() + 1} • ${formatTime(current)} / ${formatTime(duration)}`;
-                }
+            if(!player || !player.getCurrentTime) return;
+            const cur = player.getCurrentTime();
+            const dur = player.getDuration();
+            if(dur) {
+                document.getElementById('progress-bar').style.width = (cur/dur*100) + "%";
+                document.getElementById('track-info').innerText = `Tập ${player.getPlaylistIndex()+1} • ${fmt(cur)} / ${fmt(dur)}`;
             }
         }, 500);
     }
 
-    // --- CONTROLS ---
     function togglePlay() { isPlaying ? player.pauseVideo() : player.playVideo(); }
-    function seek(sec) { if(player) player.seekTo(player.getCurrentTime() + sec, true); }
+    function seek(s) { player.seekTo(player.getCurrentTime()+s, true); }
+    function seekTo(e) { 
+        const r = document.getElementById('progress-area').getBoundingClientRect();
+        player.seekTo(((e.clientX - r.left)/r.width) * player.getDuration(), true);
+    }
+    function changeSpeed() {
+        const s = [1, 1.25, 1.5, 2, 2.5];
+        let n = s[(s.indexOf(player.getPlaybackRate()) + 1) % s.length];
+        player.setPlaybackRate(n);
+        document.getElementById('speed-btn').innerText = n + "x";
+    }
+    function fmt(s) { return Math.floor(s/60) + ":" + (Math.floor(s%60)<10?"0":"") + Math.floor(s%60); }
     
-    function cycleSpeed() {
-        const rates = [1, 1.25, 1.5, 2, 2.5];
-        let current = player.getPlaybackRate();
-        let next = rates[(rates.indexOf(current) + 1) % rates.length];
-        player.setPlaybackRate(next);
-        document.getElementById('speed-btn').innerText = next + "x";
+    function toggleDrawer() { document.getElementById('drawer').classList.toggle('open'); }
+    function renderChapters() {
+        const list = player.getPlaylist();
+        const c = document.getElementById('chapter-list');
+        c.innerHTML = "";
+        if(list) list.forEach((_, i) => {
+            const d = document.createElement('div');
+            d.className = 'chapter-row'; d.id = 'chap-'+i;
+            d.innerText = `Tập ${i+1}`;
+            d.onclick = () => { player.playVideoAt(i); toggleDrawer(); };
+            c.appendChild(d);
+        });
+        highlightChapter(player.getPlaylistIndex());
+    }
+    function highlightChapter(i) {
+        document.querySelectorAll('.chapter-row').forEach(e=>e.classList.remove('active'));
+        const el = document.getElementById('chap-'+i);
+        if(el) { el.classList.add('active'); el.scrollIntoView({block:'center'}); }
     }
 
-    // --- DRAWER ---
-    function toggleDrawer() { document.getElementById('chapter-drawer').classList.toggle('open'); }
-    
-    function renderChapterList() {
-        if(!player) return;
-        const listIds = player.getPlaylist();
-        const container = document.getElementById('chapter-list-content');
-        container.innerHTML = "";
-        if(listIds) {
-            listIds.forEach((id, idx) => {
-                const item = document.createElement('div');
-                item.className = 'chapter-item';
-                item.id = 'chap-' + idx;
-                item.innerText = `Tập ${idx + 1}`;
-                item.onclick = () => { player.playVideoAt(idx); toggleDrawer(); };
-                container.appendChild(item);
-            });
-            highlightChapter(player.getPlaylistIndex());
-        }
+    function save() { 
+        localStorage.setItem('hoiam_v4', JSON.stringify({id: currentId, name: currentName, idx: player.getPlaylistIndex(), t: player.getCurrentTime()})); 
+    }
+    function checkSave() {
+        const s = JSON.parse(localStorage.getItem('hoiam_v4'));
+        if(s) loadTrack(s.id, s.name, s.idx, s.t, false);
     }
 
-    function highlightChapter(idx) {
-        document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
-        const active = document.getElementById('chap-' + idx);
-        if(active) {
-            active.classList.add('active');
-            active.scrollIntoView({block: 'center'});
-        }
-    }
-
-    // --- SAVE PROGRESS ---
-    function saveProgress() {
-        if(!player || !currentPlaylistId) return;
-        localStorage.setItem('hoiam_v3', JSON.stringify({
-            id: currentPlaylistId, name: currentPlaylistName,
-            index: player.getPlaylistIndex(), time: player.getCurrentTime()
-        }));
-    }
-    
-    function checkSavedProgress() {
-        const saved = localStorage.getItem('hoiam_v3');
-        if(saved) {
-            const p = JSON.parse(saved);
-            loadTrackToPlayer(p.id, p.name, p.index, p.time, false);
-            document.getElementById('track-name').innerText = p.name + " (Tiếp tục)";
-        }
-    }
-
-    function seekTo(e) {
-        const rect = document.getElementById('progress-container').getBoundingClientRect();
-        const p = (e.clientX - rect.left) / rect.width;
-        if(player) player.seekTo(p * player.getDuration(), true);
-    }
-
-    function formatTime(s) {
-        const m = Math.floor(s/60); const sc = Math.floor(s%60);
-        return m + ":" + (sc<10?"0":"") + sc;
-    }
-
-    loadLibrary();
+    init();
 </script>
 </body>
 </html>
