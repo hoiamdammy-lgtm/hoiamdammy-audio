@@ -5,293 +5,315 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
-    <title>Hồi Âm Pro V8</title>
+    <title>Hồi Âm Pro V9</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --bg: #000000;
-            --surface: #121212;
-            --surface-hover: #222;
-            --primary: #1db954;
-            --text: #fff;
-            --text-sub: #a7a7a7;
+            --bg: #09090b;
+            --surface: #18181b;
+            --surface-hover: #27272a;
+            --primary: #10b981; /* Màu xanh ngọc hiện đại */
+            --primary-dim: rgba(16, 185, 129, 0.1);
+            --text: #ffffff;
+            --text-sub: #a1a1aa;
             --bar-height: 140px;
+            --radius: 12px;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* --- COMPONENTS --- */
+        /* --- 1. HEADER & HERO --- */
+        .header { 
+            padding: 15px 20px; background: rgba(9, 9, 11, 0.95); 
+            backdrop-filter: blur(10px); z-index: 10; position: sticky; top: 0; 
+            border-bottom: 1px solid #27272a;
+        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .brand { font-size: 18px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px;}
         
-        /* 1. HERO SECTION (Continue Watching) */
-        .hero-section {
-            padding: 20px;
-            background: linear-gradient(180deg, #2c1a1a 0%, var(--bg) 100%);
-            display: none; /* Hiện khi có lịch sử */
+        /* Countdown Badge */
+        #timer-badge {
+            background: #222; color: var(--primary); font-size: 12px; font-weight: 700;
+            padding: 4px 10px; border-radius: 20px; display: none; align-items: center; gap: 5px;
+            border: 1px solid var(--primary); animation: pulse 2s infinite;
         }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        .search-wrapper { position: relative; }
+        .search-wrapper input {
+            width: 100%; background: var(--surface); border: 1px solid #333; padding: 12px 40px 12px 15px;
+            border-radius: var(--radius); color: #fff; font-size: 14px; outline: none; transition: 0.3s;
+        }
+        .search-wrapper input:focus { border-color: var(--primary); background: #000; }
+        .search-wrapper i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
+
+        /* HERO CARD (Continue) */
+        .hero-section { padding: 0 20px; margin-top: 15px; display: none; }
         .hero-card {
-            display: flex; align-items: center; gap: 15px; 
-            background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-            padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s;
-            border: 1px solid rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, #1f2937 0%, #000 100%);
+            border: 1px solid #374151; border-radius: var(--radius); padding: 15px;
+            display: flex; align-items: center; gap: 15px; cursor: pointer; position: relative; overflow: hidden;
         }
-        .hero-card:active { transform: scale(0.98); }
-        .hero-img { width: 60px; height: 60px; background: #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .hero-content { flex: 1; }
-        .hero-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); font-weight: 700; margin-bottom: 4px; }
-        .hero-title { font-size: 15px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .hero-sub { font-size: 12px; color: #ccc; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
-
-        /* 2. HEADER & SEARCH */
-        .header { padding: 15px 20px 5px; background: var(--bg); z-index: 10; position: sticky; top: 0; }
-        .search-box { position: relative; width: 100%; margin-bottom: 10px; }
-        .search-box input { 
-            width: 100%; background: #222; border: none; padding: 12px 40px 12px 20px; border-radius: 30px; color: #fff; font-size: 14px; outline: none; transition: 0.3s;
+        .hero-card::after { content:''; position: absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05)); }
+        .hero-icon { 
+            width: 50px; height: 50px; background: var(--primary); color: #000; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px var(--primary-dim);
         }
-        .search-box input:focus { background: #333; box-shadow: 0 0 0 1px var(--primary); }
-        .search-box i { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: #666; }
+        .hero-info h4 { margin: 0; font-size: 14px; color: var(--primary); text-transform: uppercase; font-weight: 800; font-size: 10px; letter-spacing: 1px; margin-bottom: 4px; }
+        .hero-info h3 { margin: 0; font-size: 15px; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .hero-info p { margin: 2px 0 0; font-size: 12px; color: #9ca3af; }
 
-        /* 3. FILTERS */
-        .filter-row { display: flex; gap: 8px; overflow-x: auto; padding: 5px 20px 15px; scrollbar-width: none; }
-        .filter-row::-webkit-scrollbar { display: none; }
-        .chip { background: #222; border: 1px solid #333; color: #ccc; padding: 8px 16px; border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; transition: 0.2s; font-weight: 600;}
-        .chip.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        /* --- 2. FILTERS & GRID --- */
+        .filter-scroller { display: flex; gap: 8px; overflow-x: auto; padding: 15px 20px; scrollbar-width: none; }
+        .chip { 
+            background: var(--surface); border: 1px solid #333; padding: 6px 14px; border-radius: 20px; 
+            font-size: 12px; white-space: nowrap; cursor: pointer; color: #ccc; transition: 0.2s;
+        }
+        .chip.active { background: var(--primary); color: #000; font-weight: 700; border-color: var(--primary); }
 
-        /* 4. MAIN LIST */
-        .main-content { flex: 1; overflow-y: auto; padding: 0 15px 160px 15px; }
-        .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .main-content { flex: 1; overflow-y: auto; padding: 0 20px 160px 20px; }
+        /* Responsive Grid: Tự chia cột theo kích thước màn hình */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* PC: nhiều cột, Mobile: 1 cột */
+            gap: 12px; 
+        }
         
         .card { 
-            background: var(--surface); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 12px; 
-            border: 1px solid #222; transition: 0.2s; cursor: pointer; position: relative;
+            background: var(--surface); padding: 12px; border-radius: var(--radius); 
+            display: flex; align-items: center; gap: 12px; border: 1px solid transparent; 
+            transition: all 0.2s; cursor: pointer;
         }
-        .card:hover { background: var(--surface-hover); }
-        .card.playing { border-left: 4px solid var(--primary); background: #1a1a1a; }
-        .card-icon { font-size: 18px; color: #444; width: 30px; text-align: center; }
-        .card.playing .card-icon { color: var(--primary); animation: pulse 1s infinite; }
-        .card-info { flex: 1; overflow: hidden; }
-        .card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-sub { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
-        .tag { background: #2a2a2a; padding: 2px 6px; border-radius: 4px; }
-        .fav-btn { background: none; border: none; color: #444; padding: 10px; cursor: pointer; font-size: 16px; }
-        .fav-btn.active { color: #e74c3c; }
-
-        /* SKELETON LOADING */
-        .skeleton { background: linear-gradient(90deg, #222 25%, #333 50%, #222 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
-        .sk-card { height: 70px; width: 100%; margin-bottom: 10px; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        /* 5. PLAYER BAR */
+        .card:hover { background: var(--surface-hover); border-color: #333; }
+        .card.playing { border-color: var(--primary); background: var(--primary-dim); }
+        .card-icon { width: 42px; height: 42px; background: #27272a; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #71717a; }
+        .card.playing .card-icon { background: var(--primary); color: #000; }
+        
+        .card-body { flex: 1; min-width: 0; }
+        .c-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .c-meta { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
+        .badge { background: #27272a; padding: 2px 6px; border-radius: 4px; }
+        
+        /* --- 3. PLAYER BAR --- */
         .player-bar { 
             position: fixed; bottom: 0; left: 0; right: 0; height: var(--bar-height); 
-            background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(20px); border-top: 1px solid #222;
-            padding: 10px 20px; display: flex; flex-direction: column; justify-content: space-evenly; z-index: 100;
+            background: rgba(9, 9, 11, 0.98); backdrop-filter: blur(20px); border-top: 1px solid #333;
+            padding: 10px 20px; display: flex; flex-direction: column; justify-content: center; gap: 8px; z-index: 100;
         }
+        .t-info { text-align: center; }
+        .t-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;}
+        .t-chap { font-size: 11px; color: var(--primary); font-weight: 600; }
 
-        /* Marquee Text (Chạy chữ) */
-        .track-info { overflow: hidden; white-space: nowrap; position: relative; margin-bottom: 5px; text-align: center;}
-        .t-name { font-size: 14px; font-weight: 700; color: #fff; display: inline-block; }
-        .marquee .t-name { animation: marquee 10s linear infinite; padding-left: 100%; }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-        .t-chap { font-size: 11px; color: var(--primary); font-weight: 600; display: block; margin-top: 2px;}
-
-        /* Controls */
-        .seek-wrapper { display: flex; align-items: center; gap: 10px; width: 100%; }
-        .time-txt { font-size: 10px; color: #888; width: 35px; text-align: center; }
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; height: 10px; cursor: pointer; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 3px; background: #444; border-radius: 2px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4.5px; }
-
-        .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
-        .main-ctrl { display: flex; align-items: center; gap: 20px; }
-        .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 5px; }
-        .btn:active { color: var(--primary); }
-        .btn-play { width: 45px; height: 45px; background: #fff; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .slider-row { display: flex; align-items: center; gap: 10px; }
+        .time-lbl { font-size: 10px; color: #666; width: 35px; text-align: center; font-variant-numeric: tabular-nums; }
         
-        .timer-active { color: var(--primary) !important; text-shadow: 0 0 5px var(--primary); }
-
-        /* TOAST NOTIFICATION */
-        #toast {
-            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 12px; position: fixed; z-index: 300; left: 50%; bottom: 160px; transform: translateX(-50%); font-size: 13px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s, bottom 0.3s;
+        /* Modern Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; height: 20px; cursor: pointer; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: 0.2s;
         }
-        #toast.show { visibility: visible; opacity: 1; bottom: 170px; }
+        input[type=range]:active::-webkit-slider-thumb { transform: scale(1.3); background: var(--primary); }
 
-        /* MENUS & OVERLAYS */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; opacity: 0; pointer-events: none; transition: 0.2s; display: flex; align-items: flex-end; justify-content: center; }
+        .ctrl-row { display: flex; justify-content: space-between; align-items: center; }
+        .center-ctrl { display: flex; align-items: center; gap: 20px; }
+        .btn { background: none; border: none; color: #a1a1aa; font-size: 20px; cursor: pointer; padding: 8px; }
+        .btn:hover { color: #fff; }
+        .btn-play { 
+            width: 48px; height: 48px; background: #fff; border-radius: 50%; color: #000; 
+            display: flex; align-items: center; justify-content: center; font-size: 20px; 
+            transition: transform 0.2s;
+        }
+        .btn-play:active { transform: scale(0.9); }
+
+        /* --- 4. OVERLAYS & CUSTOM TIMER --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; opacity: 0; pointer-events: none; transition: 0.2s; display: flex; align-items: flex-end; justify-content: center; }
         .overlay.open { opacity: 1; pointer-events: auto; }
-        .bottom-sheet { background: #181818; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 70vh; overflow-y: auto; transform: translateY(100%); transition: 0.3s; }
-        .overlay.open .bottom-sheet { transform: translateY(0); }
-        .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .opt-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #ddd; }
-        .opt-item:hover { background: #222; color: #fff; }
         
-        /* Desktop Tweaks */
+        .sheet { 
+            background: #18181b; width: 100%; max-width: 450px; border-radius: 24px 24px 0 0; padding: 24px; 
+            transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 80vh; overflow-y: auto;
+        }
+        .overlay.open .sheet { transform: translateY(0); }
+        
+        .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 700; color: #fff; font-size: 16px; }
+        
+        .opt-list { display: flex; flex-direction: column; gap: 8px; }
+        .opt-item { padding: 14px; background: #27272a; border-radius: 12px; color: #ccc; cursor: pointer; display: flex; justify-content: space-between; }
+        .opt-item:hover, .opt-item.active { background: #3f3f46; color: #fff; }
+
+        /* Custom Timer Input */
+        .timer-custom { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; }
+        .timer-input { flex: 1; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; text-align: center; font-size: 16px; outline: none; }
+        .timer-input:focus { border-color: var(--primary); }
+        .timer-btn { background: var(--primary); color: #000; font-weight: 700; padding: 0 20px; border-radius: 8px; border: none; cursor: pointer; }
+
         @media (min-width: 768px) {
-            .grid { grid-template-columns: repeat(2, 1fr); }
-            .bottom-sheet { border-radius: 12px; bottom: 20px; position: relative; transform: translateY(20px); }
-            .overlay.open .bottom-sheet { transform: translateY(0); }
             .overlay { align-items: center; }
+            .sheet { border-radius: 24px; bottom: auto; }
         }
     </style>
 </head>
 <body>
 
-    <div class="hero-section" id="hero-section">
-        <div class="hero-card" onclick="resumeLastPlayed()">
-            <div class="hero-img"><i class="fa-solid fa-play"></i></div>
-            <div class="hero-content">
-                <div class="hero-label">TIẾP TỤC NGHE</div>
-                <div class="hero-title" id="hero-title">Tên Truyện</div>
-                <div class="hero-sub" id="hero-sub">Tập 1 • 00:00</div>
+    <div class="header">
+        <div class="top-bar">
+            <div class="brand"><i class="fa-solid fa-layer-group"></i> HỒI ÂM PRO</div>
+            <div id="timer-badge"><i class="fa-solid fa-clock"></i> <span id="timer-count">00:00</span></div>
+        </div>
+        <div class="search-wrapper">
+            <input type="text" id="search" placeholder="Tìm truyện..." onkeyup="handleSearch()">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+    </div>
+
+    <div class="filter-scroller">
+        <div class="chip" onclick="showHistory()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
+        <div class="chip" onclick="showFavs()"><i class="fa-solid fa-heart"></i> Yêu thích</div>
+        <div class="chip active" onclick="filter('all', this)">Tất cả</div>
+        <div class="chip" onclick="filter('Chủ Thụ', this)">Chủ Thụ</div>
+        <div class="chip" onclick="filter('Chủ Công', this)">Chủ Công</div>
+        <div class="chip" onclick="filter('Hỗ Công', this)">Hỗ Công</div>
+        <div class="chip" onclick="filter('Vô CP', this)">Vô CP</div>
+    </div>
+
+    <div class="hero-section" id="hero-box">
+        <div class="hero-card" onclick="resumeHero()">
+            <div class="hero-icon"><i class="fa-solid fa-play"></i></div>
+            <div class="hero-info">
+                <h4>Tiếp tục nghe</h4>
+                <h3 id="hero-title">Tên Truyện</h3>
+                <p id="hero-meta">Tập 1</p>
             </div>
         </div>
     </div>
 
-    <div class="header">
-        <div class="search-box">
-            <input type="text" id="search" placeholder="Tìm kiếm truyện..." onkeyup="doSearch()">
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </div>
-        <div class="filter-row">
-            <div class="chip" onclick="showFavs()"><i class="fa-solid fa-heart"></i> Yêu thích</div>
-            <div class="chip active" onclick="filter('all', this)">Tất cả</div>
-            <div class="chip" onclick="filter('Chủ Thụ', this)">Chủ Thụ</div>
-            <div class="chip" onclick="filter('Chủ Công', this)">Chủ Công</div>
-            <div class="chip" onclick="filter('Hỗ Công', this)">Hỗ Công</div>
-            <div class="chip" onclick="filter('Vô CP', this)">Vô CP</div>
-        </div>
-    </div>
-
     <div class="main-content">
-        <div id="sk-loader">
-            <div class="skeleton sk-card"></div>
-            <div class="skeleton sk-card"></div>
-            <div class="skeleton sk-card"></div>
-            <div class="skeleton sk-card"></div>
-        </div>
+        <div id="loading" style="text-align: center; margin-top: 40px; color: #555;">Đang tải dữ liệu...</div>
         <div class="grid" id="list"></div>
     </div>
 
     <div id="yt-player" style="position: absolute; top: -9999px;"></div>
 
     <div class="player-bar">
-        <div class="track-info" id="track-info-box">
+        <div class="t-info">
             <span class="t-name" id="p-name">Sẵn sàng</span>
             <span class="t-chap" id="p-chap">--</span>
         </div>
-
-        <div class="seek-wrapper">
-            <span class="time-txt" id="curr">00:00</span>
+        
+        <div class="slider-row">
+            <span class="time-lbl" id="curr">00:00</span>
             <input type="range" id="seek" min="0" max="100" value="0" step="0.1">
-            <span class="time-txt" id="dur">00:00</span>
+            <span class="time-lbl" id="dur">00:00</span>
         </div>
 
-        <div class="controls">
-            <button class="btn" id="btn-timer" onclick="toggle('menu-timer')"><i class="fa-solid fa-moon"></i></button>
-            <div class="main-ctrl">
-                <button class="btn" onclick="seekStep(-10)"><i class="fa-solid fa-rotate-left"></i></button>
+        <div class="ctrl-row">
+            <button class="btn" id="btn-timer" onclick="openMenu('menu-timer')"><i class="fa-regular fa-moon"></i></button>
+            <div class="center-ctrl">
+                <button class="btn" onclick="seek(-10)"><i class="fa-solid fa-rotate-left"></i></button>
                 <button class="btn-play" id="btn-play" onclick="togglePlay()"><i class="fa-solid fa-play"></i></button>
-                <button class="btn" onclick="seekStep(10)"><i class="fa-solid fa-rotate-right"></i></button>
+                <button class="btn" onclick="seek(10)"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
-            <button class="btn" onclick="toggle('menu-more')"><i class="fa-solid fa-sliders"></i></button>
+            <button class="btn" onclick="openMenu('menu-more')"><i class="fa-solid fa-ellipsis-vertical"></i></button>
         </div>
     </div>
 
     <div class="overlay" id="menu-more" onclick="closeMenu(event)">
-        <div class="bottom-sheet">
-            <div class="sheet-head"><span>Cài đặt</span> <i class="fa-solid fa-xmark" onclick="toggle('menu-more')"></i></div>
-            <div class="opt-item" onclick="toggle('menu-list'); toggle('menu-more')">
-                <span><i class="fa-solid fa-list-ol"></i> Danh sách tập</span> <i class="fa-solid fa-chevron-right"></i>
+        <div class="sheet">
+            <div class="sheet-head"><span>Cài đặt</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
+            <div class="opt-list">
+                <div class="opt-item" onclick="openMenu('menu-list')">
+                    <span><i class="fa-solid fa-list-ol"></i> Danh sách tập</span> <i class="fa-solid fa-chevron-right"></i>
+                </div>
+                <div class="opt-item" onclick="openMenu('menu-speed')">
+                    <span><i class="fa-solid fa-gauge-high"></i> Tốc độ</span> <span id="lbl-spd" style="color:var(--primary)">1.0x</span>
+                </div>
             </div>
-            <div class="opt-item" onclick="toggle('menu-speed'); toggle('menu-more')">
-                <span><i class="fa-solid fa-gauge"></i> Tốc độ</span> <span id="txt-spd">1.0x</span>
-            </div>
-            <div class="opt-item">
-                <span><i class="fa-solid fa-volume-high"></i> Âm lượng</span>
-                <input type="range" style="width: 100px;" min="0" max="100" value="100" oninput="setVol(this.value)">
-            </div>
-        </div>
-    </div>
-
-    <div class="overlay" id="menu-speed" onclick="closeMenu(event)">
-        <div class="bottom-sheet">
-            <div class="sheet-head"><span>Tốc độ phát</span></div>
-            <div id="speed-opts"></div>
         </div>
     </div>
 
     <div class="overlay" id="menu-timer" onclick="closeMenu(event)">
-        <div class="bottom-sheet">
-            <div class="sheet-head"><span>Hẹn giờ tắt</span></div>
-            <div class="opt-item" onclick="setTimer(0)">Tắt hẹn giờ</div>
-            <div class="opt-item" onclick="setTimer(15)">15 Phút</div>
-            <div class="opt-item" onclick="setTimer(30)">30 Phút</div>
-            <div class="opt-item" onclick="setTimer(60)">60 Phút</div>
+        <div class="sheet">
+            <div class="sheet-head"><span>Hẹn giờ tắt</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
+            <div class="opt-list">
+                <div class="opt-item" onclick="setTimer(0)">Tắt hẹn giờ</div>
+                <div class="opt-item" onclick="setTimer(15)">15 Phút</div>
+                <div class="opt-item" onclick="setTimer(30)">30 Phút</div>
+                <div class="opt-item" onclick="setTimer(60)">60 Phút</div>
+            </div>
+            <div class="timer-custom">
+                <input type="number" id="custom-min" class="timer-input" placeholder="Nhập số phút...">
+                <button class="timer-btn" onclick="setCustomTimer()">HẸN</button>
+            </div>
         </div>
     </div>
 
     <div class="overlay" id="menu-list" onclick="closeMenu(event)">
-        <div class="bottom-sheet" style="height: 70vh;">
-            <div class="sheet-head"><span>Danh sách tập</span></div>
-            <div id="chap-content"></div>
+        <div class="sheet" style="height: 70vh;">
+            <div class="sheet-head"><span>Danh sách tập</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
+            <div class="opt-list" id="chap-list"></div>
         </div>
     </div>
 
-    <div id="toast">Thông báo</div>
+    <div class="overlay" id="menu-speed" onclick="closeMenu(event)">
+        <div class="sheet">
+            <div class="sheet-head"><span>Tốc độ</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
+            <div class="opt-list" id="speed-list"></div>
+        </div>
+    </div>
 
 <script>
     const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
     const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
     const db = supabase.createClient(DB_URL, DB_KEY);
 
-    let player, allData=[], curList=[], isPlaying=false, interval, drag=false, timer=null;
+    let player, fullData=[], curList=[], isPlaying=false, interval, drag=false;
     let curId, curName;
+    let timerInterval, targetTime; // Timer vars
 
-    // --- INIT ---
     async function init() {
         const { data } = await db.from('playlists').select('*').order('id', {ascending: false});
-        allData = data || [];
-        curList = allData;
-        
-        // Fake delay to show skeleton (optional, removed for speed)
-        document.getElementById('sk-loader').style.display = 'none';
-        render(allData);
+        fullData = data || [];
+        curList = fullData;
+        document.getElementById('loading').style.display = 'none';
+        render(fullData);
         checkHero();
-        loadYTApi();
+        loadYT();
         genSpeed();
     }
 
-    // --- RENDER ---
     function render(list) {
         const div = document.getElementById('list');
         div.innerHTML = "";
         const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
         const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
 
-        if(list.length === 0) div.innerHTML = `<div style="text-align:center; padding:20px; color:#555">Không có dữ liệu</div>`;
+        if(list.length === 0) div.innerHTML = `<div style="text-align:center; padding:30px; color:#555">Trống</div>`;
 
         list.forEach(i => {
             const el = document.createElement('div');
             el.className = 'card';
             let cat = i.category || 'Truyện';
             let isFav = favs.includes(i.playlist_id);
-            let hTag = hist[i.playlist_id] ? `<span style="color:var(--primary)"> • Tập ${hist[i.playlist_id].chap+1}</span>` : '';
+            let hInfo = hist[i.playlist_id] ? `<span style="color:var(--primary)"> • Tập ${hist[i.playlist_id].chap+1}</span>` : '';
 
             el.innerHTML = `
                 <div class="card-icon"><i class="fa-solid fa-music"></i></div>
-                <div class="card-info">
-                    <div class="card-title">${i.name}</div>
-                    <div class="card-sub"><span class="tag">${cat}</span>${hTag}</div>
+                <div class="card-body">
+                    <div class="c-title">${i.name}</div>
+                    <div class="c-meta"><span class="badge">${cat}</span>${hInfo}</div>
                 </div>
-                <button class="fav-btn ${isFav?'active':''}" onclick="togFav(event, '${i.playlist_id}')">
+                <button class="btn" style="color:${isFav?'#ef4444':'#555'}" onclick="togFav(event, '${i.playlist_id}')">
                     <i class="${isFav?'fa-solid':'fa-regular'} fa-heart"></i>
                 </button>
             `;
             el.onclick = (e) => {
-                if(e.target.closest('.fav-btn')) return;
+                if(e.target.closest('button')) return;
                 play(i.playlist_id, i.name, hist[i.playlist_id]?.chap || 0, hist[i.playlist_id]?.time || 0);
             };
             div.appendChild(el);
@@ -299,7 +321,7 @@
     }
 
     // --- LOGIC ---
-    function doSearch() {
+    function handleSearch() {
         const v = document.getElementById('search').value.toLowerCase();
         render(curList.filter(i => i.name.toLowerCase().includes(v)));
     }
@@ -307,54 +329,52 @@
     function filter(type, btn) {
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
-        curList = (type==='all') ? allData : allData.filter(i => i.category === type);
+        curList = type==='all' ? fullData : fullData.filter(i => i.category === type);
+        render(curList);
+    }
+
+    function showHistory() {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
+        curList = fullData.filter(x => hist[x.playlist_id]).sort((a,b) => hist[b.playlist_id].at - hist[a.playlist_id].at);
         render(curList);
     }
 
     function showFavs() {
-        const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
-        curList = allData.filter(i => favs.includes(i.playlist_id));
-        render(curList);
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
+        curList = fullData.filter(x => favs.includes(x.playlist_id));
+        render(curList);
     }
 
     function togFav(e, pid) {
         let favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
-        if(favs.includes(pid)) { favs = favs.filter(x => x !== pid); toast("Đã bỏ yêu thích"); }
-        else { favs.push(pid); toast("Đã thêm vào yêu thích"); }
+        if(favs.includes(pid)) favs = favs.filter(x => x !== pid); else favs.push(pid);
         localStorage.setItem('hoiam_favs', JSON.stringify(favs));
         
-        const btn = e.currentTarget;
-        btn.classList.toggle('active');
-        btn.querySelector('i').className = favs.includes(pid) ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+        const icon = e.currentTarget.querySelector('i');
+        e.currentTarget.style.color = favs.includes(pid) ? '#ef4444' : '#555';
+        icon.className = favs.includes(pid) ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
     }
 
     function checkHero() {
         const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
-        // Find most recent
-        let lastId = null, maxTime = 0;
-        for(let k in hist) { if(hist[k].at > maxTime) { maxTime = hist[k].at; lastId = k; } }
+        let lastId = null, maxAt = 0;
+        for(let k in hist) if(hist[k].at > maxAt) { maxAt=hist[k].at; lastId=k; }
         
         if(lastId) {
-            const item = allData.find(x => x.playlist_id === lastId);
+            const item = fullData.find(x => x.playlist_id === lastId);
             if(item) {
-                document.getElementById('hero-section').style.display = 'block';
+                document.getElementById('hero-box').style.display = 'block';
                 document.getElementById('hero-title').innerText = item.name;
-                document.getElementById('hero-sub').innerText = `Tập ${hist[lastId].chap + 1} • ${fmt(hist[lastId].time)}`;
-                // Bind click
-                document.querySelector('.hero-card').onclick = () => play(item.playlist_id, item.name, hist[lastId].chap, hist[lastId].time);
+                document.getElementById('hero-meta').innerText = `Tập ${hist[lastId].chap+1} • ${fmt(hist[lastId].time)}`;
+                window.resumeHero = () => play(item.playlist_id, item.name, hist[lastId].chap, hist[lastId].time);
             }
         }
     }
 
-    function toast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.className = "show";
-        setTimeout(() => t.className = t.className.replace("show", ""), 3000);
-    }
-
     // --- PLAYER ---
-    function loadYTApi() { var tag = document.createElement('script'); tag.src="https://www.youtube.com/iframe_api"; document.head.appendChild(tag); }
+    function loadYT() { var t = document.createElement('script'); t.src="https://www.youtube.com/iframe_api"; document.head.appendChild(t); }
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('yt-player', {
             height:'1', width:'1', playerVars:{'playsinline':1,'controls':0},
@@ -365,17 +385,13 @@
 
     function play(pid, name, idx, time) {
         curId = pid; curName = name;
-        const nameEl = document.getElementById('p-name');
-        nameEl.innerText = name;
-        
-        // Marquee effect logic
-        if(name.length > 25) document.getElementById('track-info-box').classList.add('marquee');
-        else document.getElementById('track-info-box').classList.remove('marquee');
-
+        document.getElementById('p-name').innerText = name;
         if(player && player.loadPlaylist) {
             player.loadPlaylist({list:pid, listType:'playlist', index:idx, startSeconds:time});
             setTimeout(genChapters, 1500);
         }
+        // Visual
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
     }
 
     function onState(e) {
@@ -391,10 +407,10 @@
         }
     }
 
-    // --- CONTROLS ---
-    const slide = document.getElementById('seek');
-    slide.oninput = () => drag = true;
-    slide.onchange = () => { player.seekTo(slide.value/100*player.getDuration(), true); drag = false; };
+    // --- SLIDER & TIMER ---
+    const s = document.getElementById('seek');
+    s.oninput = () => drag = true;
+    s.onchange = () => { player.seekTo(s.value/100*player.getDuration(), true); drag = false; };
 
     function startTimer() {
         clearInterval(interval);
@@ -410,11 +426,10 @@
 
             if(!drag && dur > 0) {
                 const pct = (cur/dur)*100;
-                slide.value = pct;
-                slide.style.background = `linear-gradient(to right, var(--primary) ${pct}%, #333 ${pct}%)`;
+                s.value = pct;
+                s.style.background = `linear-gradient(to right, var(--primary) ${pct}%, #333 ${pct}%)`;
             }
 
-            // Save History & Hero
             if(curId) {
                 const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
                 hist[curId] = { chap: idx, time: cur, at: Date.now() };
@@ -423,55 +438,82 @@
         }, 500);
     }
 
+    // --- ADVANCED SLEEP TIMER ---
+    function setTimer(min) {
+        clearInterval(timerInterval);
+        const badge = document.getElementById('timer-badge');
+        const icon = document.getElementById('btn-timer');
+        
+        if(min > 0) {
+            targetTime = Date.now() + min * 60000;
+            badge.style.display = 'flex';
+            icon.style.color = 'var(--primary)';
+            
+            timerInterval = setInterval(() => {
+                const diff = targetTime - Date.now();
+                if(diff <= 0) {
+                    player.pauseVideo();
+                    setTimer(0);
+                } else {
+                    document.getElementById('timer-count').innerText = fmt(diff/1000);
+                }
+            }, 1000);
+        } else {
+            badge.style.display = 'none';
+            icon.style.color = '#a1a1aa';
+        }
+        closeAll();
+    }
+
+    function setCustomTimer() {
+        const val = parseInt(document.getElementById('custom-min').value);
+        if(val > 0) setTimer(val);
+    }
+
+    // --- CONTROLS ---
     function togglePlay() { isPlaying ? player.pauseVideo() : player.playVideo(); }
-    function seekStep(s) { player.seekTo(player.getCurrentTime()+s, true); }
-    function setVol(v) { player.setVolume(v); toast(`Âm lượng: ${v}%`); }
+    function seek(s) { player.seekTo(player.getCurrentTime()+s, true); }
     function setSpd(r) { 
         player.setPlaybackRate(r); 
-        document.getElementById('txt-spd').innerText = r+"x"; 
-        toggle('menu-speed'); toggle('menu-more');
-        toast(`Tốc độ: ${r}x`);
-    }
-    
-    function setTimer(m) {
-        clearTimeout(timer);
-        const btn = document.getElementById('btn-timer');
-        if(m > 0) {
-            timer = setTimeout(() => { player.pauseVideo(); toast("Đã tắt hẹn giờ"); btn.classList.remove('timer-active'); }, m*60000);
-            btn.classList.add('timer-active');
-            toast(`Hẹn giờ tắt sau ${m} phút`);
-        } else {
-            btn.classList.remove('timer-active');
-            toast("Đã hủy hẹn giờ");
-        }
-        toggle('menu-timer');
+        document.getElementById('lbl-spd').innerText = r+"x"; 
+        closeAll();
+        document.querySelectorAll('.spd-opt').forEach(e => e.classList.remove('active'));
     }
 
     // --- UI HELPERS ---
-    function toggle(id) { document.getElementById(id).classList.toggle('open'); }
-    function closeMenu(e) { if(e.target.classList.contains('overlay')) e.target.classList.remove('open'); }
+    function openMenu(id) {
+        closeAll(); // Close others first
+        document.getElementById(id).classList.add('open');
+    }
+    function closeMenu(e) {
+        if(e.target.classList.contains('overlay')) e.target.classList.remove('open');
+    }
+    function closeAll() {
+        document.querySelectorAll('.overlay').forEach(e => e.classList.remove('open'));
+    }
     function fmt(s) { return Math.floor(s/60)+":"+(Math.floor(s%60)<10?"0":"")+Math.floor(s%60); }
 
     function genSpeed() {
         const rates = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0];
-        const c = document.getElementById('speed-opts');
+        const c = document.getElementById('speed-list');
         rates.forEach(r => {
             const d = document.createElement('div');
-            d.className = 'opt-item'; d.innerText = r + "x";
-            d.onclick = () => setSpd(r);
+            d.className = `opt-item spd-opt ${r===1?'active':''}`;
+            d.innerText = r + "x";
+            d.onclick = (e) => { setSpd(r); e.currentTarget.classList.add('active'); };
             c.appendChild(d);
         });
     }
 
     function genChapters() {
         const list = player.getPlaylist();
-        const c = document.getElementById('chap-content');
+        const c = document.getElementById('chap-list');
         c.innerHTML = "";
         list.forEach((_, i) => {
             const d = document.createElement('div');
             d.className = 'opt-item';
             d.innerHTML = `<span>Tập ${i+1}</span>${i===player.getPlaylistIndex()?'<i class="fa-solid fa-volume-high" style="color:var(--primary)"></i>':''}`;
-            d.onclick = () => { player.playVideoAt(i); toggle('menu-list'); };
+            d.onclick = () => { player.playVideoAt(i); closeAll(); };
             c.appendChild(d);
         });
     }
@@ -482,8 +524,8 @@
         ms.setActionHandler('pause', ()=>player.pauseVideo());
         ms.setActionHandler('previoustrack', ()=>player.previousVideo());
         ms.setActionHandler('nexttrack', ()=>player.nextVideo());
-        ms.setActionHandler('seekbackward', ()=>seekStep(-10));
-        ms.setActionHandler('seekforward', ()=>seekStep(10));
+        ms.setActionHandler('seekbackward', ()=>seek(-10));
+        ms.setActionHandler('seekforward', ()=>seek(10));
     }
     function updateSession() {
         navigator.mediaSession.metadata = new MediaMetadata({
