@@ -3,315 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#09090b">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
-    <title>Hồi Âm Pro V11</title>
+    <title>Hồi Âm Pro V12</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
             --bg: #09090b;
+            --sidebar: #000000;
             --surface: #18181b;
             --surface-hover: #27272a;
             --primary: #10b981;
-            --primary-dim: rgba(16, 185, 129, 0.2);
             --text: #ffffff;
             --text-sub: #a1a1aa;
-            --bar-height: 140px;
-            --radius: 16px;
+            --nav-height: 60px;
+            --player-height: 130px;
+            --radius: 12px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: background 0.3s; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; overflow: hidden; }
 
-        /* --- HEADER --- */
-        .header { padding: 15px 20px; background: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); z-index: 10; border-bottom: 1px solid #27272a; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .brand { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+        /* --- LAYOUT STRUCTURE --- */
+        /* Desktop: Sidebar Left */
+        .sidebar {
+            width: 240px; background: var(--sidebar); border-right: 1px solid #27272a;
+            display: none; flex-direction: column; padding: 20px; z-index: 20;
+        }
+        .sidebar-brand { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px; color: var(--text-sub); border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; margin-bottom: 5px; }
+        .nav-link:hover, .nav-link.active { background: var(--surface-hover); color: var(--text); }
+        .nav-link.active i { color: var(--primary); }
+
+        /* Main Area */
+        .app-container { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; }
         
-        #timer-badge { background: #222; color: var(--primary); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: none; align-items: center; gap: 5px; border: 1px solid var(--primary); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        /* Mobile: Bottom Nav */
+        .bottom-nav {
+            display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height);
+            background: rgba(9,9,11,0.95); backdrop-filter: blur(10px); border-top: 1px solid #27272a;
+            justify-content: space-around; align-items: center; z-index: 50;
+        }
+        .b-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-sub); font-size: 10px; cursor: pointer; }
+        .b-nav-item i { font-size: 20px; }
+        .b-nav-item.active { color: var(--primary); }
 
-        .search-wrapper { position: relative; display: flex; gap: 10px; }
-        .search-wrapper input { width: 100%; background: var(--surface); border: 1px solid #333; padding: 12px 40px 12px 15px; border-radius: var(--radius); color: #fff; font-size: 14px; outline: none; transition: 0.3s; }
-        .search-wrapper input:focus { border-color: var(--primary); background: #000; }
-        .search-wrapper i { position: absolute; right: 65px; top: 50%; transform: translateY(-50%); color: #666; }
-        .btn-sort { width: 45px; background: var(--surface); border: 1px solid #333; border-radius: var(--radius); color: #ccc; cursor: pointer; }
+        /* Content Scroll */
+        .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 200px; /* Space for player */ }
 
-        /* --- FILTERS --- */
-        .filter-scroller { display: flex; gap: 8px; overflow-x: auto; padding: 15px 20px; scrollbar-width: none; }
-        .chip { background: var(--surface); border: 1px solid #333; padding: 6px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #ccc; transition: 0.2s; font-weight: 600; }
-        .chip.active { background: var(--primary); color: #000; border-color: var(--primary); }
-
-        /* --- LIST --- */
-        .main-content { flex: 1; overflow-y: auto; padding: 0 20px 170px 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+        /* --- HEADER & SEARCH --- */
+        .top-header { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .search-wrapper { flex: 1; position: relative; }
+        .search-wrapper input { 
+            width: 100%; background: var(--surface); border: 1px solid #333; padding: 12px 40px 12px 15px; 
+            border-radius: 30px; color: #fff; font-size: 14px; 
+        }
+        .search-wrapper i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
         
-        .card { background: var(--surface); padding: 12px; border-radius: var(--radius); display: flex; align-items: center; gap: 12px; border: 1px solid transparent; transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden; }
-        .card:hover { background: var(--surface-hover); border-color: #333; transform: translateY(-2px); }
-        .card.playing { border-color: var(--primary); background: var(--primary-dim); }
+        /* --- GRID SYSTEM (Responsive) --- */
+        .grid { 
+            display: grid; gap: 12px;
+            grid-template-columns: 1fr; /* Mobile mặc định 1 cột */
+        }
         
-        /* Vinyl Icon Effect */
-        .card-icon { width: 45px; height: 45px; background: #27272a; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #71717a; transition: 0.2s; }
-        .card.playing .card-icon { background: #000; color: var(--primary); animation: spin 3s linear infinite; border: 2px solid var(--primary); }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        .card-body { flex: 1; min-width: 0; }
-        .c-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .c-meta { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
-        .badge { background: #27272a; padding: 2px 6px; border-radius: 4px; }
-        .btn-mini { background: none; border: none; color: #555; padding: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; z-index: 2;}
-
+        /* --- CARDS --- */
+        .card { 
+            background: var(--surface); padding: 12px; border-radius: var(--radius); 
+            display: flex; align-items: center; gap: 15px; border: 1px solid transparent; 
+            transition: 0.2s; cursor: pointer; position: relative;
+        }
+        .card:hover { background: var(--surface-hover); border-color: #333; }
+        .card.playing { border-color: var(--primary); background: rgba(16, 185, 129, 0.1); }
+        .c-img { 
+            width: 50px; height: 50px; background: #222; border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; font-size: 20px; color: #555; flex-shrink: 0;
+        }
+        .card.playing .c-img { background: #000; color: var(--primary); animation: pulse 2s infinite; }
+        .c-info { flex: 1; min-width: 0; }
+        .c-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+        .c-sub { font-size: 11px; color: var(--text-sub); display: flex; gap: 10px; }
+        .tag { background: #27272a; padding: 2px 6px; border-radius: 4px; }
+        
         /* --- PLAYER BAR --- */
-        .player-bar { 
-            position: fixed; bottom: 0; left: 0; right: 0; height: var(--bar-height); 
-            background: rgba(9, 9, 11, 0.98); backdrop-filter: blur(20px); border-top: 1px solid #333;
-            padding: 10px 20px; display: flex; flex-direction: column; justify-content: center; gap: 8px; z-index: 100;
+        .player-bar {
+            position: fixed; bottom: var(--nav-height); left: 0; right: 0; height: var(--player-height);
+            background: rgba(9,9,11,0.98); border-top: 1px solid #333; backdrop-filter: blur(20px);
+            padding: 10px 15px; display: flex; flex-direction: column; justify-content: center; gap: 5px; z-index: 40;
+            transition: bottom 0.3s;
         }
-        .t-info { text-align: center; cursor: pointer; } /* Click to open Zen Mode */
-        .t-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;}
+        
+        /* Track Info */
+        .track-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .t-info { overflow: hidden; white-space: nowrap; width: 100%; text-align: center; }
+        .t-name { font-size: 14px; font-weight: 700; color: #fff; }
         .t-chap { font-size: 11px; color: var(--primary); font-weight: 600; }
 
-        .slider-row { display: flex; align-items: center; gap: 10px; }
-        .time-lbl { font-size: 10px; color: #666; width: 35px; text-align: center; font-variant-numeric: tabular-nums; }
-        
+        /* Slider & Time */
+        .seek-box { display: flex; align-items: center; gap: 10px; }
+        .time-txt { font-size: 11px; color: #888; width: 50px; text-align: center; font-variant-numeric: tabular-nums; }
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; height: 20px; cursor: pointer; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: 0.2s; }
-        input[type=range]:active::-webkit-slider-thumb { transform: scale(1.3); background: var(--primary); }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 
-        .ctrl-row { display: flex; justify-content: space-between; align-items: center; }
-        .center-ctrl { display: flex; align-items: center; gap: 20px; }
-        .btn { background: none; border: none; color: #a1a1aa; font-size: 20px; cursor: pointer; padding: 8px; transition: 0.2s; }
-        .btn:hover { color: #fff; }
-        .btn-play { width: 50px; height: 50px; background: #fff; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-size: 22px; transition: transform 0.2s; }
-        .btn-play:active { transform: scale(0.9); }
+        /* Controls */
+        .ctrl-box { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        .center-btns { display: flex; gap: 25px; align-items: center; }
+        .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 5px; }
+        .btn:active { transform: scale(0.9); color: var(--primary); }
+        .btn-play { 
+            width: 48px; height: 48px; background: #fff; border-radius: 50%; color: #000; 
+            display: flex; align-items: center; justify-content: center; font-size: 20px; 
+        }
 
-        /* --- ZEN MODE (Full Screen Player) --- */
-        .zen-mode {
-            position: fixed; inset: 0; background: #000; z-index: 150; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: 0.4s; padding: 40px;
-        }
-        .zen-mode.active { opacity: 1; pointer-events: auto; }
-        .zen-bg { position: absolute; inset: 0; background-size: cover; opacity: 0.3; filter: blur(30px); z-index: -1; }
-        
-        /* Vinyl Disk */
-        .vinyl-wrapper { 
-            width: 280px; height: 280px; background: #111; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 5px solid #333; margin-bottom: 40px;
-            animation: spin 8s linear infinite; animation-play-state: paused;
-        }
-        .zen-mode.playing .vinyl-wrapper { animation-play-state: running; }
-        .vinyl-art { width: 150px; height: 150px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 50px; color: #000; }
-        
-        .zen-info { text-align: center; margin-bottom: 30px; width: 100%; }
-        .zen-title { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
-        .zen-chap { font-size: 16px; color: var(--primary); font-weight: 600; }
-        
-        .zen-close { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; font-size: 20px;}
+        /* --- JUMP TO TIME MODAL --- */
+        .jump-grid { display: flex; gap: 5px; justify-content: center; align-items: center; margin: 20px 0; }
+        .jump-inp { width: 60px; padding: 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; text-align: center; font-size: 18px; }
+        .jump-sep { font-size: 20px; font-weight: bold; color: #666; }
+        .jump-btn { width: 100%; padding: 12px; background: var(--primary); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; }
 
         /* --- OVERLAYS --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; opacity: 0; pointer-events: none; transition: 0.2s; display: flex; align-items: flex-end; justify-content: center; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; opacity: 0; pointer-events: none; transition: 0.2s; display: flex; align-items: flex-end; justify-content: center; }
         .overlay.open { opacity: 1; pointer-events: auto; }
-        .sheet { background: #18181b; width: 100%; max-width: 450px; border-radius: 24px 24px 0 0; padding: 24px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 80vh; display: flex; flex-direction: column;}
+        .sheet { background: #18181b; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 80vh; overflow-y: auto; transform: translateY(100%); transition: 0.3s; }
         .overlay.open .sheet { transform: translateY(0); }
-        .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 700; color: #fff; font-size: 16px; border-bottom: 1px solid #333; padding-bottom: 15px;}
-        .sheet-body { overflow-y: auto; flex: 1; }
-        
-        .opt-list { display: flex; flex-direction: column; gap: 8px; }
-        .opt-item { padding: 14px; background: #27272a; border-radius: 12px; color: #ccc; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .opt-item:hover, .opt-item.active { background: #3f3f46; color: #fff; }
+        .sheet-head { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 700; font-size: 16px; border-bottom: 1px solid #333; padding-bottom: 10px;}
+        .opt-item { padding: 14px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; }
+        .opt-item:hover { color: var(--primary); }
 
-        /* Chapter Search */
-        .chap-search { width: 100%; padding: 12px; background: #222; border: 1px solid #333; border-radius: 10px; color: #fff; margin-bottom: 15px; outline: none; }
-        .chap-search:focus { border-color: var(--primary); }
+        /* --- MEDIA QUERIES (The Magic) --- */
+        @media (min-width: 768px) {
+            .sidebar { display: flex; } /* Show Sidebar on PC */
+            .bottom-nav { display: none; } /* Hide Bottom Nav on PC */
+            .player-bar { left: 240px; bottom: 0; padding: 10px 40px; } /* Shift Player */
+            .main-content { padding-bottom: 150px; }
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .overlay { align-items: center; }
+            .sheet { border-radius: 16px; transform: scale(0.9); opacity: 0; }
+            .overlay.open .sheet { transform: scale(1); opacity: 1; }
+        }
+        @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 1400px) { .grid { grid-template-columns: repeat(4, 1fr); } }
 
-        .theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .theme-dot { height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-        .theme-dot.active { border-color: #fff; transform: scale(1.1); }
-
-        /* TOAST */
-        #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 10px 20px; position: fixed; z-index: 300; left: 50%; bottom: 180px; transform: translateX(-50%); font-size: 13px; opacity: 0; transition: 0.3s; font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 1px solid #444; }
-        #toast.show { visibility: visible; opacity: 1; bottom: 190px; }
-
-        @media (min-width: 768px) { .overlay { align-items: center; } .sheet { border-radius: 24px; bottom: auto; } }
+        /* Animation */
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="top-bar">
-            <div class="brand"><i class="fa-solid fa-layer-group"></i> HỒI ÂM PRO</div>
-            <div id="timer-badge"><i class="fa-solid fa-clock"></i> <span id="timer-count">00:00</span></div>
-        </div>
-        <div class="search-wrapper">
-            <input type="text" id="search" placeholder="Tìm truyện..." onkeyup="handleSearch()">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <button class="btn-sort" onclick="toggleSort()" title="Sắp xếp"><i class="fa-solid fa-arrow-down-a-z" id="sort-icon"></i></button>
-        </div>
+    <div class="sidebar">
+        <div class="sidebar-brand"><i class="fa-solid fa-layer-group"></i> HỒI ÂM PRO</div>
+        <div class="nav-link active" onclick="showTab('home')"><i class="fa-solid fa-house"></i> Trang chủ</div>
+        <div class="nav-link" onclick="showHistory()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
+        <div class="nav-link" onclick="showFavs()"><i class="fa-solid fa-heart"></i> Yêu thích</div>
     </div>
 
-    <div class="filter-scroller">
-        <div class="chip" onclick="showHistory()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
-        <div class="chip" onclick="showFavs()"><i class="fa-solid fa-heart"></i> Yêu thích</div>
-        <div class="chip active" onclick="filter('all', this)">Tất cả</div>
-        <div class="chip" onclick="filter('Chủ Thụ', this)">Chủ Thụ</div>
-        <div class="chip" onclick="filter('Chủ Công', this)">Chủ Công</div>
-        <div class="chip" onclick="filter('Hỗ Công', this)">Hỗ Công</div>
-        <div class="chip" onclick="filter('Vô CP', this)">Vô CP</div>
-    </div>
-
-    <div class="main-content">
-        <div id="loading" style="text-align: center; margin-top: 40px; color: #555;">Đang tải dữ liệu...</div>
-        <div class="grid" id="list"></div>
-    </div>
-
-    <div class="zen-mode" id="zen-mode">
-        <div class="zen-bg" id="zen-bg"></div>
-        <div class="zen-close" onclick="closeZen()"><i class="fa-solid fa-chevron-down"></i></div>
+    <div class="app-container">
         
-        <div class="vinyl-wrapper">
-            <div class="vinyl-art"><i class="fa-solid fa-music"></i></div>
-        </div>
-
-        <div class="zen-info">
-            <div class="zen-title" id="z-name">Chưa chọn truyện</div>
-            <div class="zen-chap" id="z-chap">--</div>
-        </div>
-
-        <div style="display:flex; gap:30px; align-items:center;">
-            <button class="btn" onclick="seek(-15)" style="color:#fff; font-size:30px;"><i class="fa-solid fa-rotate-left"></i></button>
-            <button class="btn-play" style="width:70px; height:70px; font-size:30px;" onclick="togglePlay()"><i class="fa-solid fa-play" id="z-btn-icon"></i></button>
-            <button class="btn" onclick="seek(15)" style="color:#fff; font-size:30px;"><i class="fa-solid fa-rotate-right"></i></button>
-        </div>
-    </div>
-
-    <div id="yt-player" style="position: absolute; top: -9999px;"></div>
-
-    <div class="player-bar">
-        <div class="t-info" onclick="openZen()">
-            <span class="t-name" id="p-name">Sẵn sàng</span>
-            <span class="t-chap" id="p-chap">--</span>
-        </div>
-        
-        <div class="slider-row">
-            <span class="time-lbl" id="curr">00:00</span>
-            <input type="range" id="seek" min="0" max="100" value="0" step="0.1">
-            <span class="time-lbl" id="dur">00:00</span>
-        </div>
-
-        <div class="ctrl-row">
-            <button class="btn" onclick="openMenu('menu-more')"><i class="fa-solid fa-bars"></i></button>
-            <div class="center-ctrl">
-                <button class="btn" onclick="seek(-10)"><i class="fa-solid fa-rotate-left"></i></button>
-                <button class="btn-play" id="btn-play" onclick="togglePlay()"><i class="fa-solid fa-play"></i></button>
-                <button class="btn" onclick="seek(10)"><i class="fa-solid fa-rotate-right"></i></button>
+        <div class="main-content">
+            <div class="top-header">
+                <div class="search-wrapper">
+                    <input type="text" id="search" placeholder="Tìm truyện..." onkeyup="handleSearch()">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
             </div>
-            <button class="btn" onclick="openMenu('menu-list')"><i class="fa-solid fa-list-ul"></i></button>
+
+            <div id="loading" style="text-align:center; margin-top:50px; color:#555">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải...
+            </div>
+
+            <div class="grid" id="list"></div>
+        </div>
+
+        <div class="player-bar">
+            <div class="t-info">
+                <div class="t-name" id="p-name">Sẵn sàng phát</div>
+                <div class="t-chap" id="p-chap">--</div>
+            </div>
+
+            <div class="seek-box">
+                <span class="time-lbl" id="curr">00:00</span>
+                <input type="range" id="seek" min="0" max="100" value="0" step="0.1">
+                <span class="time-lbl" id="dur">00:00</span>
+            </div>
+
+            <div class="ctrl-box">
+                <button class="btn" onclick="openMenu('menu-jump')" title="Nhảy tới thời gian"><i class="fa-solid fa-stopwatch"></i></button>
+                <div class="center-btns">
+                    <button class="btn" onclick="seek(-15)"><i class="fa-solid fa-rotate-left"></i></button>
+                    <button class="btn-play" id="btn-play" onclick="togglePlay()"><i class="fa-solid fa-play"></i></button>
+                    <button class="btn" onclick="seek(15)"><i class="fa-solid fa-rotate-right"></i></button>
+                </div>
+                <button class="btn" onclick="openMenu('menu-more')"><i class="fa-solid fa-bars"></i></button>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="b-nav-item active" onclick="showTab('home')">
+                <i class="fa-solid fa-house"></i><span>Home</span>
+            </div>
+            <div class="b-nav-item" onclick="showHistory()">
+                <i class="fa-solid fa-clock-rotate-left"></i><span>Lịch sử</span>
+            </div>
+            <div class="b-nav-item" onclick="showFavs()">
+                <i class="fa-solid fa-heart"></i><span>Yêu thích</span>
+            </div>
+            <div class="b-nav-item" onclick="openMenu('menu-more')">
+                <i class="fa-solid fa-user-gear"></i><span>Cài đặt</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="yt-player" style="position:absolute; top:-9999px;"></div>
+
+    <div class="overlay" id="menu-jump" onclick="closeMenu(event)">
+        <div class="sheet">
+            <div class="sheet-head"><span>Nhảy tới thời gian</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
+            <div style="text-align:center; color:#888; font-size:12px; margin-bottom:10px;">Nhập thời gian (Giờ : Phút : Giây)</div>
+            <div class="jump-grid">
+                <input type="number" id="j-h" class="jump-inp" placeholder="00" min="0"> <span class="jump-sep">:</span>
+                <input type="number" id="j-m" class="jump-inp" placeholder="00" min="0" max="59"> <span class="jump-sep">:</span>
+                <input type="number" id="j-s" class="jump-inp" placeholder="00" min="0" max="59">
+            </div>
+            <button class="jump-btn" onclick="doJump()">ĐI TỚI</button>
         </div>
     </div>
 
     <div class="overlay" id="menu-more" onclick="closeMenu(event)">
         <div class="sheet">
-            <div class="sheet-head"><span>Cài đặt</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
-            <div class="sheet-body">
-                <div class="opt-list">
-                    <div class="opt-item" onclick="openMenu('menu-speed')">
-                        <span><i class="fa-solid fa-gauge-high"></i> Tốc độ phát</span> <span id="lbl-spd" style="color:var(--primary)">1.0x</span>
-                    </div>
-                    <div class="opt-item" onclick="openMenu('menu-timer')">
-                        <span><i class="fa-solid fa-moon"></i> Hẹn giờ tắt</span>
-                    </div>
-                    <div class="opt-item" onclick="openMenu('menu-theme')">
-                        <span><i class="fa-solid fa-palette"></i> Giao diện</span>
-                    </div>
-                    <div class="opt-item" onclick="openMenu('menu-data')">
-                        <span><i class="fa-solid fa-database"></i> Dữ liệu</span>
-                    </div>
+            <div class="sheet-head"><span>Menu</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
+            <div class="opt-list">
+                <div class="opt-item" onclick="openMenu('menu-list')">
+                    <span><i class="fa-solid fa-list-ol"></i> Danh sách tập</span> <i class="fa-solid fa-chevron-right"></i>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="overlay" id="menu-list" onclick="closeMenu(event)">
-        <div class="sheet" style="height: 80vh;">
-            <div class="sheet-head"><span>Danh sách tập</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
-            <input type="number" class="chap-search" id="chap-search" placeholder="Tìm số tập (VD: 123)..." onkeyup="searchChapter()">
-            <div class="sheet-body">
-                <div class="opt-list" id="chap-list"></div>
+                <div class="opt-item" onclick="openMenu('menu-speed')">
+                    <span><i class="fa-solid fa-gauge-high"></i> Tốc độ phát</span> <span id="lbl-spd" style="color:var(--primary)">1.0x</span>
+                </div>
+                <div class="opt-item" onclick="toggleSort()">
+                    <span><i class="fa-solid fa-sort"></i> Sắp xếp A-Z / Mới nhất</span>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="overlay" id="menu-speed" onclick="closeMenu(event)">
         <div class="sheet">
-            <div class="sheet-head"><span>Tốc độ</span> <i class="fa-solid fa-chevron-down" onclick="closeAll()"></i></div>
-            <div class="sheet-body"><div class="opt-list" id="speed-list"></div></div>
+            <div class="sheet-head"><span>Tốc độ</span></div>
+            <div id="speed-list"></div>
         </div>
     </div>
 
-    <div class="overlay" id="menu-timer" onclick="closeMenu(event)">
-        <div class="sheet">
-            <div class="sheet-head"><span>Hẹn giờ tắt</span> <i class="fa-solid fa-chevron-down" onclick="closeAll()"></i></div>
-            <div class="sheet-body">
-                <div class="opt-list">
-                    <div class="opt-item" onclick="setTimer(0)">Tắt hẹn giờ</div>
-                    <div class="opt-item" onclick="setTimer(15)">15 Phút</div>
-                    <div class="opt-item" onclick="setTimer(30)">30 Phút</div>
-                    <div class="opt-item" onclick="setTimer(60)">60 Phút</div>
-                </div>
-            </div>
+    <div class="overlay" id="menu-list" onclick="closeMenu(event)">
+        <div class="sheet" style="height: 80vh;">
+            <div class="sheet-head"><span>Danh sách tập</span> <input type="number" id="chap-find" placeholder="Tìm số tập..." style="background:#333; border:none; color:#fff; padding:5px; border-radius:4px; width:100px;" onkeyup="findChap()"></div>
+            <div id="chap-content"></div>
         </div>
     </div>
-
-    <div class="overlay" id="menu-theme" onclick="closeMenu(event)">
-        <div class="sheet">
-            <div class="sheet-head"><span>Chọn màu chủ đạo</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
-            <div class="sheet-body">
-                <div class="theme-grid">
-                    <div class="theme-dot" style="background:#10b981" onclick="setTheme('#10b981')"></div>
-                    <div class="theme-dot" style="background:#3b82f6" onclick="setTheme('#3b82f6')"></div>
-                    <div class="theme-dot" style="background:#8b5cf6" onclick="setTheme('#8b5cf6')"></div>
-                    <div class="theme-dot" style="background:#ec4899" onclick="setTheme('#ec4899')"></div>
-                    <div class="theme-dot" style="background:#f59e0b" onclick="setTheme('#f59e0b')"></div>
-                    <div class="theme-dot" style="background:#ef4444" onclick="setTheme('#ef4444')"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="overlay" id="menu-data" onclick="closeMenu(event)">
-        <div class="sheet">
-            <div class="sheet-head"><span>Quản lý dữ liệu</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
-            <div class="sheet-body">
-                <div class="opt-list">
-                    <div class="opt-item" onclick="exportData()"><span><i class="fa-solid fa-download"></i> Tải xuống Backup</span></div>
-                    <div class="opt-item" onclick="document.getElementById('file-input').click()"><span><i class="fa-solid fa-upload"></i> Khôi phục</span></div>
-                    <div class="opt-item" style="color:#ef4444" onclick="resetData()"><span><i class="fa-solid fa-trash"></i> Xóa dữ liệu</span></div>
-                    <input type="file" id="file-input" style="display:none" onchange="importData(this)">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast">Thông báo</div>
 
 <script>
     const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
     const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
     const db = supabase.createClient(DB_URL, DB_KEY);
 
-    let player, fullData=[], curList=[], isPlaying=false, interval, drag=false, timerInterval, targetTime;
-    let curId, curName, sortMode='new'; // 'new' or 'az'
+    let player, fullData=[], curList=[], isPlaying=false, interval, drag=false;
+    let curId, curName;
 
+    // --- SETUP ---
     async function init() {
-        const savedColor = localStorage.getItem('hoiam_theme');
-        if(savedColor) setTheme(savedColor);
-
         const { data } = await db.from('playlists').select('*').order('id', {ascending: false});
         fullData = data || [];
         curList = fullData;
@@ -319,7 +280,6 @@
         render(fullData);
         loadYT();
         genSpeed();
-        setupShortcuts();
     }
 
     // --- RENDER ---
@@ -329,20 +289,20 @@
         const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
         const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
 
-        if(list.length===0) div.innerHTML = `<div style="text-align:center; padding:30px; color:#555">Trống</div>`;
+        if(list.length===0) div.innerHTML = `<div style="padding:20px; text-align:center; color:#555">Trống</div>`;
 
         list.forEach(i => {
             const el = document.createElement('div');
             el.className = 'card';
             let cat = i.category || 'Truyện';
             let isFav = favs.includes(i.playlist_id);
-            let hInfo = hist[i.playlist_id] ? `<span style="color:var(--primary); font-weight:bold"> • Tập ${hist[i.playlist_id].chap+1}</span>` : '';
+            let hInfo = hist[i.playlist_id] ? `<span style="color:var(--primary); font-weight:bold">• Tập ${hist[i.playlist_id].chap+1}</span>` : '';
 
             el.innerHTML = `
-                <div class="card-icon"><i class="fa-solid fa-music"></i></div>
-                <div class="card-body">
+                <div class="c-img"><i class="fa-solid fa-music"></i></div>
+                <div class="c-info">
                     <div class="c-title">${i.name}</div>
-                    <div class="c-meta"><span class="badge">${cat}</span>${hInfo}</div>
+                    <div class="c-sub"><span class="tag">${cat}</span>${hInfo}</div>
                 </div>
                 <button class="btn-mini" style="color:${isFav?'#ef4444':'#555'}" onclick="togFav(event, '${i.playlist_id}')">
                     <i class="${isFav?'fa-solid':'fa-regular'} fa-heart"></i>
@@ -362,35 +322,21 @@
         render(curList.filter(i => i.name.toLowerCase().includes(v)));
     }
 
-    function toggleSort() {
-        sortMode = sortMode === 'new' ? 'az' : 'new';
-        document.getElementById('sort-icon').className = sortMode==='new' ? 'fa-solid fa-arrow-down-a-z' : 'fa-solid fa-arrow-down-z-a';
-        
-        if(sortMode === 'az') {
-            curList.sort((a,b) => a.name.localeCompare(b.name));
-        } else {
-            curList.sort((a,b) => b.id - a.id); // Assuming ID is roughly date added
-        }
-        render(curList);
-        toast(sortMode==='az' ? 'Sắp xếp A-Z' : 'Sắp xếp Mới nhất');
-    }
-
-    function filter(type, btn) {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        curList = type==='all' ? fullData : fullData.filter(i => i.category === type);
+    function showTab(tab) {
+        // Reset Nav UI
+        document.querySelectorAll('.b-nav-item, .nav-link').forEach(e=>e.classList.remove('active'));
+        // Set logic
+        if(tab==='home') curList = fullData;
         render(curList);
     }
 
     function showHistory() {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
         curList = fullData.filter(x => hist[x.playlist_id]).sort((a,b) => hist[b.playlist_id].at - hist[a.playlist_id].at);
         render(curList);
     }
 
     function showFavs() {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
         curList = fullData.filter(x => favs.includes(x.playlist_id));
         render(curList);
@@ -400,10 +346,14 @@
         let favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
         if(favs.includes(pid)) favs = favs.filter(x => x !== pid); else favs.push(pid);
         localStorage.setItem('hoiam_favs', JSON.stringify(favs));
-        
-        const icon = e.currentTarget.querySelector('i');
         e.currentTarget.style.color = favs.includes(pid) ? '#ef4444' : '#555';
-        icon.className = favs.includes(pid) ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+        e.currentTarget.querySelector('i').className = favs.includes(pid) ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+    }
+
+    function toggleSort() {
+        curList.reverse();
+        render(curList);
+        closeAll();
     }
 
     // --- PLAYER CORE ---
@@ -419,33 +369,27 @@
     function play(pid, name, idx, time) {
         curId = pid; curName = name;
         document.getElementById('p-name').innerText = name;
-        document.getElementById('z-name').innerText = name;
         if(player && player.loadPlaylist) {
             player.loadPlaylist({list:pid, listType:'playlist', index:idx, startSeconds:time});
             setTimeout(genChapters, 1500);
         }
         document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-        document.getElementById('zen-mode').classList.add('playing');
-        openZen(); // Auto open Zen on play
     }
 
     function onState(e) {
         if(e.data === YT.PlayerState.PLAYING) {
             isPlaying = true;
             document.getElementById('btn-play').innerHTML = '<i class="fa-solid fa-pause"></i>';
-            document.getElementById('z-btn-icon').className = 'fa-solid fa-pause';
-            document.getElementById('zen-mode').classList.add('playing');
             startTimer();
             if('mediaSession' in navigator) updateSession();
         } else {
             isPlaying = false;
             document.getElementById('btn-play').innerHTML = '<i class="fa-solid fa-play"></i>';
-            document.getElementById('z-btn-icon').className = 'fa-solid fa-play';
-            document.getElementById('zen-mode').classList.remove('playing');
             clearInterval(interval);
         }
     }
 
+    // --- SLIDER & TIME ---
     const s = document.getElementById('seek');
     s.oninput = () => drag = true;
     s.onchange = () => { player.seekTo(s.value/100*player.getDuration(), true); drag = false; };
@@ -461,7 +405,6 @@
             document.getElementById('curr').innerText = fmt(cur);
             document.getElementById('dur').innerText = fmt(dur);
             document.getElementById('p-chap').innerText = `Tập ${idx+1}`;
-            document.getElementById('z-chap').innerText = `Đang phát Tập ${idx+1}`;
 
             if(!drag && dur > 0) {
                 const pct = (cur/dur)*100;
@@ -476,97 +419,61 @@
         }, 500);
     }
 
+    // --- FEATURES ---
+    function doJump() {
+        const h = parseInt(document.getElementById('j-h').value) || 0;
+        const m = parseInt(document.getElementById('j-m').value) || 0;
+        const s = parseInt(document.getElementById('j-s').value) || 0;
+        const total = (h * 3600) + (m * 60) + s;
+        if(player) player.seekTo(total, true);
+        closeAll();
+    }
+
+    function findChap() {
+        const v = document.getElementById('chap-find').value;
+        document.querySelectorAll('.chap-itm').forEach(el => {
+            el.style.display = el.innerText.includes(v) ? 'flex' : 'none';
+        });
+    }
+
     // --- UTILS ---
     function togglePlay() { isPlaying ? player.pauseVideo() : player.playVideo(); }
     function seek(s) { player.seekTo(player.getCurrentTime()+s, true); }
     function setSpd(r) { 
-        player.setPlaybackRate(r); document.getElementById('lbl-spd').innerText=r+"x"; closeAll(); toast('Tốc độ '+r+'x'); 
-        document.querySelectorAll('.spd-opt').forEach(e => e.classList.remove('active'));
+        player.setPlaybackRate(r); document.getElementById('lbl-spd').innerText=r+"x"; closeAll(); 
     }
     
-    function setTimer(min) {
-        clearInterval(timerInterval);
-        const badge = document.getElementById('timer-badge');
-        if(min > 0) {
-            targetTime = Date.now() + min*60000;
-            badge.style.display = 'flex';
-            timerInterval = setInterval(() => {
-                const diff = targetTime - Date.now();
-                if(diff <= 0) { player.pauseVideo(); setTimer(0); }
-                else document.getElementById('timer-count').innerText = fmt(diff/1000);
-            }, 1000);
-            toast('Hẹn giờ: '+min+' phút');
-        } else {
-            badge.style.display = 'none';
-            toast('Đã tắt hẹn giờ');
-        }
-        closeAll();
+    // FORMAT TIME (HH:MM:SS)
+    function fmt(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        if(h > 0) return `${h}:${m<10?'0':''}${m}:${s<10?'0':''}${s}`;
+        return `${m}:${s<10?'0':''}${s}`;
     }
-
-    function searchChapter() {
-        const v = document.getElementById('chap-search').value;
-        const items = document.querySelectorAll('.chap-item');
-        items.forEach(i => {
-            const txt = i.innerText.toLowerCase();
-            i.style.display = txt.includes(v) || v==='' ? 'flex' : 'none';
-        });
-    }
-
-    function setTheme(color) {
-        document.documentElement.style.setProperty('--primary', color);
-        document.documentElement.style.setProperty('--primary-dim', color + '20');
-        localStorage.setItem('hoiam_theme', color);
-        document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.style.background === color));
-        closeAll();
-    }
-
-    function exportData() {
-        const data = { favs: JSON.parse(localStorage.getItem('hoiam_favs')||'[]'), hist: JSON.parse(localStorage.getItem('hoiam_hist')||'{}') };
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'}));
-        a.download = 'hoiam_backup.json'; a.click();
-    }
-    function importData(inp) {
-        const r = new FileReader();
-        r.onload = e => {
-            try {
-                const d = JSON.parse(e.target.result);
-                localStorage.setItem('hoiam_favs', JSON.stringify(d.favs));
-                localStorage.setItem('hoiam_hist', JSON.stringify(d.hist));
-                location.reload();
-            } catch(err) { toast('Lỗi file'); }
-        };
-        r.readAsText(inp.files[0]);
-    }
-    function resetData() { if(confirm('Xóa hết dữ liệu?')) { localStorage.clear(); location.reload(); } }
 
     function openMenu(id) { closeAll(); document.getElementById(id).classList.add('open'); }
     function closeMenu(e) { if(e.target.classList.contains('overlay')) e.target.classList.remove('open'); }
     function closeAll() { document.querySelectorAll('.overlay').forEach(e=>e.classList.remove('open')); }
-    function openZen() { document.getElementById('zen-mode').classList.add('active'); }
-    function closeZen() { document.getElementById('zen-mode').classList.remove('active'); }
-    function toast(m) { const t=document.getElementById('toast'); t.innerText=m; t.className="show"; setTimeout(()=>t.className="", 2000); }
-    function fmt(s) { return Math.floor(s/60)+":"+(Math.floor(s%60)<10?"0":"")+Math.floor(s%60); }
 
     function genSpeed() {
         const rates = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
         const c = document.getElementById('speed-list');
         rates.forEach(r => {
             const d = document.createElement('div');
-            d.className = `opt-item spd-opt ${r===1?'active':''}`;
-            d.innerText = r + "x";
-            d.onclick = (e) => { setSpd(r); e.currentTarget.classList.add('active'); };
+            d.className = 'opt-item'; d.innerText = r + "x";
+            d.onclick = () => setSpd(r);
             c.appendChild(d);
         });
     }
     function genChapters() {
         const list = player.getPlaylist();
-        const c = document.getElementById('chap-list');
+        const c = document.getElementById('chap-content');
         c.innerHTML = "";
         list.forEach((_, i) => {
             const d = document.createElement('div');
-            d.className = 'opt-item chap-item';
-            d.innerHTML = `<span>Tập ${i+1}</span>${i===player.getPlaylistIndex()?'<i class="fa-solid fa-volume-high" style="color:var(--primary)"></i>':''}`;
+            d.className = 'opt-item chap-itm';
+            d.innerHTML = `<span>Tập ${i+1}</span>${i===player.getPlaylistIndex()?'<i class="fa-solid fa-check" style="color:var(--primary)"></i>':''}`;
             d.onclick = () => { player.playVideoAt(i); closeAll(); };
             c.appendChild(d);
         });
