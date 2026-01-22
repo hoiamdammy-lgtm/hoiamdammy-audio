@@ -2,223 +2,196 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#09090b">
     <title>Audio Hồi Âm Đam Mỹ</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
             --bg: #09090b;
-            --sidebar: #000000;
+            --sidebar-bg: #000000;
             --surface: #18181b;
             --surface-hover: #27272a;
             --primary: #10b981;
-            --primary-dim: rgba(16, 185, 129, 0.2);
             --text: #ffffff;
             --text-sub: #a1a1aa;
             
-            /* Kích thước Mobile */
-            --nav-height: 60px;
-            --player-height: 140px;
-            --header-height: 60px;
-            --safe-bottom: env(safe-area-inset-bottom, 15px);
-            --radius: 12px;
+            --nav-h-mobile: 60px;
+            --player-h-mobile: 130px;
+            --player-h-pc: 90px;
+            --sidebar-w: 240px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         
-        /* FIX QUAN TRỌNG: 100dvh để full màn hình mobile mà không bị che */
         body { 
             font-family: 'Manrope', sans-serif; 
             background: var(--bg); color: var(--text); margin: 0; 
-            height: 100dvh; 
+            height: 100vh; /* PC fallback */
+            height: 100dvh; /* Mobile fix */
             display: flex; overflow: hidden; 
         }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-
         /* --- 1. SIDEBAR (PC) --- */
         .sidebar {
-            width: 260px; background: var(--sidebar); border-right: 1px solid #27272a;
-            display: none; flex-direction: column; padding: 20px; z-index: 20;
+            width: var(--sidebar-w); background: var(--sidebar-bg); 
+            border-right: 1px solid #222;
+            display: none; flex-direction: column; padding: 20px; z-index: 20; flex-shrink: 0;
         }
-        .sidebar-brand { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
-        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px; color: var(--text-sub); border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; margin-bottom: 5px; }
-        .nav-link:hover, .nav-link.active { background: var(--surface-hover); color: var(--text); }
-        .nav-link.active i { color: var(--primary); }
+        .brand { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-bottom: 30px; letter-spacing: -0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; color: var(--text-sub); border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; font-size: 15px; margin-bottom: 5px; }
+        .nav-item:hover, .nav-item.active { background: var(--surface-hover); color: #fff; }
+        .nav-item.active i { color: var(--primary); }
 
-        .app-container { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; width: 100%; }
-
-        /* --- 2. HEADER --- */
-        .top-header { 
-            height: var(--header-height); padding: 0 15px; display: flex; gap: 10px; align-items: center; 
-            background: rgba(9,9,11,0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #27272a; flex-shrink: 0;
+        /* --- 2. MAIN LAYOUT --- */
+        .app-main { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; min-width: 0; }
+        
+        .header { 
+            height: 60px; padding: 0 20px; display: flex; align-items: center; gap: 15px; 
+            border-bottom: 1px solid #222; background: rgba(9,9,11,0.95); z-index: 10;
         }
-        .search-wrapper { flex: 1; position: relative; }
-        .search-wrapper input { 
-            width: 100%; background: var(--surface); border: 1px solid #333; 
-            padding: 10px 35px 10px 15px; border-radius: 30px; color: #fff; font-size: 14px; 
+        .search-box { flex: 1; position: relative; max-width: 600px; }
+        .search-box input { 
+            width: 100%; background: #27272a; border: 1px solid transparent; 
+            padding: 10px 40px 10px 15px; border-radius: 30px; color: #fff; font-size: 14px; transition: 0.2s;
         }
-        .search-wrapper i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
+        .search-box input:focus { border-color: var(--primary); background: #000; }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
 
-        .filter-scroller { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; scrollbar-width: none; flex-shrink: 0; background: var(--bg); }
-        .chip { background: var(--surface); border: 1px solid #333; padding: 6px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #ccc; transition: 0.2s; font-weight: 600; }
+        .filters { display: flex; gap: 10px; overflow-x: auto; padding: 15px 20px; scrollbar-width: none; background: var(--bg); flex-shrink: 0; }
+        .chip { background: var(--surface); border: 1px solid #333; padding: 6px 16px; border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; color: #ccc; font-weight: 600; transition: 0.2s; }
+        .chip:hover { border-color: #666; }
         .chip.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
-        /* --- 3. LIST CONTENT --- */
-        .main-content { 
-            flex: 1; overflow-y: auto; padding: 0 15px; 
-            /* Padding bottom cực lớn để tránh player bar che mất */
-            padding-bottom: calc(var(--player-height) + var(--nav-height) + var(--safe-bottom) + 20px);
+        /* CONTENT GRID */
+        .content-area { 
+            flex: 1; overflow-y: auto; padding: 0 20px; 
+            padding-bottom: 150px; /* Space for player */
         }
-        .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-        
-        .card { background: var(--surface); padding: 10px; border-radius: var(--radius); display: flex; align-items: center; gap: 12px; border: 1px solid transparent; transition: 0.2s; cursor: pointer; }
-        .card:active { transform: scale(0.98); background: var(--surface-hover); }
-        .card.playing { border-color: var(--primary); background: linear-gradient(90deg, var(--primary-dim), transparent); }
-        .c-icon { width: 45px; height: 45px; background: #27272a; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #71717a; font-size: 18px; flex-shrink: 0; }
-        .card.playing .c-icon { background: #000; color: var(--primary); border: 1px solid var(--primary); }
-        .c-info { flex: 1; min-width: 0; }
-        /* Tối ưu tên truyện: tối đa 2 dòng, font vừa phải */
-        .c-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
-        .c-meta { font-size: 11px; color: var(--text-sub); display: flex; gap: 8px; align-items: center; }
+        .grid { 
+            display: grid; gap: 15px; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+        }
 
-        /* --- 4. PLAYER BAR (Mobile & PC) --- */
+        .card { background: var(--surface); padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid transparent; cursor: pointer; transition: 0.2s; }
+        .card:hover { background: var(--surface-hover); transform: translateY(-2px); }
+        .card.active { border-color: var(--primary); background: linear-gradient(90deg, rgba(16,185,129,0.1), transparent); }
+        .card-img { width: 50px; height: 50px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #777; flex-shrink: 0; }
+        .card.active .card-img { background: #000; color: var(--primary); }
+        .card-info { flex: 1; min-width: 0; }
+        .card-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-sub { font-size: 12px; color: var(--text-sub); display: flex; gap: 8px; align-items: center; }
+
+        /* --- 3. PLAYER BAR (PC & Mobile Unified) --- */
         .player-bar {
-            position: fixed; 
-            bottom: calc(var(--nav-height) + var(--safe-bottom)); 
-            left: 0; right: 0; height: var(--player-height);
-            background: rgba(9,9,11,0.98); border-top: 1px solid #333; 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 5px 15px 10px 15px; display: flex; flex-direction: column; justify-content: center; gap: 5px; z-index: 40;
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: #000; border-top: 1px solid #222;
+            padding: 10px 20px; z-index: 50;
+            display: flex; flex-direction: column; gap: 5px;
+            height: var(--player-h-mobile);
             transition: bottom 0.3s;
         }
 
-        /* Visualizer từ V2 */
-        .visualizer { display: flex; align-items: flex-end; gap: 3px; height: 10px; justify-content: center; opacity: 0.7; margin-bottom: 2px; }
-        .bar { width: 3px; background: var(--primary); border-radius: 2px; animation: bounce 1s infinite ease-in-out; }
-        .bar:nth-child(1) { animation-delay: 0.1s; height: 40%; }
-        .bar:nth-child(2) { animation-delay: 0.3s; height: 70%; }
-        .bar:nth-child(3) { animation-delay: 0.5s; height: 100%; }
-        .bar:nth-child(4) { animation-delay: 0.2s; height: 60%; }
-        .bar:nth-child(5) { animation-delay: 0.4s; height: 50%; }
-        .paused .bar { animation-play-state: paused; height: 2px !important; transition: height 0.5s; }
-        @keyframes bounce { 0%, 100% { height: 20%; } 50% { height: 100%; } }
+        /* PC Layout Adjustments */
+        @media (min-width: 768px) {
+            .sidebar { display: flex; }
+            .player-bar { left: var(--sidebar-w); height: var(--player-h-pc); flex-direction: row; align-items: center; justify-content: space-between; padding: 0 30px; }
+            .content-area { padding-bottom: 100px; }
+            .mobile-nav { display: none; }
+            
+            /* Player layout PC */
+            .p-info { width: 30%; text-align: left !important; margin-bottom: 0 !important; }
+            .p-ctrl { flex: 1; max-width: 600px; }
+            .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 15px; }
+        }
 
-        .t-info { text-align: center; cursor: pointer; overflow: hidden; }
-        .t-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; margin-bottom: 2px; }
-        .t-chap { font-size: 11px; color: var(--primary); font-weight: 600; display: block; }
+        /* Info Section */
+        .p-info { text-align: center; cursor: pointer; overflow: hidden; margin-bottom: 5px; }
+        .p-title { font-weight: 700; color: #fff; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .p-sub { font-size: 12px; color: var(--primary); margin-top: 2px; }
 
-        .seek-box { display: flex; align-items: center; gap: 10px; }
-        .time-txt { font-size: 10px; color: #888; width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; height: 20px; cursor: pointer; }
+        /* Controls Section */
+        .p-ctrl { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .ctrl-btns { display: flex; align-items: center; gap: 20px; }
+        .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.2s; }
+        .btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .btn-play { width: 45px; height: 45px; background: #fff; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .btn-play:hover { transform: scale(1.1); background: #fff; color: #000; }
+
+        .progress-container { width: 100%; display: flex; align-items: center; gap: 10px; }
+        .time { font-size: 11px; color: #888; width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; height: 16px; cursor: pointer; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 
-        .ctrl-box { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
-        .center-btns { display: flex; gap: 20px; align-items: center; }
-        .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 5px; }
-        .btn:active { color: #fff; }
-        .btn-play { width: 48px; height: 48px; background: #fff; border-radius: 50%; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-
-        /* --- 5. BOTTOM NAV (Mobile Only) --- */
-        .bottom-nav {
-            display: flex; position: fixed; bottom: 0; left: 0; right: 0; 
-            height: calc(var(--nav-height) + var(--safe-bottom));
-            background: #09090b; border-top: 1px solid #27272a;
-            justify-content: space-around; align-items: flex-start; z-index: 50; padding-top: 8px;
+        /* Mobile Nav */
+        .mobile-nav {
+            display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+            background: #09090b; border-top: 1px solid #222; z-index: 60;
+            justify-content: space-around; align-items: center;
         }
-        .b-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-sub); font-size: 10px; cursor: pointer; width: 25%; }
-        .b-nav-item i { font-size: 20px; }
-        .b-nav-item.active { color: var(--primary); }
+        .m-item { color: #666; font-size: 20px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; }
+        .m-item i { font-size: 20px; }
+        .m-item.active { color: var(--primary); }
 
-        /* --- 6. ZEN MODE --- */
-        .zen-mode {
-            position: fixed; inset: 0; background: #000; z-index: 150; 
+        /* ZEN MODE (Full Screen) */
+        .zen {
+            position: fixed; inset: 0; background: #000; z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px; padding-bottom: 50px;
+            opacity: 0; pointer-events: none; transition: 0.3s;
         }
-        .zen-mode.active { opacity: 1; pointer-events: auto; }
-        .zen-bg { position: absolute; inset: 0; background-size: cover; opacity: 0.3; filter: blur(30px); z-index: -1; }
-        .zen-close { position: absolute; top: max(20px, var(--safe-bottom)); left: 20px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        
-        .vinyl-wrapper { width: 70vmin; height: 70vmin; max-width: 350px; max-height: 350px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 5px solid #333; margin-bottom: 20px; animation: spin 10s linear infinite; animation-play-state: paused; }
-        .zen-mode.playing .vinyl-wrapper { animation-play-state: running; }
-        .vinyl-art { font-size: 50px; color: #fff; }
+        .zen.active { opacity: 1; pointer-events: auto; }
+        .zen-bg { position: absolute; inset: 0; opacity: 0.3; filter: blur(50px); background-size: cover; }
+        .disk { 
+            width: 300px; height: 300px; background: #111; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; border: 4px solid #333;
+            margin-bottom: 40px; animation: spin 12s linear infinite; animation-play-state: paused;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .zen.playing .disk { animation-play-state: running; }
+        .disk i { font-size: 60px; color: #fff; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .zen-title { font-size: 18px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding: 0 20px; }
-        .zen-chap { font-size: 14px; color: var(--primary); font-weight: 600; margin-bottom: 30px; }
-
-        /* --- 7. OVERLAYS (Full V2 Features) --- */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; opacity: 0; pointer-events: none; transition: 0.2s; display: flex; align-items: flex-end; justify-content: center; backdrop-filter: blur(5px); }
-        .overlay.open { opacity: 1; pointer-events: auto; }
-        .sheet { background: #18181b; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; padding-bottom: calc(20px + var(--safe-bottom)); max-height: 80dvh; overflow-y: auto; transform: translateY(100%); transition: 0.3s; display: flex; flex-direction: column; }
-        .overlay.open .sheet { transform: translateY(0); }
-        .sheet-head { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: 700; font-size: 16px; border-bottom: 1px solid #333; padding-bottom: 10px; align-items: center; }
+        /* UTILS */
+        .hidden { display: none !important; }
+        @media (max-width: 768px) { .player-bar { bottom: 60px; } .p-extra { display: none; } }
         
-        .opt-item { padding: 14px 10px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #ddd; }
-        .opt-item:hover { color: #fff; background: #222; }
+        /* Overlays */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+        .overlay.open { display: flex; animation: fadein 0.2s; }
+        .sheet { background: #18181b; width: 100%; max-width: 400px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 70vh; overflow-y: auto; animation: slideup 0.3s; }
+        @media (min-width: 768px) { .overlay { align-items: center; } .sheet { border-radius: 16px; } }
+        @keyframes slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Feature V2: Jump Time */
-        .jump-grid { display: flex; gap: 5px; justify-content: center; align-items: center; margin: 20px 0; }
-        .jump-inp { width: 60px; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; text-align: center; font-size: 18px; }
-        .jump-btn { width: 100%; padding: 12px; background: var(--primary); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-
-        /* Feature V2: Theme Grid */
-        .theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; padding: 10px; }
-        .theme-dot { aspect-ratio: 1; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-        .theme-dot.active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px var(--primary); }
-
-        /* Feature V2: Custom Timer */
-        .timer-custom { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; align-items: center; }
-
-        #toast { visibility: hidden; min-width: 200px; background-color: #fff; color: #000; text-align: center; border-radius: 50px; padding: 10px 20px; position: fixed; z-index: 300; left: 50%; bottom: 150px; transform: translateX(-50%); font-size: 13px; opacity: 0; transition: 0.3s; font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        #toast.show { visibility: visible; opacity: 1; }
-
-        /* Desktop Responsiveness */
-        @media (min-width: 768px) {
-            .sidebar { display: flex; }
-            .bottom-nav { display: none; }
-            .player-bar { left: 260px; bottom: 0; padding: 10px 40px; height: 100px; flex-direction: row; align-items: center; justify-content: space-between; }
-            .main-content { padding-bottom: 120px; }
-            .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-            .overlay { align-items: center; }
-            .sheet { border-radius: 16px; transform: scale(0.95); opacity: 0; width: 450px; }
-            .overlay.open .sheet { transform: scale(1); opacity: 1; }
-            .seek-box { flex: 1; max-width: 500px; margin: 0 20px; }
-            .t-info { text-align: left; width: 200px; }
-            .ctrl-box { margin-top: 0; gap: 15px; }
-        }
+        .opt-item { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; cursor: pointer; color: #ddd; }
+        .opt-item:hover { background: #222; color: #fff; }
+        .active-track { color: var(--primary); }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-brand"><i class="fa-solid fa-layer-group"></i> HỒI ÂM AUDIO</div>
-        <div class="nav-link active" onclick="showTab('home')"><i class="fa-solid fa-house"></i> Trang chủ</div>
-        <div class="nav-link" onclick="showHistory()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
-        <div class="nav-link" onclick="showFavs()"><i class="fa-solid fa-heart"></i> Yêu thích</div>
-        <div class="nav-link" onclick="openMenu('menu-theme')"><i class="fa-solid fa-palette"></i> Giao diện</div>
-        <div class="nav-link" onclick="openMenu('menu-data')"><i class="fa-solid fa-database"></i> Dữ liệu</div>
+        <div class="brand"><i class="fa-solid fa-layer-group"></i> HỒI ÂM AUDIO</div>
+        <div class="nav-item active" onclick="setView('home')"><i class="fa-solid fa-house"></i> Trang chủ</div>
+        <div class="nav-item" onclick="loadHist()"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
+        <div class="nav-item" onclick="loadFav()"><i class="fa-solid fa-heart"></i> Yêu thích</div>
+        <div style="flex:1"></div>
+        <div class="nav-item" onclick="openMenu('menu-data')"><i class="fa-solid fa-database"></i> Dữ liệu</div>
     </div>
 
-    <div class="app-container">
-        <div class="top-header">
-            <div class="search-wrapper">
-                <input type="text" id="search" placeholder="Tìm kiếm..." onkeyup="handleSearch()">
+    <div class="app-main">
+        <div class="header">
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Tìm kiếm truyện..." onkeyup="doSearch()">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </div>
-            <button class="btn" onclick="toggleSort()" style="width:40px; height:40px; border-radius:50%; background:#27272a; display:flex; align-items:center; justify-content:center"><i class="fa-solid fa-arrow-down-a-z" id="sort-icon"></i></button>
         </div>
 
-        <div class="filter-scroller">
+        <div class="filters">
             <div class="chip active" onclick="filter('all', this)">Tất cả</div>
             <div class="chip" onclick="filter('Chủ Thụ', this)">Chủ Thụ</div>
             <div class="chip" onclick="filter('Chủ Công', this)">Chủ Công</div>
@@ -226,432 +199,372 @@
             <div class="chip" onclick="filter('Vô CP', this)">Vô CP</div>
         </div>
 
-        <div class="main-content">
-            <div id="loading" style="text-align: center; margin-top: 40px; color: #555;">Đang tải...</div>
-            <div class="grid" id="list"></div>
-        </div>
-
-        <div class="player-bar">
-            <div class="visualizer paused" id="visualizer">
-                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
-                 <div class="t-info" onclick="openZen()" style="flex:1; text-align:left; padding-right:10px">
-                    <span class="t-name" id="p-name">Sẵn sàng</span>
-                    <span class="t-chap" id="p-chap">--</span>
-                </div>
-                
-                <div class="ctrl-box">
-                    <button class="btn" onclick="openMenu('menu-jump')" title="Nhảy tới"><i class="fa-solid fa-stopwatch"></i></button>
-                    <div class="center-btns">
-                         <button class="btn" onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
-                         <button class="btn-play" id="btn-play" onclick="togglePlay()"><i class="fa-solid fa-play"></i></button>
-                         <button class="btn" onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="seek-box">
-                <span class="time-txt" id="curr">00:00</span>
-                <input type="range" id="seek" min="0" max="100" value="0" step="0.1">
-                <span class="time-txt" id="dur">00:00</span>
-            </div>
-        </div>
-
-        <div class="bottom-nav">
-            <div class="b-nav-item active" onclick="showTab('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
-            <div class="b-nav-item" onclick="showHistory()"><i class="fa-solid fa-clock-rotate-left"></i><span>Lịch sử</span></div>
-            <div class="b-nav-item" onclick="openMenu('menu-timer')"><i class="fa-solid fa-moon"></i><span>Hẹn giờ</span></div>
-            <div class="b-nav-item" onclick="openMenu('menu-more')"><i class="fa-solid fa-bars"></i><span>Menu</span></div>
+        <div class="content-area">
+            <div id="loading" style="text-align:center; padding:40px; color:#555">Đang tải dữ liệu...</div>
+            <div class="grid" id="grid"></div>
         </div>
     </div>
 
-    <div class="zen-mode" id="zen-mode">
-        <div class="zen-bg" id="zen-bg"></div>
-        <div class="zen-close" onclick="closeZen()"><i class="fa-solid fa-chevron-down"></i></div>
-        <div class="vinyl-wrapper"><div class="vinyl-art"><i class="fa-solid fa-music"></i></div></div>
-        <div class="zen-title" id="z-name">Chưa chọn truyện</div>
-        <div class="zen-chap" id="z-chap">--</div>
-        <div style="display:flex; gap:30px; align-items:center;">
-            <button class="btn" onclick="seek(-15)" style="color:#fff; font-size:24px"><i class="fa-solid fa-rotate-left"></i></button>
-            <button class="btn-play" style="width:70px; height:70px; font-size:30px;" onclick="togglePlay()"><i class="fa-solid fa-play" id="z-btn-icon"></i></button>
-            <button class="btn" onclick="seek(15)" style="color:#fff; font-size:24px"><i class="fa-solid fa-rotate-right"></i></button>
+    <div class="player-bar">
+        <div class="p-info" onclick="openZen()">
+            <div class="p-title" id="track-name">Sẵn sàng</div>
+            <div class="p-sub" id="track-sub">--</div>
+        </div>
+
+        <div class="p-ctrl">
+            <div class="ctrl-btns">
+                <button class="btn" onclick="seek(-10)"><i class="fa-solid fa-rotate-left"></i></button>
+                <button class="btn" onclick="prev()"><i class="fa-solid fa-backward-step"></i></button>
+                <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play"></i></button>
+                <button class="btn" onclick="next()"><i class="fa-solid fa-forward-step"></i></button>
+                <button class="btn" onclick="seek(10)"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            <div class="progress-container">
+                <span class="time" id="cur">00:00</span>
+                <input type="range" id="seek" value="0" min="0" max="100" step="0.1">
+                <span class="time" id="dur">00:00</span>
+            </div>
+        </div>
+
+        <div class="p-extra">
+            <button class="btn" onclick="openMenu('menu-list')"><i class="fa-solid fa-list-ul"></i></button>
+            <button class="btn" onclick="openMenu('menu-speed')"><span id="spd-txt" style="font-size:14px; font-weight:700">1x</span></button>
         </div>
     </div>
 
-    <div id="yt-player" style="position: absolute; top: -9999px;"></div>
+    <div class="mobile-nav">
+        <div class="m-item active" onclick="setView('home')"><i class="fa-solid fa-house"></i>Home</div>
+        <div class="m-item" onclick="loadHist()"><i class="fa-solid fa-clock-rotate-left"></i>Lịch sử</div>
+        <div class="m-item" onclick="loadFav()"><i class="fa-solid fa-heart"></i>Yêu thích</div>
+        <div class="m-item" onclick="openMenu('menu-more')"><i class="fa-solid fa-bars"></i>Menu</div>
+    </div>
 
-    <div class="overlay" id="menu-more" onclick="closeMenu(event)">
-        <div class="sheet">
-            <div class="sheet-head"><span>Menu</span> <i class="fa-solid fa-xmark" onclick="closeAll()"></i></div>
-            <div class="opt-list">
-                <div class="opt-item" onclick="openMenu('menu-list')"><span><i class="fa-solid fa-list-ol"></i> Danh sách tập</span> <i class="fa-solid fa-chevron-right"></i></div>
-                <div class="opt-item" onclick="openMenu('menu-speed')"><span><i class="fa-solid fa-gauge-high"></i> Tốc độ phát</span> <span id="lbl-spd">1.0x</span></div>
-                <div class="opt-item" onclick="openMenu('menu-theme')"><span><i class="fa-solid fa-palette"></i> Giao diện</span> <i class="fa-solid fa-chevron-right"></i></div>
-                <div class="opt-item" onclick="openMenu('menu-data')"><span><i class="fa-solid fa-database"></i> Dữ liệu</span> <i class="fa-solid fa-chevron-right"></i></div>
-            </div>
+    <div class="zen" id="zen">
+        <div class="zen-bg"></div>
+        <button class="btn" style="position:absolute; top:20px; left:20px; z-index:10; background:rgba(0,0,0,0.5)" onclick="closeZen()"><i class="fa-solid fa-chevron-down"></i></button>
+        
+        <div class="disk"><i class="fa-solid fa-music"></i></div>
+        
+        <div style="text-align:center; padding:0 20px; margin-bottom:40px">
+            <h2 id="z-title" style="color:#fff; margin-bottom:5px; font-size:18px">...</h2>
+            <p id="z-sub" style="color:var(--primary)">...</p>
+        </div>
+
+        <div class="ctrl-btns" style="transform:scale(1.2)">
+            <button class="btn" onclick="prev()"><i class="fa-solid fa-backward-step"></i></button>
+            <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="z-icon-play"></i></button>
+            <button class="btn" onclick="next()"><i class="fa-solid fa-forward-step"></i></button>
         </div>
     </div>
 
     <div class="overlay" id="menu-list" onclick="closeMenu(event)">
-        <div class="sheet" style="height: 80dvh;">
-            <div class="sheet-head">
-                <span>Danh sách tập</span> 
-                <input type="number" id="chap-find" placeholder="Tìm số..." style="background:#333; border:none; color:#fff; padding:5px 10px; border-radius:4px; width:100px; text-align:center" onkeyup="findChap()">
-            </div>
-            <div class="opt-list" id="chap-content"></div>
+        <div class="sheet">
+            <h3 style="border-bottom:1px solid #333; padding-bottom:10px; margin-top:0">Danh sách tập</h3>
+            <div id="chap-list"></div>
         </div>
     </div>
 
-    <div class="overlay" id="menu-timer" onclick="closeMenu(event)">
+    <div class="overlay" id="menu-more" onclick="closeMenu(event)">
         <div class="sheet">
-            <div class="sheet-head"><span>Hẹn giờ tắt</span> <span id="timer-status" style="color:var(--primary); font-size:12px"></span></div>
-            <div class="opt-list">
-                <div class="opt-item" onclick="setTimer(0)">Tắt hẹn giờ</div>
-                <div class="opt-item" onclick="setTimer(15)">15 Phút</div>
-                <div class="opt-item" onclick="setTimer(30)">30 Phút</div>
-                <div class="opt-item" onclick="setTimer(60)">60 Phút</div>
-            </div>
-            <div class="timer-custom">
-                <span>Tùy chỉnh:</span>
-                <input type="number" id="cust-h" class="jump-inp" placeholder="Giờ" style="width:50px; padding:8px" min="0"> : 
-                <input type="number" id="cust-m" class="jump-inp" placeholder="Phút" style="width:50px; padding:8px" min="0">
-                <button class="btn" style="background:#333; border-radius:8px; margin-left:auto; font-size:14px" onclick="setCustomTimer()">Lưu</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="overlay" id="menu-jump" onclick="closeMenu(event)">
-        <div class="sheet">
-            <div class="sheet-head"><span>Nhảy thời gian</span></div>
-            <div class="jump-grid">
-                <input type="number" id="j-h" class="jump-inp" placeholder="HH" min="0"> : 
-                <input type="number" id="j-m" class="jump-inp" placeholder="MM" min="0"> : 
-                <input type="number" id="j-s" class="jump-inp" placeholder="SS" min="0">
-            </div>
-            <button class="jump-btn" onclick="doJump()">ĐI TỚI</button>
-        </div>
-    </div>
-
-    <div class="overlay" id="menu-theme" onclick="closeMenu(event)">
-        <div class="sheet">
-            <div class="sheet-head"><span>Màu chủ đạo</span></div>
-            <div class="theme-grid">
-                <div class="theme-dot" style="background:#10b981" onclick="setTheme('#10b981')"></div>
-                <div class="theme-dot" style="background:#3b82f6" onclick="setTheme('#3b82f6')"></div>
-                <div class="theme-dot" style="background:#8b5cf6" onclick="setTheme('#8b5cf6')"></div>
-                <div class="theme-dot" style="background:#ec4899" onclick="setTheme('#ec4899')"></div>
-                <div class="theme-dot" style="background:#f59e0b" onclick="setTheme('#f59e0b')"></div>
-                <div class="theme-dot" style="background:#ef4444" onclick="setTheme('#ef4444')"></div>
-                <div class="theme-dot" style="background:#06b6d4" onclick="setTheme('#06b6d4')"></div>
-                <div class="theme-dot" style="background:#d946ef" onclick="setTheme('#d946ef')"></div>
-                <div class="theme-dot" style="background:#84cc16" onclick="setTheme('#84cc16')"></div>
-                <div class="theme-dot" style="background:#64748b" onclick="setTheme('#64748b')"></div>
-            </div>
+            <div class="opt-item" onclick="openMenu('menu-list')"><span>Danh sách phát</span> <i class="fa-solid fa-list-ol"></i></div>
+            <div class="opt-item" onclick="openMenu('menu-speed')"><span>Tốc độ phát</span> <i class="fa-solid fa-gauge"></i></div>
+            <div class="opt-item" onclick="openMenu('menu-timer')"><span>Hẹn giờ tắt</span> <i class="fa-solid fa-moon"></i></div>
+            <div class="opt-item" onclick="openMenu('menu-data')"><span>Cài đặt dữ liệu</span> <i class="fa-solid fa-database"></i></div>
         </div>
     </div>
 
     <div class="overlay" id="menu-speed" onclick="closeMenu(event)">
         <div class="sheet">
-            <div class="sheet-head"><span>Tốc độ</span></div>
-            <div class="opt-list" id="speed-list"></div>
+            <h3>Tốc độ</h3>
+            <div id="spd-list"></div>
         </div>
     </div>
-
+    
+    <div class="overlay" id="menu-timer" onclick="closeMenu(event)">
+        <div class="sheet">
+            <h3>Hẹn giờ <span id="timer-val" style="color:var(--primary); font-size:14px"></span></h3>
+            <div class="opt-item" onclick="setTimer(0)">Tắt hẹn giờ</div>
+            <div class="opt-item" onclick="setTimer(15)">15 Phút</div>
+            <div class="opt-item" onclick="setTimer(30)">30 Phút</div>
+            <div class="opt-item" onclick="setTimer(60)">60 Phút</div>
+        </div>
+    </div>
+    
     <div class="overlay" id="menu-data" onclick="closeMenu(event)">
         <div class="sheet">
-            <div class="sheet-head"><span>Dữ liệu</span></div>
-            <div class="opt-list">
-                <div class="opt-item" onclick="exportData()"><span><i class="fa-solid fa-download"></i> Sao lưu</span></div>
-                <div class="opt-item" onclick="document.getElementById('file-input').click()"><span><i class="fa-solid fa-upload"></i> Khôi phục</span></div>
-                <div class="opt-item" style="color:#ef4444" onclick="resetData()"><span><i class="fa-solid fa-trash"></i> Xóa hết</span></div>
-                <input type="file" id="file-input" style="display:none" onchange="importData(this)">
-            </div>
+            <div class="opt-item" onclick="exportData()">Sao lưu dữ liệu <i class="fa-solid fa-download"></i></div>
+            <div class="opt-item" onclick="document.getElementById('file-in').click()">Khôi phục <i class="fa-solid fa-upload"></i></div>
+            <div class="opt-item" style="color:#ef4444" onclick="resetData()">Xóa toàn bộ <i class="fa-solid fa-trash"></i></div>
+            <input type="file" id="file-in" style="display:none" onchange="importData(this)">
         </div>
     </div>
 
-    <div id="toast">Thông báo</div>
+    <div id="yt-player" style="position:absolute; top:-9999px"></div>
 
 <script>
     const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
     const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
     const db = supabase.createClient(DB_URL, DB_KEY);
 
-    let player, fullData=[], curList=[], isPlaying=false, interval, drag=false, timerInterval, targetTime;
-    let curId, curName, sortMode='new';
+    let player, allData=[], list=[], curId='', curName='', timer=null;
+    let isPlaying=false, updateInt, drag=false;
 
+    // --- INIT ---
     async function init() {
-        const savedColor = localStorage.getItem('hoiam_theme');
-        if(savedColor) setTheme(savedColor);
-
-        const { data } = await db.from('playlists').select('*').order('id', {ascending: false});
-        fullData = data || [];
-        curList = fullData;
-        document.getElementById('loading').style.display = 'none';
-        render(fullData);
-        loadYT();
+        const { data } = await db.from('playlists').select('*').order('id', {ascending:false});
+        allData = data || [];
+        list = allData;
+        render(list);
+        document.getElementById('loading').style.display='none';
+        
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(tag);
+        
         genSpeed();
     }
 
-    function render(list) {
-        const div = document.getElementById('list');
-        div.innerHTML = "";
-        const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
-        const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
+    function render(data) {
+        const g = document.getElementById('grid'); g.innerHTML = '';
+        const favs = JSON.parse(localStorage.getItem('fav')||'[]');
+        const hist = JSON.parse(localStorage.getItem('hist')||'{}');
 
-        if(list.length===0) div.innerHTML = `<div style="text-align:center; padding:30px; color:#555">Trống</div>`;
+        if(!data.length) g.innerHTML = '<div style="color:#666; text-align:center; grid-column:1/-1">Trống</div>';
 
-        list.forEach(i => {
-            const el = document.createElement('div');
-            el.className = 'card';
-            let cat = i.category || 'Truyện';
-            let isFav = favs.includes(i.playlist_id);
-            let hInfo = hist[i.playlist_id] ? `<span style="color:var(--primary)">• Tập ${hist[i.playlist_id].chap+1}</span>` : '';
-
-            el.innerHTML = `
-                <div class="c-icon"><i class="fa-solid fa-music"></i></div>
-                <div class="c-info">
-                    <div class="c-title">${i.name}</div>
-                    <div class="c-meta"><span style="background:#222; padding:2px 6px; border-radius:4px">${cat}</span>${hInfo}</div>
+        data.forEach(x => {
+            const h = hist[x.playlist_id];
+            const div = document.createElement('div');
+            div.className = `card ${curId===x.playlist_id ? 'active' : ''}`;
+            div.innerHTML = `
+                <div class="card-img"><i class="fa-solid fa-music"></i></div>
+                <div class="card-info">
+                    <div class="card-title">${x.name}</div>
+                    <div class="card-sub">
+                        <span style="background:#222; padding:2px 8px; border-radius:4px">${x.category||'Truyện'}</span>
+                        ${h ? `<span style="color:var(--primary)">• Tập ${h.idx+1}</span>` : ''}
+                    </div>
                 </div>
-                <button class="btn" style="color:${isFav?'#ef4444':'#555'}" onclick="togFav(event, '${i.playlist_id}')">
-                    <i class="${isFav?'fa-solid':'fa-heart'}"></i>
-                </button>
+                <button class="btn" style="color:${favs.includes(x.playlist_id)?'#ef4444':'#555'}" onclick="togFav(event,'${x.playlist_id}')"><i class="${favs.includes(x.playlist_id)?'fa-solid':'fa-regular'} fa-heart"></i></button>
             `;
-            el.onclick = (e) => {
-                if(e.target.closest('button')) return;
-                play(i.playlist_id, i.name, hist[i.playlist_id]?.chap || 0, hist[i.playlist_id]?.time || 0);
+            div.onclick = (e) => {
+                if(!e.target.closest('button')) play(x.playlist_id, x.name, h?.idx||0, h?.time||0);
             };
-            div.appendChild(el);
+            g.appendChild(div);
         });
     }
 
-    function loadYT() { var t=document.createElement('script'); t.src="https://www.youtube.com/iframe_api"; document.head.appendChild(t); }
+    // --- PLAYER LOGIC (SMART TITLE) ---
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('yt-player', {
-            height:'1', width:'1', playerVars:{'playsinline':1,'controls':0},
+            height:'1', width:'1',
+            playerVars: { 'playsinline':1, 'controls':0 },
             events: { 'onStateChange': onState }
         });
-        if('mediaSession' in navigator) setupSession();
     }
 
     function play(pid, name, idx, time) {
-        curId = pid; curName = name;
-        document.getElementById('p-name').innerText = name;
-        document.getElementById('z-name').innerText = name;
-        if(player && player.loadPlaylist) {
-            player.loadPlaylist({list:pid, listType:'playlist', index:idx, startSeconds:time});
-            setTimeout(genChapters, 1500);
+        if(curId === pid && player) {
+            // Nếu đang chọn đúng truyện này -> chỉ cần chuyển tập (mượt hơn)
+            player.playVideoAt(idx);
+        } else {
+            // Truyện mới -> Load playlist
+            curId = pid; curName = name;
+            player.loadPlaylist({ list:pid, listType:'playlist', index:idx, startSeconds:time });
+            render(list); // Update active card
         }
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-        document.getElementById('zen-mode').classList.add('playing');
-        openZen();
+        
+        // Cập nhật UI tạm thời
+        updateUI(name, `Đang tải tập ${idx+1}...`);
+        document.querySelector('.player-bar').style.bottom = '0'; // Show PC player
     }
 
     function onState(e) {
-        if(e.data === YT.PlayerState.PLAYING) {
-            isPlaying = true;
-            document.getElementById('btn-play').innerHTML = '<i class="fa-solid fa-pause"></i>';
-            document.getElementById('z-btn-icon').className = 'fa-solid fa-pause';
-            document.getElementById('visualizer').classList.remove('paused');
-            document.getElementById('zen-mode').classList.add('playing');
-            startTimer();
-            if('mediaSession' in navigator) updateSession();
+        // 1: Playing, 3: Buffering
+        if (e.data === 1 || e.data === 3) {
+            isPlaying = (e.data === 1);
+            setIcon(isPlaying);
+            if(isPlaying) startUpdate();
             
-            // Feature V3: Get Real Title
-            let vData = player.getVideoData();
-            if(vData && vData.title) {
-                document.getElementById('p-name').innerText = vData.title;
-                document.getElementById('z-name').innerText = vData.title;
-            }
-
-        } else if (e.data === YT.PlayerState.PAUSED) {
+            // --- SMART TITLE FETCH ---
+            // Lấy tên thật của video từ API player
+            const vData = player.getVideoData();
+            const idx = player.getPlaylistIndex();
+            
+            // Nếu có tên video -> Hiện tên video. Nếu không -> Hiện tên truyện
+            const realTitle = vData && vData.title ? vData.title : curName;
+            const subTitle = vData && vData.title ? curName : `Tập ${idx+1}`;
+            
+            updateUI(realTitle, `Tập ${idx+1} • ${curName}`);
+            
+            // Lưu lịch sử
+            saveHist(idx);
+            
+            // Cập nhật danh sách tập
+            genChapList(idx);
+            
+        } else if (e.data === 0) { // Ended
+            next();
+        } else {
             isPlaying = false;
-            document.getElementById('btn-play').innerHTML = '<i class="fa-solid fa-play"></i>';
-            document.getElementById('z-btn-icon').className = 'fa-solid fa-play';
-            document.getElementById('visualizer').classList.add('paused');
-            document.getElementById('zen-mode').classList.remove('playing');
-        } else if (e.data === YT.PlayerState.ENDED) {
-            nextTrack(); // Feature V2: Auto Next
+            setIcon(false);
+            stopUpdate();
         }
     }
 
-    const s = document.getElementById('seek');
-    s.oninput = () => drag = true;
-    s.onchange = () => { if(player) player.seekTo(s.value/100*player.getDuration(), true); drag = false; };
+    function updateUI(title, sub) {
+        document.getElementById('track-name').innerText = title;
+        document.getElementById('track-sub').innerText = sub;
+        document.getElementById('z-title').innerText = title;
+        document.getElementById('z-sub').innerText = sub;
+    }
 
-    function startTimer() {
-        clearInterval(interval);
-        interval = setInterval(() => {
+    function startUpdate() {
+        stopUpdate();
+        updateInt = setInterval(() => {
             if(!player || !player.getCurrentTime) return;
-            const cur = player.getCurrentTime();
-            const dur = player.getDuration();
-            const idx = player.getPlaylistIndex();
+            const c = player.getCurrentTime();
+            const d = player.getDuration();
             
-            document.getElementById('curr').innerText = fmt(cur);
-            document.getElementById('dur').innerText = fmt(dur);
-            // Feature V3: Smart Chapter Info
-            document.getElementById('p-chap').innerText = `Tập ${idx+1} • ${curName}`;
-            document.getElementById('z-chap').innerText = `Đang phát tập ${idx+1}`;
-
-            if(!drag && dur > 0) {
-                const pct = (cur/dur)*100;
-                s.value = pct;
-                s.style.background = `linear-gradient(to right, var(--primary) ${pct}%, #333 ${pct}%)`;
+            document.getElementById('cur').innerText = fmt(c);
+            document.getElementById('dur').innerText = fmt(d);
+            
+            if(!drag && d > 0) {
+                document.getElementById('seek').value = (c/d)*100;
             }
-            if(curId) {
-                const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
-                hist[curId] = { chap: idx, time: cur, at: Date.now() };
-                localStorage.setItem('hoiam_hist', JSON.stringify(hist));
-            }
-        }, 500);
+            saveHist(player.getPlaylistIndex(), c);
+        }, 1000);
+    }
+    
+    function stopUpdate() { clearInterval(updateInt); }
+    
+    // --- CONTROLS ---
+    function toggle() { if(player) isPlaying ? player.pauseVideo() : player.playVideo(); }
+    function prev() { if(player) player.previousVideo(); }
+    function next() { if(player) player.nextVideo(); }
+    function seek(v) { 
+        if(!player) return;
+        const t = typeof v === 'number' ? player.getCurrentTime() + v : (v.target.value/100)*player.getDuration();
+        player.seekTo(t, true);
+    }
+    document.getElementById('seek').oninput = () => drag=true;
+    document.getElementById('seek').onchange = (e) => { drag=false; seek(e); };
+    
+    function setIcon(p) {
+        const c = p ? 'fa-pause' : 'fa-play';
+        document.getElementById('icon-play').className = `fa-solid ${c}`;
+        document.getElementById('z-icon-play').className = `fa-solid ${c}`;
+        if(p) document.getElementById('zen').classList.add('playing');
+        else document.getElementById('zen').classList.remove('playing');
     }
 
-    // --- UTILS ---
-    function togglePlay() { if(player) isPlaying ? player.pauseVideo() : player.playVideo(); }
-    function seek(s) { if(player) player.seekTo(player.getCurrentTime()+s, true); }
-    function nextTrack() { if(player) player.nextVideo(); }
-    function prevTrack() { if(player) player.previousVideo(); }
-    function setSpd(r) { 
-        if(player) player.setPlaybackRate(r); 
-        document.getElementById('lbl-spd').innerText=r+"x"; closeAll(); toast('Tốc độ '+r+'x'); 
+    // --- DATA & HELPERS ---
+    function saveHist(idx, time=0) {
+        if(!curId) return;
+        const h = JSON.parse(localStorage.getItem('hist')||'{}');
+        h[curId] = { idx, time, at: Date.now() };
+        localStorage.setItem('hist', JSON.stringify(h));
     }
-
-    // --- V2 LOGIC: TIMERS & JUMPS ---
-    function setTimer(min) {
-        clearInterval(timerInterval);
-        document.getElementById('timer-status').innerText = "";
-        if(min > 0) {
-            targetTime = Date.now() + min*60000;
-            timerInterval = setInterval(() => {
-                if(targetTime - Date.now() <= 0) { player.pauseVideo(); setTimer(0); toast('Đã tắt nhạc'); }
-            }, 1000);
-            document.getElementById('timer-status').innerText = `(${min}p)`;
-            toast(`Hẹn giờ: ${min} phút`);
-        } else { toast('Đã tắt hẹn giờ'); }
-        closeAll();
-    }
-    function setCustomTimer() {
-        const h = parseInt(document.getElementById('cust-h').value) || 0;
-        const m = parseInt(document.getElementById('cust-m').value) || 0;
-        if(h+m > 0) setTimer(h*60 + m);
-    }
-    function doJump() {
-        const h = parseInt(document.getElementById('j-h').value)||0;
-        const m = parseInt(document.getElementById('j-m').value)||0;
-        const s = parseInt(document.getElementById('j-s').value)||0;
-        if(player) player.seekTo(h*3600 + m*60 + s, true);
-        closeAll();
-    }
-    function findChap() {
-        const v = document.getElementById('chap-find').value;
-        document.querySelectorAll('.chap-itm').forEach(e => {
-            e.style.display = e.innerText.includes(v) ? 'flex' : 'none';
+    
+    function genChapList(activeIdx) {
+        const d = document.getElementById('chap-list'); d.innerHTML = '';
+        const list = player.getPlaylist();
+        if(!list) return;
+        list.forEach((_, i) => {
+            const div = document.createElement('div');
+            div.className = `opt-item ${i===activeIdx ? 'active-track' : ''}`;
+            div.innerHTML = `<span>Tập ${i+1}</span> ${i===activeIdx ? '<i class="fa-solid fa-volume-high"></i>' : ''}`;
+            div.onclick = () => { player.playVideoAt(i); closeMenu({target:{classList:{contains:()=>true}}}); }; // Fake close
+            d.appendChild(div);
         });
-    }
-
-    function setTheme(c) {
-        document.documentElement.style.setProperty('--primary', c);
-        document.documentElement.style.setProperty('--primary-dim', c+'20');
-        localStorage.setItem('hoiam_theme', c);
-        document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.style.background === c));
-        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#09090b');
-        closeAll();
-    }
-
-    // --- GENERAL UI ---
-    function handleSearch() {
-        const v = document.getElementById('search').value.toLowerCase();
-        render(curList.filter(i => i.name.toLowerCase().includes(v)));
-    }
-    function showTab(tab) {
-        document.querySelectorAll('.b-nav-item, .nav-link').forEach(e=>e.classList.remove('active'));
-        if(tab==='home') curList = fullData;
-        render(curList);
-    }
-    function showHistory() {
-        const hist = JSON.parse(localStorage.getItem('hoiam_hist') || '{}');
-        curList = fullData.filter(x => hist[x.playlist_id]).sort((a,b) => hist[b.playlist_id].at - hist[a.playlist_id].at);
-        render(curList);
-    }
-    function showFavs() {
-        const favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
-        curList = fullData.filter(x => favs.includes(x.playlist_id));
-        render(curList);
-    }
-    function togFav(e, pid) {
-        e.stopPropagation();
-        let favs = JSON.parse(localStorage.getItem('hoiam_favs') || '[]');
-        if(favs.includes(pid)) favs = favs.filter(x => x !== pid); else favs.push(pid);
-        localStorage.setItem('hoiam_favs', JSON.stringify(favs));
-        render(curList);
-    }
-    function filter(type, btn) {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        curList = type==='all' ? fullData : fullData.filter(i => i.category === type);
-        render(curList);
-    }
-    function toggleSort() {
-        sortMode = sortMode === 'new' ? 'az' : 'new';
-        document.getElementById('sort-icon').className = sortMode==='new' ? 'fa-solid fa-arrow-down-a-z' : 'fa-solid fa-arrow-down-z-a';
-        if(sortMode === 'az') curList.sort((a,b) => a.name.localeCompare(b.name)); else curList.sort((a,b) => b.id - a.id);
-        render(curList);
     }
 
     function genSpeed() {
-        const rates = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
-        const c = document.getElementById('speed-list');
-        c.innerHTML = "";
-        rates.forEach(r => {
-            const d = document.createElement('div');
-            d.className = 'opt-item';
-            d.innerHTML = `<span>${r}x</span>`;
-            d.onclick = () => setSpd(r);
-            c.appendChild(d);
+        const s = [0.75, 1, 1.25, 1.5, 1.75, 2];
+        const d = document.getElementById('spd-list');
+        s.forEach(x => {
+            const div = document.createElement('div');
+            div.className = 'opt-item';
+            div.innerText = x + 'x';
+            div.onclick = () => { 
+                player.setPlaybackRate(x); 
+                document.getElementById('spd-txt').innerText = x + 'x';
+                closeMenu({target:document.getElementById('menu-speed')});
+            };
+            d.appendChild(div);
         });
     }
 
-    function genChapters() {
-        if(!player) return;
-        const list = player.getPlaylist();
-        const c = document.getElementById('chap-content');
-        if(!list) return;
-        c.innerHTML = "";
-        const curIdx = player.getPlaylistIndex();
-        list.forEach((_, i) => {
-            const d = document.createElement('div');
-            d.className = 'opt-item chap-itm';
-            if(i===curIdx) d.style.color = 'var(--primary)';
-            d.innerHTML = `<span>Tập ${i+1}</span> ${i===curIdx?'<i class="fa-solid fa-volume-high"></i>':''}`;
-            d.onclick = () => { player.playVideoAt(i); closeAll(); };
-            c.appendChild(d);
-        });
+    function setTimer(m) {
+        clearInterval(timer);
+        const t = document.getElementById('timer-val');
+        if(m===0) { t.innerText=''; return; }
+        
+        t.innerText = `(${m}p)`;
+        const end = Date.now() + m*60000;
+        timer = setInterval(() => {
+            if(Date.now() > end) { player.pauseVideo(); setTimer(0); }
+        }, 1000);
+        closeMenu({target:document.getElementById('menu-timer')});
     }
 
+    // --- VIEW LOGIC ---
+    function setView(v) {
+        document.querySelectorAll('.nav-item, .m-item').forEach(e=>e.classList.remove('active'));
+        // Logic active class here if needed
+        list = allData;
+        render(list);
+    }
+    function loadHist() {
+        const h = JSON.parse(localStorage.getItem('hist')||'{}');
+        list = allData.filter(x => h[x.playlist_id]).sort((a,b) => h[b.playlist_id].at - h[a.playlist_id].at);
+        render(list);
+    }
+    function loadFav() {
+        const f = JSON.parse(localStorage.getItem('fav')||'[]');
+        list = allData.filter(x => f.includes(x.playlist_id));
+        render(list);
+    }
+    function togFav(e, pid) {
+        e.stopPropagation();
+        let f = JSON.parse(localStorage.getItem('fav')||'[]');
+        if(f.includes(pid)) f = f.filter(x=>x!==pid); else f.push(pid);
+        localStorage.setItem('fav', JSON.stringify(f));
+        render(list);
+    }
+    function doSearch() {
+        const v = document.getElementById('search').value.toLowerCase();
+        render(list.filter(x => x.name.toLowerCase().includes(v)));
+    }
+    function filter(cat, el) {
+        document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+        el.classList.add('active');
+        render(cat==='all' ? allData : allData.filter(x=>x.category===cat));
+    }
+
+    // --- UTILS ---
+    function openMenu(id) { document.querySelectorAll('.overlay').forEach(e=>e.classList.remove('open')); document.getElementById(id).classList.add('open'); }
+    function closeMenu(e) { if(e.target.classList.contains('overlay') || e.target.classList.contains('opt-item')) e.target.closest('.overlay')?.classList.remove('open'); }
+    function openZen() { document.getElementById('zen').classList.add('active'); }
+    function closeZen() { document.getElementById('zen').classList.remove('active'); }
+    function fmt(s) { return new Date(s * 1000).toISOString().substr(11, 8).replace(/^00:/, ''); }
+    
+    // Backup
     function exportData() {
-        const data = { favs: JSON.parse(localStorage.getItem('hoiam_favs')||'[]'), hist: JSON.parse(localStorage.getItem('hoiam_hist')||'{}') };
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'}));
-        a.download = 'hoiam_data.json'; a.click();
+        const d = {fav: localStorage.getItem('fav'), hist: localStorage.getItem('hist')};
+        const b = new Blob([JSON.stringify(d)],{type:'application/json'});
+        const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download='backup.json'; a.click();
     }
-    function importData(inp) {
+    function importData(e) {
         const r = new FileReader();
-        r.onload = e => { try { const d = JSON.parse(e.target.result); localStorage.setItem('hoiam_favs', JSON.stringify(d.favs)); localStorage.setItem('hoiam_hist', JSON.stringify(d.hist)); location.reload(); } catch(err) { toast('Lỗi file'); } };
-        r.readAsText(inp.files[0]);
+        r.onload = x => {
+            const d = JSON.parse(x.target.result);
+            if(d.fav) localStorage.setItem('fav', d.fav);
+            if(d.hist) localStorage.setItem('hist', d.hist);
+            location.reload();
+        };
+        r.readAsText(e.files[0]);
     }
-    function resetData() { if(confirm('Xóa hết dữ liệu?')) { localStorage.clear(); location.reload(); } }
-
-    function openMenu(id) { closeAll(); document.getElementById(id).classList.add('open'); }
-    function closeMenu(e) { if(e.target.classList.contains('overlay')) e.target.classList.remove('open'); }
-    function closeAll() { document.querySelectorAll('.overlay').forEach(e=>e.classList.remove('open')); }
-    function openZen() { document.getElementById('zen-mode').classList.add('active'); }
-    function closeZen() { document.getElementById('zen-mode').classList.remove('active'); }
-    function toast(m) { const t=document.getElementById('toast'); t.innerText=m; t.className="show"; setTimeout(()=>t.className="", 2000); }
-    function fmt(s) { return Math.floor(s/3600)>0 ? new Date(s * 1000).toISOString().substr(11, 8) : new Date(s * 1000).toISOString().substr(14, 5); }
-    function setupSession() { const ms = navigator.mediaSession; ms.setActionHandler('play', ()=>player.playVideo()); ms.setActionHandler('pause', ()=>player.pauseVideo()); ms.setActionHandler('previoustrack', ()=>prevTrack()); ms.setActionHandler('nexttrack', ()=>nextTrack()); ms.setActionHandler('seekbackward', ()=>seek(-10)); ms.setActionHandler('seekforward', ()=>seek(10)); }
-    function updateSession() { navigator.mediaSession.metadata = new MediaMetadata({ title: document.getElementById('p-name').innerText, artist: curName }); }
+    function resetData() { localStorage.clear(); location.reload(); }
 
     init();
 </script>
