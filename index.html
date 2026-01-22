@@ -2,24 +2,24 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎧</text></svg>">
-    <title>Kho Truyện Đam Mỹ - Pro Player</title>
+    <title>Kho Truyện Đam Mỹ - Pro Player V2</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --bg-dark: #000000;
-            --bg-card: #121212;
-            --bg-hover: #282828;
+            --bg-dark: #090909;
+            --bg-card: #181818;
+            --bg-hover: #2a2a2a;
             --primary: #1db954;
             --text-main: #ffffff;
-            --text-sub: #b3b3b3;
-            --bar-height: 110px; /* Tăng chiều cao để chứa thanh tiến độ */
+            --text-sub: #a7a7a7;
+            --bar-height: 90px;
         }
 
         body {
@@ -29,148 +29,145 @@
             margin: 0; padding: 0;
             overflow: hidden;
             display: flex; height: 100vh;
+            user-select: none; /* Tránh bôi đen text khi thao tác */
         }
 
         /* --- SIDEBAR --- */
         .sidebar {
             width: 240px; background: #000; padding: 24px;
             display: flex; flex-direction: column; gap: 20px;
-            border-right: 1px solid #1a1a1a;
+            border-right: 1px solid #222;
         }
-        .logo { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 20px;}
-        .nav-item { color: var(--text-sub); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 15px; padding: 10px 0; transition: 0.2s; }
+        .logo { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; color: var(--primary); letter-spacing: -0.5px;}
+        .nav-item { color: var(--text-sub); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 15px; padding: 12px 0; transition: 0.2s; font-size: 14px;}
         .nav-item:hover, .nav-item.active { color: var(--text-main); }
         .nav-item.active i { color: var(--primary); }
 
         /* --- MAIN CONTENT --- */
         .main-content {
             flex: 1;
-            background: linear-gradient(180deg, #1e1e1e 0%, var(--bg-dark) 100%);
-            overflow-y: auto; padding: 30px; padding-bottom: 140px; /* Chừa chỗ cho Player cao hơn */
+            background: linear-gradient(180deg, #222 0%, var(--bg-dark) 40%);
+            overflow-y: auto; padding: 20px 30px; padding-bottom: 160px;
+            scrollbar-width: thin; scrollbar-color: #444 #121212;
         }
-        h2 { margin-top: 0; margin-bottom: 20px; font-size: 24px;}
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
+        h2 { margin-top: 10px; font-size: 28px; letter-spacing: -0.5px;}
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
         
-        .card { background: var(--bg-card); padding: 16px; border-radius: 8px; cursor: pointer; transition: 0.3s; position: relative; border: 1px solid transparent;}
-        .card:hover { background: var(--bg-hover); border-color: #333; }
-        .card-video-box { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 4px; margin-bottom: 12px; overflow: hidden; position: relative; }
-        .card-video-box iframe { width: 100%; height: 100%; border: 0; pointer-events: none; }
-        .play-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; }
+        .card { 
+            background: var(--bg-card); padding: 16px; border-radius: 8px; cursor: pointer; 
+            transition: all 0.3s ease; position: relative; border: 1px solid transparent;
+        }
+        .card:hover { background: var(--bg-hover); transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .card-video-box { 
+            width: 100%; aspect-ratio: 16/9; background: #333; border-radius: 6px; 
+            margin-bottom: 12px; overflow: hidden; position: relative; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .card-video-box img { width: 100%; height: 100%; object-fit: cover; }
+        .play-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; }
         .card:hover .play-overlay { opacity: 1; }
-        .play-icon-big { font-size: 40px; color: var(--primary); filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transform: scale(0.8); transition: 0.2s; }
+        .play-icon-big { font-size: 48px; color: var(--primary); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6)); transform: scale(0.8); transition: 0.2s; }
         .card:hover .play-icon-big { transform: scale(1); }
-        .card-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;}
-        .card-desc { font-size: 12px; color: var(--text-sub); }
+        .card-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;}
+        .card-desc { font-size: 13px; color: var(--text-sub); }
 
-        /* --- PLAYER BAR (Nâng cấp) --- */
+        /* --- PLAYER BAR --- */
         .player-bar {
             position: fixed; bottom: 0; left: 0; right: 0; height: var(--bar-height);
-            background: #000; border-top: 1px solid #282828;
-            display: flex; flex-direction: column; /* Đổi thành column để chứa thanh progress */
-            z-index: 100;
+            background: #000000; border-top: 1px solid #222;
+            display: flex; flex-direction: column; z-index: 100;
         }
-
-        /* Thanh tiến độ */
-        .progress-container {
-            width: 100%; height: 4px; background: #333; cursor: pointer; position: relative;
-        }
+        .progress-container { width: 100%; height: 4px; background: #333; cursor: pointer; position: relative; transition: height 0.1s;}
+        .progress-container:hover { height: 6px; }
         .progress-filled { height: 100%; background: var(--primary); width: 0%; border-radius: 0 4px 4px 0; position: relative; }
-        .progress-thumb { 
-            width: 12px; height: 12px; background: white; border-radius: 50%; 
-            position: absolute; right: -6px; top: -4px; opacity: 0; transition: 0.2s; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        .progress-container:hover .progress-filled { background: #1ed760; }
+        .progress-thumb { width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; right: -6px; top: 50%; transform: translateY(-50%); opacity: 0; transition: 0.2s; }
         .progress-container:hover .progress-thumb { opacity: 1; }
 
-        /* Nội dung Player (Chia 3 cột như cũ) */
-        .player-controls-wrapper {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 24px; flex: 1;
-        }
+        .player-controls-wrapper { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex: 1; }
         
         .player-left { display: flex; align-items: center; width: 30%; gap: 15px; }
-        .mini-player-wrapper { width: 80px; height: 45px; background: #000; border-radius: 4px; overflow: hidden; position: relative; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .mini-player-wrapper iframe { position: absolute; top:0; left:0; width: 100%; height: 100%; border: 0; }
+        .mini-player-thumb { width: 56px; height: 56px; border-radius: 4px; background: #333; overflow: hidden; flex-shrink: 0; }
+        .mini-player-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .current-info h4 { margin: 0; font-size: 14px; color: white; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
         .current-info p { margin: 4px 0 0; font-size: 11px; color: var(--text-sub); }
 
-        .player-center { width: 40%; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .controls { display: flex; align-items: center; gap: 20px; }
-        .btn-control { background: none; border: none; color: #b3b3b3; font-size: 18px; cursor: pointer; transition: 0.2s; }
-        .btn-control:hover { color: white; transform: scale(1.1); }
-        .btn-play { width: 36px; height: 36px; background: white; border-radius: 50%; color: black; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.2s; }
-        .btn-play:hover { transform: scale(1.1); }
-        
-        /* Hiển thị thời gian 00:00 / 00:00 */
+        .player-center { width: 40%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .controls { display: flex; align-items: center; gap: 24px; }
+        .btn-control { background: none; border: none; color: #b3b3b3; font-size: 18px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-control:hover { color: white; }
+        .btn-play { width: 38px; height: 38px; background: white; border-radius: 50%; color: black; font-size: 18px; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+        .btn-play:hover { transform: scale(1.05); background: #eee; }
         .time-display { font-size: 11px; color: #b3b3b3; font-variant-numeric: tabular-nums; }
 
-        .player-right { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 15px; position: relative;}
+        .player-right { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
 
-        /* Menu danh sách tập (Drawer) */
+        /* --- DRAWER --- */
         .chapter-drawer {
-            position: fixed; right: -300px; top: 0; bottom: var(--bar-height); width: 300px;
+            position: fixed; right: -320px; top: 0; bottom: var(--bar-height); width: 320px;
             background: #121212; border-left: 1px solid #333; z-index: 90;
-            transition: 0.3s; display: flex; flex-direction: column;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column;
+            box-shadow: -5px 0 30px rgba(0,0,0,0.7);
         }
         .chapter-drawer.open { right: 0; }
-        .drawer-header { padding: 20px; border-bottom: 1px solid #333; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .drawer-header { padding: 24px; border-bottom: 1px solid #282828; font-weight: 700; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
         .drawer-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .chapter-item { 
-            padding: 12px; border-radius: 4px; cursor: pointer; color: #b3b3b3; font-size: 14px; 
-            display: flex; justify-content: space-between; 
-        }
-        .chapter-item:hover { background: #282828; color: white; }
-        .chapter-item.active { color: var(--primary); font-weight: bold; }
-        .chapter-item.active i { display: block !important; }
-
-        /* Dropdown tốc độ */
+        .chapter-item { padding: 14px; border-radius: 6px; cursor: pointer; color: #ccc; font-size: 14px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .chapter-item:hover { background: #2a2a2a; color: white; }
+        .chapter-item.active { background: #222; color: var(--primary); font-weight: 600; }
+        
+        /* Speed Menu */
         .speed-menu {
-            position: absolute; bottom: 60px; right: 0; background: #282828; 
-            border-radius: 4px; padding: 5px; display: none; flex-direction: column;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            position: absolute; bottom: 70px; right: 0; background: #282828; 
+            border-radius: 8px; padding: 8px; display: none; flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6); min-width: 120px;
         }
-        .speed-menu.show { display: flex; }
-        .speed-opt { padding: 8px 15px; font-size: 13px; color: #ddd; cursor: pointer; text-align: left; }
+        .speed-menu.show { display: flex; animation: fadeIn 0.2s; }
+        .speed-opt { padding: 10px; font-size: 13px; color: #ddd; cursor: pointer; border-radius: 4px; }
         .speed-opt:hover { background: #3e3e3e; color: white; }
         .speed-opt.active { color: var(--primary); }
 
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         @media (max-width: 768px) {
             .sidebar { display: none; }
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .player-bar { height: auto; padding-bottom: 10px; }
-            .progress-container { height: 3px; width: 100%; margin-bottom: 10px; }
-            .player-controls-wrapper { flex-direction: column; gap: 10px; padding: 5px 15px; }
-            .player-left { width: 100%; justify-content: flex-start; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .main-content { padding: 15px; padding-bottom: 150px;}
+            .player-bar { height: auto; padding-bottom: 15px; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); }
+            .player-controls-wrapper { flex-direction: column; gap: 12px; padding: 8px 15px; }
+            .player-left { width: 100%; }
             .player-center { width: 100%; flex-direction: row; justify-content: space-between; }
-            .player-right { display: none; } /* Ẩn volume/speed trên mobile cho gọn, có thể đưa vào menu sau */
-            .chapter-drawer { width: 80%; bottom: 0; z-index: 200; border-left: none; box-shadow: -5px 0 20px rgba(0,0,0,0.5);}
+            .player-right { display: none; } /* Mobile ẩn volume, đưa speed vào drawer hoặc nút riêng */
+            .controls { gap: 20px; }
+            .chapter-drawer { width: 85%; }
+            /* Thêm nút speed trên mobile center */
+            .mobile-speed { display: block !important; }
         }
-        
-        #loading { text-align: center; margin-top: 50px; color: #666; }
+        .mobile-speed { display: none; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="logo"><i class="fa-solid fa-headphones-simple" style="color: var(--primary);"></i> HỒI ÂM</div>
+        <div class="logo"><i class="fa-solid fa-headphones-simple"></i> HỒI ÂM PRO</div>
         <div class="nav-item active"><i class="fa-solid fa-house"></i> Trang chủ</div>
-        <div class="nav-item"><i class="fa-solid fa-layer-group"></i> Thư viện</div>
+        <div class="nav-item"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
+        <div id="youtube-iframe" style="width: 1px; height: 1px; opacity: 0; pointer-events: none;"></div>
     </div>
 
     <div class="main-content">
-        <h2>Chào buổi chiều 👋</h2>
-        <div id="loading">Đang tải kho truyện...</div>
+        <h2>Hôm nay nghe gì?</h2>
+        <div id="loading" style="text-align: center; margin-top: 40px; color: #666;">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Đang tải kho truyện...
+        </div>
         <div class="grid" id="playlist-container"></div>
     </div>
 
     <div class="chapter-drawer" id="chapter-drawer">
         <div class="drawer-header">
             <span>Danh sách tập</span>
-            <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="toggleDrawer()"></i>
+            <i class="fa-solid fa-xmark" style="cursor: pointer; padding: 5px;" onclick="toggleDrawer()"></i>
         </div>
-        <div class="drawer-list" id="chapter-list-content">
-            </div>
+        <div class="drawer-list" id="chapter-list-content"></div>
     </div>
 
     <div class="player-bar">
@@ -182,34 +179,31 @@
 
         <div class="player-controls-wrapper">
             <div class="player-left">
-                <div class="mini-player-wrapper">
-                    <div id="youtube-iframe"></div>
+                <div class="mini-player-thumb">
+                    <img id="track-thumb" src="https://via.placeholder.com/150" alt="Thumb">
                 </div>
                 <div class="current-info">
-                    <h4 id="track-name">Chưa chọn truyện</h4>
-                    <p id="track-info">--:-- / --:--</p>
+                    <h4 id="track-name">Sẵn sàng phát</h4>
+                    <p id="track-info">--:--</p>
                 </div>
             </div>
 
             <div class="player-center">
                 <div class="controls">
-                    <button class="btn-control" title="Tập trước" onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
-                    <button class="btn-control" title="Lùi 10s" onclick="seek(-10)"><i class="fa-solid fa-rotate-left" style="font-size: 16px;"></i></button>
+                    <button class="btn-control" onclick="prevTrack()"><i class="fa-solid fa-backward-step"></i></button>
+                    <button class="btn-control" onclick="seek(-10)"><i class="fa-solid fa-rotate-left" style="font-size: 16px;"></i></button>
                     <button class="btn-play" id="play-btn" onclick="togglePlay()"><i class="fa-solid fa-play"></i></button>
-                    <button class="btn-control" title="Tới 10s" onclick="seek(10)"><i class="fa-solid fa-rotate-right" style="font-size: 16px;"></i></button>
-                    <button class="btn-control" title="Tập sau" onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
+                    <button class="btn-control" onclick="seek(10)"><i class="fa-solid fa-rotate-right" style="font-size: 16px;"></i></button>
+                    <button class="btn-control" onclick="nextTrack()"><i class="fa-solid fa-forward-step"></i></button>
                 </div>
                 <div class="time-display" id="time-display">00:00 / 00:00</div>
             </div>
 
             <div class="player-right">
-                <button class="btn-control" title="Danh sách tập" onclick="toggleDrawer()" style="margin-right: 15px;">
-                    <i class="fa-solid fa-list-ul"></i>
-                </button>
-
+                <button class="btn-control" onclick="toggleDrawer()" title="Danh sách tập"><i class="fa-solid fa-list-ul"></i></button>
                 <div style="position: relative;">
-                    <button class="btn-control" title="Tốc độ" onclick="toggleSpeedMenu()">
-                        <span id="speed-btn-text" style="font-size: 13px; font-weight: bold; border: 1px solid #555; padding: 2px 5px; border-radius: 3px;">1x</span>
+                    <button class="btn-control" onclick="toggleSpeedMenu()">
+                        <span id="speed-btn-text" style="font-size: 12px; font-weight: 700; border: 1px solid #555; padding: 2px 6px; border-radius: 4px;">1x</span>
                     </button>
                     <div class="speed-menu" id="speed-menu">
                         <div class="speed-opt" onclick="setSpeed(0.5)">0.5x</div>
@@ -217,6 +211,8 @@
                         <div class="speed-opt" onclick="setSpeed(1.25)">1.25x</div>
                         <div class="speed-opt" onclick="setSpeed(1.5)">1.5x</div>
                         <div class="speed-opt" onclick="setSpeed(2.0)">2.0x</div>
+                        <div class="speed-opt" onclick="setSpeed(2.5)">2.5x</div>
+                        <div class="speed-opt" onclick="setSpeed(3.0)">3.0x</div>
                     </div>
                 </div>
             </div>
@@ -231,14 +227,38 @@
     let player;
     let isPlaying = false;
     let updateTimer;
-    let totalDuration = 0;
     let currentPlaylistId = "";
-    let currentVideoIndex = 0;
+    let currentPlaylistName = "";
     
     // --- LƯU TIẾN ĐỘ ---
-    const STORAGE_KEY = 'hoiam_progress_v1';
+    const STORAGE_KEY = 'hoiam_progress_v2';
 
-    // --- 1. KHỞI TẠO & LOAD THƯ VIỆN ---
+    // --- 1. SETUP MEDIA SESSION (QUAN TRỌNG CHO PHÁT NỀN) ---
+    function setupMediaSession() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', togglePlay);
+            navigator.mediaSession.setActionHandler('pause', togglePlay);
+            navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
+            navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
+            navigator.mediaSession.setActionHandler('seekbackward', () => seek(-10));
+            navigator.mediaSession.setActionHandler('seekforward', () => seek(10));
+        }
+    }
+
+    function updateMediaSessionInfo(index) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: `Tập ${index + 1}`,
+                artist: currentPlaylistName,
+                album: 'Hồi Âm Đam Mỹ',
+                artwork: [
+                    { src: 'https://via.placeholder.com/512', sizes: '512x512', type: 'image/png' }
+                ]
+            });
+        }
+    }
+
+    // --- 2. LOAD THƯ VIỆN ---
     async function loadLibrary() {
         const { data, error } = await db.from('playlists').select('*').order('id', { ascending: false });
         document.getElementById('loading').style.display = 'none';
@@ -248,23 +268,27 @@
             data.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'card';
-                const embedUrl = `https://www.youtube.com/embed/videoseries?list=${item.playlist_id}&controls=0&showinfo=0&rel=0`;
+                // Dùng ảnh tĩnh Youtube để nhẹ hơn
+                const thumbUrl = `https://i.ytimg.com/vi_webp/${item.playlist_id.split(',')[0] || 'hqdefault'}/maxresdefault.jpg`; 
+                // Xử lý playlist ID đôi khi là list, lấy đại diện hoặc dùng placeholder nếu cần
+                const bgImg = `https://i.ytimg.com/vi/mqdefault.jpg`; // Fallback image logic is complex with pure playlists
+
                 div.innerHTML = `
                     <div class="card-video-box">
-                        <iframe src="${embedUrl}" loading="lazy" title="${item.name}"></iframe>
+                        <img src="${bgImg}" onerror="this.src='https://via.placeholder.com/300x169?text=Audio'" />
                         <div class="play-overlay"><i class="fa-solid fa-circle-play play-icon-big"></i></div>
                     </div>
                     <div class="card-title">${item.name}</div>
                     <div class="card-desc">Danh sách phát</div>
                 `;
-                // Click vào truyện: Load truyện, index 0, thời gian 0
+                // Logic ảnh đại diện playlist: Cần lấy ID video đầu tiên trong list mới chuẩn, ở đây dùng tạm logic click
                 div.onclick = () => loadTrackToPlayer(item.playlist_id, item.name, 0, 0);
                 container.appendChild(div);
             });
         }
     }
 
-    // --- 2. YOUTUBE API ---
+    // --- 3. YOUTUBE API ---
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -276,58 +300,29 @@
             playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 0, 'fs': 0, 'rel': 0 },
             events: { 
                 'onStateChange': onPlayerStateChange,
-                'onReady': checkSavedProgress // Khi player sẵn sàng, kiểm tra tiến độ cũ
+                'onReady': checkSavedProgress
             }
         });
-    }
-
-    // --- 3. XỬ LÝ TIẾN ĐỘ & AUTO SAVE ---
-    function checkSavedProgress() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            const p = JSON.parse(saved);
-            // Có thể hỏi người dùng "Bạn có muốn nghe tiếp...?" ở đây.
-            // Ở đây mình tự động load luôn nhưng pause lại để người dùng quyết định
-            console.log("Tìm thấy tiến độ cũ:", p);
-            loadTrackToPlayer(p.id, p.name, p.index, p.time, false); // false = không tự play
-            document.getElementById('track-name').innerText = p.name + " (Nghe tiếp)";
-        }
-    }
-
-    function saveProgress() {
-        if (!player || !currentPlaylistId) return;
-        try {
-            const currentTime = player.getCurrentTime();
-            const index = player.getPlaylistIndex();
-            const name = document.getElementById('track-name').innerText.replace(" (Nghe tiếp)", "");
-            
-            const data = {
-                id: currentPlaylistId,
-                name: name,
-                index: index,
-                time: currentTime,
-                date: new Date().getTime()
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        } catch (e) {}
+        setupMediaSession();
     }
 
     // --- 4. PLAYER LOGIC ---
     function loadTrackToPlayer(playlistId, name, index = 0, startSeconds = 0, autoPlay = true) {
         currentPlaylistId = playlistId;
+        currentPlaylistName = name;
         document.getElementById('track-name').innerText = name;
-        document.getElementById('track-info').innerText = "Đang tải...";
+        document.getElementById('track-info').innerText = "Đang tải Tập " + (index + 1);
         
+        // Update Thumb (Lấy tạm ảnh video)
+        document.getElementById('track-thumb').src = "https://i.ytimg.com/vi/mqdefault.jpg";
+
         if(player && player.loadPlaylist) {
-            // Load danh sách, chọn tập (index), và tua đến giây (startSeconds)
             if(autoPlay) {
                 player.loadPlaylist({list: playlistId, listType: 'playlist', index: index, startSeconds: startSeconds});
             } else {
                 player.cuePlaylist({list: playlistId, listType: 'playlist', index: index, startSeconds: startSeconds});
             }
-            
-            // Render danh sách tập bên phải
-            setTimeout(renderChapterList, 2000); // Đợi Youtube load xong list ID
+            setTimeout(renderChapterList, 1500);
         }
     }
 
@@ -336,141 +331,138 @@
             isPlaying = true;
             updatePlayButton();
             startTimer();
-            // Lưu tiến độ mỗi 10 giây
             if(!window.saveInterval) window.saveInterval = setInterval(saveProgress, 10000);
             
-            // Cập nhật index tập đang nghe
-            currentVideoIndex = player.getPlaylistIndex();
-            highlightChapter(currentVideoIndex);
+            const idx = player.getPlaylistIndex();
+            highlightChapter(idx);
+            updateMediaSessionInfo(idx); // Update màn hình khóa
 
         } else {
             isPlaying = false;
             updatePlayButton();
-            clearInterval(window.updateTimer);
-            if(event.data == YT.PlayerState.PAUSED) saveProgress(); // Lưu ngay khi pause
+            clearInterval(updateTimer);
+            if(event.data == YT.PlayerState.PAUSED) saveProgress();
         }
     }
 
-    // --- 5. THANH TIẾN ĐỘ (PROGRESS BAR) ---
+    // --- 5. PROGRESS & CONTROLS ---
     function startTimer() {
         clearInterval(updateTimer);
         updateTimer = setInterval(() => {
             if (player && player.getCurrentTime) {
                 const current = player.getCurrentTime();
                 const duration = player.getDuration();
-                
                 if (duration > 0) {
                     const percent = (current / duration) * 100;
                     document.getElementById('progress-filled').style.width = percent + "%";
-                    
                     document.getElementById('time-display').innerText = formatTime(current) + " / " + formatTime(duration);
-                    document.getElementById('track-info').innerText = "Tập " + (player.getPlaylistIndex() + 1);
+                    
+                    // Cập nhật media session position (quan trọng cho thanh tua trên lock screen)
+                    if ('mediaSession' in navigator) {
+                        navigator.mediaSession.setPositionState({
+                            duration: duration,
+                            playbackRate: player.getPlaybackRate(),
+                            position: current
+                        });
+                    }
                 }
             }
         }, 500);
     }
 
-    function formatTime(seconds) {
-        const min = Math.floor(seconds / 60);
-        const sec = Math.floor(seconds % 60);
-        return min + ":" + (sec < 10 ? "0" : "") + sec;
-    }
-
-    function seekTo(event) {
-        if (!player) return;
-        const container = document.getElementById('progress-container');
-        const rect = container.getBoundingClientRect();
-        const clickX = event.clientX - rect.left;
-        const width = rect.width;
-        const duration = player.getDuration();
-        
-        const percent = clickX / width;
-        const newTime = percent * duration;
-        
-        player.seekTo(newTime, true);
-        document.getElementById('progress-filled').style.width = (percent * 100) + "%";
-    }
-
-    function seek(sec) {
-        if(player && player.getCurrentTime) player.seekTo(player.getCurrentTime() + sec, true);
-    }
-
-    // --- 6. DANH SÁCH TẬP & DRAWER ---
-    function toggleDrawer() {
-        document.getElementById('chapter-drawer').classList.toggle('open');
-    }
-
-    function renderChapterList() {
-        if(!player) return;
-        const listIds = player.getPlaylist();
-        const container = document.getElementById('chapter-list-content');
-        container.innerHTML = "";
-
-        if(listIds) {
-            listIds.forEach((id, idx) => {
-                const item = document.createElement('div');
-                item.className = 'chapter-item';
-                item.id = 'chapter-' + idx;
-                // Vì Youtube API giới hạn, ta không lấy được tên từng tập nếu không có API Key
-                // Nên ta hiển thị Tập 1, Tập 2...
-                item.innerHTML = `<span>Tập ${idx + 1}</span> <i class="fa-solid fa-volume-high" style="display:none; color:var(--primary)"></i>`;
-                item.onclick = () => {
-                    player.playVideoAt(idx);
-                    highlightChapter(idx);
-                };
-                container.appendChild(item);
-            });
-            highlightChapter(player.getPlaylistIndex());
-        }
-    }
-
-    function highlightChapter(index) {
-        document.querySelectorAll('.chapter-item').forEach(el => {
-            el.classList.remove('active');
-            el.querySelector('i').style.display = 'none';
-        });
-        const activeItem = document.getElementById('chapter-' + index);
-        if(activeItem) {
-            activeItem.classList.add('active');
-            activeItem.querySelector('i').style.display = 'block';
-            activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    // --- 7. TỐC ĐỘ ---
-    function toggleSpeedMenu() {
-        const menu = document.getElementById('speed-menu');
-        menu.classList.toggle('show');
-    }
-    
-    function setSpeed(rate) {
-        if(player && player.setPlaybackRate) player.setPlaybackRate(rate);
-        document.getElementById('speed-btn-text').innerText = rate + "x";
-        document.getElementById('speed-menu').classList.remove('show');
-    }
-
-    // --- CONTROLS ---
     function togglePlay() { 
         if(!player) return; 
-        isPlaying ? player.pauseVideo() : player.playVideo(); 
+        if(isPlaying) player.pauseVideo(); 
+        else player.playVideo(); 
     }
+    
     function updatePlayButton() { 
         document.getElementById('play-btn').innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>'; 
     }
     function prevTrack() { if(player) player.previousVideo(); }
     function nextTrack() { if(player) player.nextVideo(); }
+    
+    function seekTo(event) {
+        if (!player) return;
+        const container = document.getElementById('progress-container');
+        const rect = container.getBoundingClientRect();
+        const percent = (event.clientX - rect.left) / rect.width;
+        player.seekTo(percent * player.getDuration(), true);
+    }
+    function seek(sec) { if(player) player.seekTo(player.getCurrentTime() + sec, true); }
+
+    // --- 6. DRAWER & SPEED ---
+    function toggleDrawer() { document.getElementById('chapter-drawer').classList.toggle('open'); }
+    function toggleSpeedMenu() { document.getElementById('speed-menu').classList.toggle('show'); }
+    
+    function setSpeed(rate) {
+        if(player) player.setPlaybackRate(rate);
+        document.getElementById('speed-btn-text').innerText = rate + "x";
+        document.getElementById('speed-menu').classList.remove('show');
+    }
+
+    function renderChapterList() {
+        if(!player) return;
+        const listIds = player.getPlaylist(); // Hàm này trả về Array Video ID
+        const container = document.getElementById('chapter-list-content');
+        container.innerHTML = "";
+        if(listIds) {
+            listIds.forEach((id, idx) => {
+                const item = document.createElement('div');
+                item.className = 'chapter-item';
+                item.id = 'chapter-' + idx;
+                item.innerHTML = `<span>Tập ${idx + 1}</span> <i class="fa-solid fa-volume-high" style="display:none; font-size:12px"></i>`;
+                item.onclick = () => { player.playVideoAt(idx); };
+                container.appendChild(item);
+            });
+            highlightChapter(player.getPlaylistIndex());
+        }
+    }
+    
+    function highlightChapter(index) {
+        document.querySelectorAll('.chapter-item').forEach(el => {
+            el.classList.remove('active'); el.querySelector('i').style.display = 'none';
+        });
+        const activeItem = document.getElementById('chapter-' + index);
+        if(activeItem) {
+            activeItem.classList.add('active'); activeItem.querySelector('i').style.display = 'block';
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('track-info').innerText = "Đang phát: Tập " + (index + 1);
+        }
+    }
+
+    // --- 7. AUTO SAVE/LOAD ---
+    function saveProgress() {
+        if (!player || !currentPlaylistId) return;
+        const data = {
+            id: currentPlaylistId, name: currentPlaylistName,
+            index: player.getPlaylistIndex(), time: player.getCurrentTime()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function checkSavedProgress() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const p = JSON.parse(saved);
+            // Auto load nhưng không auto play để tránh phiền
+            loadTrackToPlayer(p.id, p.name, p.index, p.time, false);
+            document.getElementById('track-name').innerText = p.name + " (Tiếp tục)";
+        }
+    }
+
+    function formatTime(s) {
+        const m = Math.floor(s / 60); const sc = Math.floor(s % 60);
+        return m + ":" + (sc < 10 ? "0" : "") + sc;
+    }
 
     loadLibrary();
-
-    // Đóng menu tốc độ khi click ra ngoài
-    document.addEventListener('click', function(e) {
-        const speedContainer = document.querySelector('.player-right > div'); // Chứa nút và menu
-        if (speedContainer && !speedContainer.contains(e.target)) {
-            document.getElementById('speed-menu').classList.remove('show');
-        }
+    
+    // Close menus when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.player-right')) document.getElementById('speed-menu').classList.remove('show');
     });
 
 </script>
-
 </body>
 </html>
