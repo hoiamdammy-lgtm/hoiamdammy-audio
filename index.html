@@ -21,7 +21,7 @@
             --text-sub: #a1a1aa;
             
             --nav-h: 60px; 
-            --player-h-mob: 100px; /* Tăng chiều cao player mobile để chứa thanh trượt */
+            --player-h-mob: 110px; /* Tăng chiều cao để chứa thanh seek bar thoải mái */
             --player-h-pc: 90px;
             --sidebar-w: 240px;
             --safe-b: env(safe-area-inset-bottom, 0px);
@@ -106,7 +106,7 @@
             .player-bar {
                 bottom: calc(var(--nav-h) + var(--safe-b));
                 height: var(--player-h-mob);
-                flex-direction: column; /* Xếp dọc để đủ chỗ cho thanh thời lượng */
+                flex-direction: column; /* Xếp dọc */
                 justify-content: center;
                 gap: 5px;
                 padding: 10px 15px;
@@ -119,7 +119,7 @@
             .p-ctrl-pc { display: none; }
             .p-ctrl-mob { display: flex; gap: 15px; align-items: center; }
             
-            /* Thanh thời lượng Mobile: To rõ, không dùng absolute */
+            /* Thanh thời lượng Mobile: Đảm bảo luôn hiện */
             .p-mob-progress { width: 100%; display: flex; align-items: center; gap: 10px; margin-top: 5px; }
             .p-mob-progress input { height: 20px; } 
         }
@@ -137,9 +137,9 @@
             .content-area { padding-bottom: 100px; }
             .grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 
-            .p-top-row { display: contents; } /* Remove wrapper behavior on PC */
+            .p-top-row { display: contents; } 
             .p-info { width: 30%; }
-            .p-mob-progress { display: none; } /* Hide mobile bar */
+            .p-mob-progress { display: none; } 
             .p-ctrl-mob { display: none; }
             .p-ctrl-pc { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 5px; max-width: 600px; }
             .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 15px; }
@@ -307,14 +307,18 @@
 
     let player, allData=[], list=[], curId='', curName='', activeTab='home';
     let isPlaying=false, updateInt, drag=false;
-    let cachedTitles = {}; // Lưu tên tập đã load để hiển thị lại
+    let cachedTitles = {}; 
 
     async function init() {
         const { data } = await db.from('playlists').select('*');
         allData = data || [];
         
-        // FIX 3: Sắp xếp danh sách A-Z mặc định cho đỡ lộn xộn
-        allData.sort((a,b) => a.name.localeCompare(b.name));
+        // FIX 3: Sắp xếp danh sách (Thể loại -> Tên)
+        allData.sort((a,b) => {
+            const catA = a.category || 'z';
+            const catB = b.category || 'z';
+            return catA.localeCompare(catB) || a.name.localeCompare(b.name);
+        });
         
         list = allData;
         render(list);
@@ -389,15 +393,18 @@
     }
 
     function play(pid, name, idx, time) {
-        // FIX 1: Ép buộc cập nhật tên truyện NGAY LẬP TỨC
+        // FIX 1: Cập nhật biến toàn cục curName ngay lập tức
         curName = name; 
         curId = pid;
-        updateUI(`Đang tải tập ${idx+1}...`, curName); // Hiển thị tên truyện đúng ngay
+        
+        // Cập nhật UI ngay lập tức với tên truyện mới
+        updateUI(`Đang tải tập ${idx+1}...`, curName); 
 
         if(player && player.loadPlaylist) {
+            // FIX 4: Gọi loadPlaylist để chuyển ngay
             player.loadPlaylist({ list:pid, listType:'playlist', index:idx, startSeconds:time });
         }
-        render(list); // Re-render để highlight truyện đang chọn
+        render(list); 
     }
 
     function onState(e) {
@@ -411,16 +418,15 @@
             // Lấy tên thật video, nếu chưa có thì dùng "Tập X"
             const realTitle = vData && vData.title ? vData.title : `Tập ${idx+1}`;
             
-            // Lưu cache tên tập
             if(curId) {
                 if(!cachedTitles[curId]) cachedTitles[curId] = {};
                 cachedTitles[curId][idx] = realTitle;
             }
 
-            updateUI(realTitle, curName); // Tên truyện chắc chắn đúng do đã set ở play()
+            // Đảm bảo luôn hiển thị curName (tên truyện) đúng
+            updateUI(realTitle, curName); 
             saveHist(idx, player.getCurrentTime(), realTitle);
             
-            // Cập nhật danh sách tập (hiển thị tên thật)
             genChapList(idx);
 
         } else if (e.data === 0) { next(); } 
@@ -442,7 +448,6 @@
             const d = player.getDuration();
             const p = (c/d)*100;
             
-            // Update cả PC và Mobile seek bars
             ['curr-pc','curr-mob'].forEach(i => document.getElementById(i).innerText = fmt(c));
             ['dur-pc','dur-mob'].forEach(i => document.getElementById(i).innerText = fmt(d));
             
@@ -469,7 +474,6 @@
     function prev() { if(player) player.previousVideo(); }
     function next() { if(player) player.nextVideo(); }
     
-    // Đồng bộ 2 thanh seek bar (Mobile & PC)
     function seek(v) { 
         if(!player) return;
         const t = (v/100)*player.getDuration();
@@ -489,17 +493,16 @@
         localStorage.setItem('hist', JSON.stringify(h));
     }
 
-    // FIX 4: Danh sách tập hiển thị tên thật (nếu đã cache)
     function genChapList(activeIdx) {
         const d = document.getElementById('chap-list'); d.innerHTML = '';
         const pl = player ? player.getPlaylist() : [];
         if(!pl) return;
         
         pl.forEach((_, i) => {
-            // Kiểm tra xem đã có tên thật trong cache chưa
             let displayName = `Tập ${i+1}`;
+            // Hiển thị tên thật nếu đã cache
             if(cachedTitles[curId] && cachedTitles[curId][i]) {
-                displayName = cachedTitles[curId][i]; // Dùng tên thật
+                displayName = cachedTitles[curId][i]; 
             }
 
             const div = document.createElement('div');
