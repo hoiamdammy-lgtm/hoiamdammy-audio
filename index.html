@@ -21,7 +21,7 @@
             --text-sub: #a1a1aa;
             
             --nav-h: 60px; 
-            --player-h-mob: 110px; /* Tăng chiều cao để chứa thanh seek bar thoải mái */
+            --player-h-mob: 110px;
             --player-h-pc: 90px;
             --sidebar-w: 240px;
             --safe-b: env(safe-area-inset-bottom, 0px);
@@ -99,32 +99,22 @@
         .m-item.active { color: var(--primary); }
 
         /* --- RESPONSIVE LAYOUTS --- */
-        
-        /* MOBILE (< 768px) */
         @media (max-width: 768px) {
             .sidebar { display: none !important; }
             .player-bar {
                 bottom: calc(var(--nav-h) + var(--safe-b));
                 height: var(--player-h-mob);
-                flex-direction: column; /* Xếp dọc */
-                justify-content: center;
-                gap: 5px;
-                padding: 10px 15px;
+                flex-direction: column; justify-content: center; gap: 5px; padding: 10px 15px;
             }
             .content-area { padding-bottom: calc(var(--nav-h) + var(--player-h-mob) + 20px); }
-
-            /* Mobile Elements */
             .p-top-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; }
             .p-info { flex: 1; text-align: left; overflow: hidden; }
             .p-ctrl-pc { display: none; }
             .p-ctrl-mob { display: flex; gap: 15px; align-items: center; }
-            
-            /* Thanh thời lượng Mobile: Đảm bảo luôn hiện */
             .p-mob-progress { width: 100%; display: flex; align-items: center; gap: 10px; margin-top: 5px; }
             .p-mob-progress input { height: 20px; } 
         }
 
-        /* PC (>= 768px) */
         @media (min-width: 768px) {
             .sidebar { display: flex; }
             .mobile-nav { display: none !important; }
@@ -136,7 +126,6 @@
             }
             .content-area { padding-bottom: 100px; }
             .grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-
             .p-top-row { display: contents; } 
             .p-info { width: 30%; }
             .p-mob-progress { display: none; } 
@@ -145,15 +134,11 @@
             .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 15px; }
         }
 
-        /* Common Player Styles */
+        /* Common Player */
         .p-title { font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 14px; }
         .p-sub { font-size: 11px; color: var(--primary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
         .btn { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 5px; }
-        .btn:hover { color: #fff; }
         .btn-play { width: 42px; height: 42px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-
-        /* Range Slider Styling */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
@@ -172,7 +157,6 @@
         .overlay.open { display: flex; }
         .sheet { background: #18181b; width: 100%; max-width: 450px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 70vh; overflow-y: auto; display:flex; flex-direction:column; }
         @media (min-width: 768px) { .overlay { align-items: center; } .sheet { border-radius: 16px; } }
-        
         .opt-item { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; color: #ddd; cursor: pointer; flex-shrink: 0; }
         .opt-item:hover { background: #222; color: #fff; }
         .active-chap { color: var(--primary); font-weight: 700; }
@@ -216,19 +200,16 @@
                 <div class="p-title" id="track-name">Sẵn sàng</div>
                 <div class="p-sub" id="track-sub">Chưa chọn bài</div>
             </div>
-
             <div class="p-ctrl-mob">
                 <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-mob"></i></button>
                 <button class="btn" onclick="next()"><i class="fa-solid fa-forward-step"></i></button>
             </div>
         </div>
-
         <div class="p-mob-progress">
             <span class="time-txt" id="curr-mob">00:00</span>
             <input type="range" id="seek-mob" value="0" min="0" max="100" step="0.1">
             <span class="time-txt" id="dur-mob">00:00</span>
         </div>
-
         <div class="p-ctrl-pc">
             <div style="display:flex; gap:20px; align-items:center">
                 <button class="btn" onclick="prev()"><i class="fa-solid fa-backward-step"></i></button>
@@ -241,7 +222,6 @@
                 <span id="dur-pc">00:00</span>
             </div>
         </div>
-
         <div class="p-extra">
             <button class="btn" onclick="openMenu('menu-list')"><i class="fa-solid fa-list-ul"></i></button>
             <button class="btn" onclick="openMenu('menu-speed')"><i class="fa-solid fa-gauge-high"></i></button>
@@ -279,18 +259,8 @@
             <div class="opt-item" onclick="openMenu('menu-data')"><span>Cài đặt</span> <i class="fa-solid fa-gear"></i></div>
         </div>
     </div>
-
-    <div class="overlay" id="menu-list" onclick="closeMenu(event)">
-        <div class="sheet">
-            <h3 style="margin:0 0 10px 0; border-bottom:1px solid #333; padding-bottom:10px; font-size:16px">Danh sách tập</h3>
-            <div id="chap-list" style="overflow-y:auto; flex:1"></div>
-        </div>
-    </div>
-
-    <div class="overlay" id="menu-speed" onclick="closeMenu(event)">
-        <div class="sheet"><div id="spd-list"></div></div>
-    </div>
-
+    <div class="overlay" id="menu-list" onclick="closeMenu(event)"><div class="sheet"><h3 style="margin:0 0 10px 0; border-bottom:1px solid #333; padding-bottom:10px; font-size:16px">Danh sách tập</h3><div id="chap-list" style="overflow-y:auto; flex:1"></div></div></div>
+    <div class="overlay" id="menu-speed" onclick="closeMenu(event)"><div class="sheet"><div id="spd-list"></div></div></div>
     <div class="overlay" id="menu-data" onclick="closeMenu(event)">
         <div class="sheet">
             <div class="opt-item" onclick="exportData()">Sao lưu <i class="fa-solid fa-download"></i></div>
@@ -307,19 +277,14 @@
 
     let player, allData=[], list=[], curId='', curName='', activeTab='home';
     let isPlaying=false, updateInt, drag=false;
-    let cachedTitles = {}; 
+    let cachedTitles = {};
+    let isSwitching = false; // Cờ kiểm tra đang chuyển playlist
 
     async function init() {
         const { data } = await db.from('playlists').select('*');
         allData = data || [];
-        
-        // FIX 3: Sắp xếp danh sách (Thể loại -> Tên)
-        allData.sort((a,b) => {
-            const catA = a.category || 'z';
-            const catB = b.category || 'z';
-            return catA.localeCompare(catB) || a.name.localeCompare(b.name);
-        });
-        
+        // Sort: Thể loại -> Tên
+        allData.sort((a,b) => (a.category||'z').localeCompare(b.category||'z') || a.name.localeCompare(b.name));
         list = allData;
         render(list);
         document.getElementById('loading').style.display='none';
@@ -363,59 +328,46 @@
         });
     }
 
-    function changeTab(tab) {
-        activeTab = tab;
-        ['sb','mb'].forEach(p => {
-            ['home','hist','fav'].forEach(t => {
-                const el = document.getElementById(`${p}-${t}`);
-                if(el) el.classList.toggle('active', t === tab);
-            });
-        });
-
-        if(tab==='home') list = allData;
-        else if(tab==='hist') {
-            const h = JSON.parse(localStorage.getItem('hist')||'{}');
-            list = allData.filter(x => h[x.playlist_id]).sort((a,b) => h[b.playlist_id].at - h[a.playlist_id].at);
-        }
-        else if(tab==='fav') {
-            const f = JSON.parse(localStorage.getItem('fav')||'[]');
-            list = allData.filter(x => f.includes(x.playlist_id));
-        }
-        render(list);
-    }
-
-    // --- PLAYER LOGIC ---
-    function onYouTubeIframeAPIReady() {
-        player = new YT.Player('yt-player', {
-            height:'1', width:'1', playerVars: { 'playsinline':1, 'controls':0 },
-            events: { 'onStateChange': onState }
-        });
-    }
-
+    // --- CRITICAL FIX: PLAY LOGIC V8 ---
     function play(pid, name, idx, time) {
-        // FIX 1: Cập nhật biến toàn cục curName ngay lập tức
+        // Kiểm tra xem có phải đang chuyển truyện mới không
+        const isNewPlaylist = (curId !== pid);
+        
         curName = name; 
         curId = pid;
         
-        // Cập nhật UI ngay lập tức với tên truyện mới
-        updateUI(`Đang tải tập ${idx+1}...`, curName); 
+        // Cập nhật giao diện ngay lập tức
+        updateUI(`Đang tải tập ${idx+1}...`, curName);
+        render(list); // Re-render để highlight card mới
 
         if(player && player.loadPlaylist) {
-            // FIX 4: Gọi loadPlaylist để chuyển ngay
-            player.loadPlaylist({ list:pid, listType:'playlist', index:idx, startSeconds:time });
+            if (isNewPlaylist) {
+                isSwitching = true; // Bật cờ đang chuyển
+                // 1. Dừng video cũ ngay lập tức
+                player.stopVideo(); 
+                // 2. Load playlist mới
+                player.loadPlaylist({ list:pid, listType:'playlist', index:idx, startSeconds:time });
+            } else {
+                // Nếu cùng truyện, chỉ chuyển tập
+                player.playVideoAt(idx);
+            }
         }
-        render(list); 
     }
 
     function onState(e) {
-        if (e.data === 1 || e.data === 3) { // Playing/Buffering
+        // 1: Playing, 3: Buffering
+        if (e.data === 1 || e.data === 3) {
+            // Nếu đang chuyển truyện, đợi đến khi Playing mới tắt cờ
+            if (isSwitching && e.data === 1) {
+                isSwitching = false;
+            }
+
             isPlaying = (e.data === 1);
             setIcon(isPlaying);
             if(isPlaying) startUpdate();
 
             const vData = player.getVideoData();
             const idx = player.getPlaylistIndex();
-            // Lấy tên thật video, nếu chưa có thì dùng "Tập X"
             const realTitle = vData && vData.title ? vData.title : `Tập ${idx+1}`;
             
             if(curId) {
@@ -423,14 +375,18 @@
                 cachedTitles[curId][idx] = realTitle;
             }
 
-            // Đảm bảo luôn hiển thị curName (tên truyện) đúng
-            updateUI(realTitle, curName); 
-            saveHist(idx, player.getCurrentTime(), realTitle);
-            
-            genChapList(idx);
+            // Chỉ cập nhật UI nếu không đang trong quá trình switch dở dang (hoặc đã switch xong)
+            if (!isSwitching) {
+                updateUI(realTitle, curName);
+                saveHist(idx, player.getCurrentTime(), realTitle);
+                genChapList(idx);
+            }
 
-        } else if (e.data === 0) { next(); } 
-        else { isPlaying = false; setIcon(false); stopUpdate(); }
+        } else if (e.data === 0) { 
+            next(); 
+        } else { 
+            isPlaying = false; setIcon(false); stopUpdate(); 
+        }
     }
 
     function updateUI(title, sub) {
@@ -440,6 +396,7 @@
         document.getElementById('z-sub').innerText = sub;
     }
 
+    // --- OTHER FUNCS ---
     function startUpdate() {
         stopUpdate();
         updateInt = setInterval(() => {
@@ -455,30 +412,20 @@
                 document.getElementById('seek-pc').value = p;
                 document.getElementById('seek-mob').value = p;
             }
-            
             if(Math.floor(c)%5===0) saveHist(player.getPlaylistIndex(), c, document.getElementById('track-name').innerText);
         }, 1000);
     }
     
     function stopUpdate() { clearInterval(updateInt); }
-    
     function setIcon(p) {
         const c = p ? 'fa-pause' : 'fa-play';
-        ['icon-play-mob','icon-play-pc','icon-play-zen'].forEach(id => {
-            document.getElementById(id).className = `fa-solid ${c}`;
-        });
+        ['icon-play-mob','icon-play-pc','icon-play-zen'].forEach(id => document.getElementById(id).className = `fa-solid ${c}`);
         document.getElementById('zen').classList.toggle('playing', p);
     }
-
     function toggle() { if(player) isPlaying ? player.pauseVideo() : player.playVideo(); }
     function prev() { if(player) player.previousVideo(); }
     function next() { if(player) player.nextVideo(); }
-    
-    function seek(v) { 
-        if(!player) return;
-        const t = (v/100)*player.getDuration();
-        player.seekTo(t, true);
-    }
+    function seek(v) { if(player) player.seekTo((v/100)*player.getDuration(), true); }
     ['seek-pc', 'seek-mob'].forEach(id => {
         const el = document.getElementById(id);
         el.oninput = () => drag=true;
@@ -497,14 +444,9 @@
         const d = document.getElementById('chap-list'); d.innerHTML = '';
         const pl = player ? player.getPlaylist() : [];
         if(!pl) return;
-        
         pl.forEach((_, i) => {
             let displayName = `Tập ${i+1}`;
-            // Hiển thị tên thật nếu đã cache
-            if(cachedTitles[curId] && cachedTitles[curId][i]) {
-                displayName = cachedTitles[curId][i]; 
-            }
-
+            if(cachedTitles[curId] && cachedTitles[curId][i]) displayName = cachedTitles[curId][i]; 
             const div = document.createElement('div');
             div.className = 'opt-item';
             if(i===activeIdx) div.classList.add('active-chap');
@@ -526,10 +468,35 @@
         });
     }
 
-    function doSearch() {
-        const v = document.getElementById('search').value.toLowerCase();
-        render(list.filter(x => x.name.toLowerCase().includes(v)));
+    // --- TABS & UTILS ---
+    function changeTab(tab) {
+        activeTab = tab;
+        ['sb','mb'].forEach(p => {
+            ['home','hist','fav'].forEach(t => {
+                const el = document.getElementById(`${p}-${t}`);
+                if(el) el.classList.toggle('active', t === tab);
+            });
+        });
+        if(tab==='home') list = allData;
+        else if(tab==='hist') {
+            const h = JSON.parse(localStorage.getItem('hist')||'{}');
+            list = allData.filter(x => h[x.playlist_id]).sort((a,b) => h[b.playlist_id].at - h[a.playlist_id].at);
+        }
+        else if(tab==='fav') {
+            const f = JSON.parse(localStorage.getItem('fav')||'[]');
+            list = allData.filter(x => f.includes(x.playlist_id));
+        }
+        render(list);
     }
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('yt-player', {
+            height:'1', width:'1', playerVars: { 'playsinline':1, 'controls':0 },
+            events: { 'onStateChange': onState }
+        });
+    }
+
+    function doSearch() { render(list.filter(x => x.name.toLowerCase().includes(document.getElementById('search').value.toLowerCase()))); }
     function filter(cat, el) {
         document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
         el.classList.add('active');
@@ -548,21 +515,8 @@
     function openZen() { document.getElementById('zen').classList.add('active'); }
     function closeZen() { document.getElementById('zen').classList.remove('active'); }
     function fmt(s) { return new Date(s * 1000).toISOString().substr(11, 8).replace(/^00:/, ''); }
-    
-    function exportData() {
-        const d = {fav: localStorage.getItem('fav'), hist: localStorage.getItem('hist')};
-        const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:'application/json'})); a.download='backup.json'; a.click();
-    }
-    function importData(e) {
-        const r = new FileReader();
-        r.onload = x => {
-            const d = JSON.parse(x.target.result);
-            if(d.fav) localStorage.setItem('fav', d.fav);
-            if(d.hist) localStorage.setItem('hist', d.hist);
-            location.reload();
-        };
-        r.readAsText(e.files[0]);
-    }
+    function exportData() { const d = {fav: localStorage.getItem('fav'), hist: localStorage.getItem('hist')}; const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:'application/json'})); a.download='backup.json'; a.click(); }
+    function importData(e) { const r = new FileReader(); r.onload = x => { const d = JSON.parse(x.target.result); if(d.fav) localStorage.setItem('fav', d.fav); if(d.hist) localStorage.setItem('hist', d.hist); location.reload(); }; r.readAsText(e.files[0]); }
     function resetData() { localStorage.clear(); location.reload(); }
 
     init();
