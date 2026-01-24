@@ -13,11 +13,11 @@
     <style>
         :root {
             --bg: #09090b;
-            --sidebar-bg: rgba(9, 9, 11, 0.95);
+            --sidebar-bg: rgba(9, 9, 11, 0.6);
             --surface: #18181b;
             --surface-hover: #27272a;
-            --primary: #10b981;
-            --primary-glow: rgba(16, 185, 129, 0.4);
+            --primary: #8b5cf6; /* Đổi sang màu tím Trendy hơn */
+            --primary-glow: rgba(139, 92, 246, 0.4);
             --text: #ffffff;
             --text-sub: #a1a1aa;
             
@@ -27,6 +27,7 @@
             --sidebar-w: 260px;
             --safe-b: env(safe-area-inset-bottom, 20px); 
             --glass: blur(20px) saturate(180%);
+            --border: 1px solid rgba(255,255,255,0.08);
         }
 
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -39,126 +40,146 @@
             font-family: 'Manrope', sans-serif; 
             background: var(--bg); color: var(--text); margin: 0; 
             height: 100dvh; display: flex; overflow: hidden; 
+            background-image: radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.08), transparent 40%);
         }
-
-        /* LOGO */
-        .brand { 
-            font-size: 20px; font-weight: 800; color: #fff; 
-            display: flex; align-items: center; gap: 15px; margin-bottom: 35px; padding-left: 5px;
-        }
-        .disk-logo {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: radial-gradient(circle, #111 20%, #333 21%, #111 22%, #333 50%, #111 100%);
-            border: 2px solid #444; display: flex; align-items: center; justify-content: center; position: relative;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5); animation: spinLogo 5s linear infinite;
-        }
-        .disk-logo::after { content: ''; position: absolute; width: 12px; height: 12px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 5px var(--primary); }
-        @keyframes spinLogo { 100% { transform: rotate(360deg); } }
 
         /* SIDEBAR */
         .sidebar {
-            width: var(--sidebar-w); background: var(--sidebar-bg); border-right: 1px solid rgba(255,255,255,0.08);
+            width: var(--sidebar-w); background: var(--sidebar-bg); border-right: var(--border);
             display: none; flex-direction: column; padding: 24px 16px; z-index: 20; flex-shrink: 0;
+            backdrop-filter: blur(40px);
+        }
+        .brand { 
+            font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.5px;
+            display: flex; align-items: center; gap: 15px; margin-bottom: 35px; padding-left: 10px;
         }
         .nav-item { 
             display: flex; align-items: center; gap: 14px; padding: 14px 16px; 
             color: var(--text-sub); border-radius: 12px; cursor: pointer; transition: 0.2s; 
-            font-weight: 600; font-size: 15px; margin-bottom: 4px; 
+            font-weight: 600; font-size: 14px; margin-bottom: 4px; 
         }
-        .nav-item:hover { background: var(--surface-hover); color: #fff; }
-        .nav-item.active { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(139, 92, 246, 0.15); color: var(--primary); }
 
         /* MAIN */
         .app-main { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; min-width: 0; }
         
-        .header { height: 70px; padding: 0 20px; display: flex; align-items: center; gap: 15px; z-index: 10; }
+        .header { height: 70px; padding: 0 24px; display: flex; align-items: center; gap: 15px; z-index: 10; flex-shrink: 0; }
         .search-box { flex: 1; position: relative; max-width: 480px; }
         .search-box input { 
-            width: 100%; background: #1f1f22; border: 1px solid #333; 
-            padding: 12px 40px 12px 20px; border-radius: 12px; color: #fff; font-size: 14px; 
+            width: 100%; background: #1f1f22; border: var(--border); 
+            padding: 12px 40px 12px 20px; border-radius: 12px; color: #fff; font-size: 14px; transition: 0.2s;
         }
+        .search-box input:focus { border-color: var(--primary); background: #27272a; }
         .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
 
-        .filters { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 15px 20px; scrollbar-width: none; flex-shrink: 0; }
-        .chip { 
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
-            padding: 8px 16px; border-radius: 100px; font-size: 13px; white-space: nowrap; 
-            cursor: pointer; color: #ccc; font-weight: 600; 
+        /* CONTROL BAR (FILTER & SORT) */
+        .control-bar {
+            padding: 0 24px 16px 24px; display: flex; gap: 12px; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; align-items: center;
         }
-        .chip.active { background: var(--primary); color: #000; border-color: var(--primary); font-weight: 700; }
+        .filter-group { display: flex; background: #1f1f22; border-radius: 10px; padding: 4px; border: var(--border); }
+        .chip { 
+            padding: 6px 16px; border-radius: 8px; font-size: 13px; white-space: nowrap; 
+            cursor: pointer; color: var(--text-sub); font-weight: 600; transition: 0.2s;
+        }
+        .chip.active { background: var(--surface-hover); color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        .dropdown-wrapper { position: relative; }
+        .custom-select {
+            background: #1f1f22; border: var(--border); color: var(--text-sub);
+            padding: 8px 30px 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 600;
+            cursor: pointer; appearance: none; -webkit-appearance: none; outline: none; min-width: 130px;
+        }
+        .custom-select:focus { border-color: var(--primary); color: #fff; }
+        .select-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #666; font-size: 10px; pointer-events: none; }
 
-        .content-area { flex: 1; overflow-y: auto; padding: 0 20px 20px 20px; }
-        .grid { display: grid; gap: 16px; grid-template-columns: 1fr; padding-bottom: 20px; }
+        /* CONTENT */
+        .content-area { flex: 1; overflow-y: auto; padding: 0 24px 120px 24px; }
+        .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 
         /* CARD */
         .card { 
-            background: var(--surface); padding: 12px; border-radius: 16px; 
-            display: flex; align-items: flex-start; gap: 12px; border: 1px solid rgba(255,255,255,0.05); 
-            cursor: pointer; transition: 0.2s; 
+            background: rgba(255,255,255,0.03); padding: 16px; border-radius: 16px; 
+            display: flex; flex-direction: column; gap: 12px; border: var(--border); 
+            cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;
         }
-        .card:active { transform: scale(0.98); background: var(--surface-hover); }
-        .card.playing { border-color: var(--primary); background: rgba(16,185,129,0.05); }
+        .card:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); border-color: rgba(255,255,255,0.15); }
+        .card.playing { border-color: var(--primary); background: rgba(139, 92, 246, 0.08); }
         
-        .c-img { 
-            width: 50px; height: 50px; background: #222; border-radius: 10px; 
-            display: flex; align-items: center; justify-content: center; font-size: 20px; 
-            color: #555; flex-shrink: 0; margin-top: 2px;
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .c-icon { 
+            width: 44px; height: 44px; background: #27272a; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; color: #71717a; font-size: 18px;
         }
-        .card.playing .c-img { background: var(--primary); color: #000; }
-        .c-info { flex: 1; min-width: 0; }
+        .card.playing .c-icon { background: var(--primary); color: #fff; }
+
+        .c-info { display: flex; flex-direction: column; gap: 4px; }
         .c-title { 
-            font-weight: 700; font-size: 15px; margin-bottom: 6px; line-height: 1.4; color: #eee;
+            font-weight: 700; font-size: 15px; color: #eee; line-height: 1.4;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
         }
-        .c-sub { font-size: 12px; color: var(--text-sub); display: flex; gap: 10px; align-items: center; }
-        .c-badge { background: #222; padding: 2px 8px; border-radius: 4px; display:inline-flex; align-items:center; }
+        .c-author { font-size: 12px; color: var(--text-sub); display: flex; align-items: center; gap: 6px; }
+        
+        .c-meta { display: flex; gap: 8px; margin-top: auto; font-size: 11px; font-weight: 600; }
+        .badge { padding: 4px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: #94a3b8; }
+        .badge.ep { color: #cbd5e1; background: rgba(255,255,255,0.1); }
+        .badge.cat { color: #d8b4fe; background: rgba(139, 92, 246, 0.15); }
+
+        .btn-fav { 
+            position: absolute; bottom: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%;
+            border: none; background: transparent; color: #52525b; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        .btn-fav:hover { background: rgba(255,255,255,0.1); color: #ef4444; }
+        .btn-fav.liked { color: #ef4444; }
 
         /* PLAYER BAR */
         .player-bar {
-            position: fixed; left: 0; right: 0; 
-            background: rgba(20, 20, 23, 0.98); backdrop-filter: var(--glass); -webkit-backdrop-filter: var(--glass);
-            border-top: 1px solid rgba(255,255,255,0.15); display: flex; transition: bottom 0.3s;
-            padding: 0 20px; box-shadow: 0 -5px 30px rgba(0,0,0,0.8); z-index: 100;
+            position: fixed; left: 0; right: 0; bottom: 0;
+            background: rgba(9, 9, 11, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: var(--border); display: flex; transition: bottom 0.3s;
+            padding: 0 24px; z-index: 100;
         }
 
         /* MOBILE NAV */
         .mobile-nav {
             display: flex; position: fixed; bottom: 0; left: 0; right: 0; 
             height: calc(var(--nav-h) + var(--safe-b)); padding-bottom: var(--safe-b);
-            background: #09090b; border-top: 1px solid rgba(255,255,255,0.1); z-index: 90;
-            justify-content: space-around; align-items: center;
+            background: rgba(9, 9, 11, 0.95); border-top: var(--border); z-index: 90;
+            justify-content: space-around; align-items: center; backdrop-filter: blur(20px);
         }
-        .m-item { color: #666; font-size: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 25%; }
+        .m-item { color: #71717a; font-size: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 25%; font-weight: 500; }
         .m-item.active { color: var(--primary); }
         .m-item i { font-size: 20px; }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
             .sidebar { display: none !important; }
+            .header { padding: 0 16px; }
+            .control-bar { padding: 0 16px 12px 16px; }
+            .content-area { padding: 0 16px 180px 16px; }
+            .grid { grid-template-columns: 1fr; gap: 12px; }
+            .card { flex-direction: row; align-items: center; padding: 12px; }
+            .card-top { margin-bottom: 0; align-items: center; }
+            .c-meta { display: none; } /* Ẩn bớt trên mobile cho gọn */
+            .c-info { gap: 2px; }
+            .btn-fav { position: relative; bottom: auto; right: auto; margin-left: auto; }
+            
             .player-bar {
                 bottom: calc(var(--nav-h) + var(--safe-b)); height: var(--player-h-mob);
-                padding: 0 15px; align-items: center; justify-content: space-between;
-                border-radius: 16px 16px 0 0;
+                padding: 0 16px; align-items: center; justify-content: space-between;
+                border-radius: 16px 16px 0 0; border: var(--border); border-bottom: none;
             }
-            .content-area { padding-bottom: calc(var(--nav-h) + var(--player-h-mob) + 40px); }
-            
-            .p-left { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; margin-right: 5px; }
+            .p-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; margin-right: 10px; }
             .p-info { overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
-            .p-title { 
-                font-size: 13px; font-weight: 700; color: #fff; line-height: 1.3;
-                display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal;
-            }
-            .p-sub { font-size: 11px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-            .p-ctrl-mob { display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
-            .p-ctrl-pc { display: none; }
+            .p-title { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .p-sub { font-size: 12px; color: var(--primary); }
             
-            /* SỬA LỖI DƯ NÚT: Ẩn p-extra trên mobile */
-            .p-extra { display: none !important; } 
-            
-            .p-mob-progress { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.1); }
+            .p-ctrl-mob { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+            .p-ctrl-pc, .p-extra { display: none; }
+            .p-mob-progress { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.1); }
             .p-bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.1s linear; }
-            #seek-mob-touch { position: absolute; top: -10px; left: 0; right: 0; height: 25px; opacity: 0; z-index: 110; cursor: pointer; }
+            #seek-mob-touch { position: absolute; top: -10px; left: 0; right: 0; height: 25px; opacity: 0; z-index: 110; }
         }
 
         @media (min-width: 768px) {
@@ -166,68 +187,66 @@
             .mobile-nav { display: none !important; }
             .player-bar {
                 left: var(--sidebar-w); bottom: 0; height: var(--player-h-pc);
-                align-items: center; justify-content: space-between; padding: 0 30px; z-index: 200;
+                align-items: center; justify-content: space-between; padding: 0 32px; z-index: 200;
             }
-            .content-area { padding-bottom: 120px; }
-            .grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-            
-            .p-left { display: flex; width: 30%; align-items: center; gap: 15px; cursor: pointer; }
-            .p-thumb-pc { width: 45px; height: 45px; background: #333; border-radius: 8px; display:flex; align-items:center; justify-content:center; color:#555; }
-            .p-title { white-space: nowrap; }
+            .p-left { display: flex; width: 30%; align-items: center; gap: 16px; cursor: pointer; }
+            .p-thumb-pc { width: 50px; height: 50px; background: #27272a; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:#555; font-size: 20px; }
             .p-info { width: 100%; }
-            .p-ctrl-mob { display: none; }
-            .p-mob-progress { display: none; }
-            .p-ctrl-pc { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 6px; max-width: 600px; }
-            .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 10px; }
+            .p-title { font-size: 15px; font-weight: 700; }
+            .p-sub { font-size: 13px; color: #aaa; }
+            
+            .p-ctrl-mob, .p-mob-progress { display: none; }
+            .p-ctrl-pc { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 8px; max-width: 500px; }
+            .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 15px; }
         }
 
-        .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 8px; display:flex; align-items:center; justify-content:center; }
+        .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 8px; display:flex; align-items:center; justify-content:center; transition: 0.2s; }
+        .btn:hover { color: #fff; transform: scale(1.1); }
         .btn:active { transform: scale(0.9); }
         .btn-play { 
-            width: 40px; height: 40px; background: #fff; color: #000; border-radius: 50%; font-size: 16px; 
-            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+            width: 44px; height: 44px; background: #fff; color: #000; border-radius: 50%; font-size: 18px; 
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
         }
+        .btn-play:hover { color: #000; transform: scale(1.05); }
 
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; height: 20px; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; box-shadow: 0 0 10px #000; }
-
-        /* ZEN MODE */
-        .zen { position: fixed; inset: 0; background: #000; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
-        .zen.active { opacity: 1; pointer-events: auto; }
-        .zen-bg { position: absolute; inset: 0; opacity: 0.4; filter: blur(80px); background-size: cover; z-index: -1; }
-        .disk { 
-            width: 260px; height: 260px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            border: 3px solid rgba(255,255,255,0.1); margin-bottom: 40px; 
-            animation: spin 10s linear infinite; animation-play-state: paused; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .zen.playing .disk { animation-play-state: running; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; box-shadow: 0 0 10px #000; transition: 0.2s; }
+        input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.3); }
 
         /* OVERLAYS */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 400; display: none; align-items: flex-end; justify-content: center; }
-        .overlay.open { display: flex; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 400; display: none; align-items: flex-end; justify-content: center; }
+        .overlay.open { display: flex; animation: fadeIn 0.2s; }
         .sheet { 
-            background: #18181b; width: 100%; max-width: 450px; border-radius: 20px 20px 0 0; padding: 20px; 
+            background: #18181b; width: 100%; max-width: 450px; border-radius: 24px 24px 0 0; padding: 24px; 
             max-height: 80vh; overflow-y: auto; display:flex; flex-direction:column; border: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 50px; 
+            padding-bottom: 50px; animation: slideUp 0.3s;
         }
-        @media (min-width: 768px) { .overlay { align-items: center; } .sheet { border-radius: 16px; padding-bottom: 20px; } }
-        .opt-item { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; color: #ddd; cursor: pointer; align-items: center; }
-        .opt-item:hover { background: #222; }
-        .active-chap { color: var(--primary); font-weight: 700; background: rgba(16,185,129,0.05); }
+        @keyframes slideUp { from {transform: translateY(100%);} to {transform: translateY(0);} }
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+        
+        @media (min-width: 768px) { .overlay { align-items: center; } .sheet { border-radius: 16px; padding-bottom: 24px; animation: zoomIn 0.2s; } }
+        @keyframes zoomIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
 
+        .opt-item { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; color: #ddd; cursor: pointer; align-items: center; border-radius: 8px; }
+        .opt-item:hover { background: rgba(255,255,255,0.05); }
+        .active-chap { color: var(--primary); font-weight: 700; background: rgba(139, 92, 246, 0.1); }
+        
+        /* ZEN MODE STYLES omitted for brevity but included in logic */
+        .zen { position: fixed; inset: 0; background: #000; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .zen.active { opacity: 1; pointer-events: auto; }
+        .zen-bg { position: absolute; inset: 0; opacity: 0.5; filter: blur(80px); background-size: cover; z-index: -1; }
+        .disk { width: 280px; height: 280px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,0.1); margin-bottom: 40px; animation: spin 20s linear infinite; animation-play-state: paused; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+        .zen.playing .disk { animation-play-state: running; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand">
-            <div class="disk-logo"></div> AUDIO ĐAM MỸ
-        </div>
+        <div class="brand"><i class="fa-solid fa-compact-disc" style="color:var(--primary)"></i> AUDIO ĐAM MỸ</div>
         <div class="nav-item active" id="sb-home" onclick="changeTab('home')"><i class="fa-solid fa-house"></i> Trang chủ</div>
-        <div class="nav-item" id="sb-hist" onclick="changeTab('hist')"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
+        <div class="nav-item" id="sb-hist" onclick="changeTab('hist')"><i class="fa-solid fa-clock-rotate-left"></i> Đã nghe</div>
         <div class="nav-item" id="sb-fav" onclick="changeTab('fav')"><i class="fa-solid fa-heart"></i> Yêu thích</div>
         <div style="flex:1"></div>
         <div class="nav-item" onclick="openMenu('menu-data')"><i class="fa-solid fa-database"></i> Dữ liệu</div>
@@ -236,22 +255,43 @@
     <div class="app-main">
         <div class="header">
             <div class="search-box">
-                <input type="text" id="search" placeholder="Tìm kiếm..." onkeyup="doSearch()">
+                <input type="text" id="search" placeholder="Tìm kiếm truyện, tác giả..." onkeyup="processData()">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </div>
         </div>
 
-        <div class="filters">
-            <div class="chip active" onclick="filter('all', this)">Tất cả</div>
-            <div class="chip" onclick="filter('Chủ Thụ', this)">Chủ Thụ</div>
-            <div class="chip" onclick="filter('Chủ Công', this)">Chủ Công</div>
-            <div class="chip" onclick="filter('Vô CP', this)">Vô CP</div>
-            <div class="chip" onclick="filter('Hệ Thống', this)">Hệ Thống</div>
+        <div class="control-bar">
+            <div class="filter-group">
+                <div class="chip active" data-cat="all" onclick="setFilter('cat', 'all', this)">Tất cả</div>
+                <div class="chip" data-cat="Chủ Thụ" onclick="setFilter('cat', 'Chủ Thụ', this)">Chủ Thụ</div>
+                <div class="chip" data-cat="Chủ Công" onclick="setFilter('cat', 'Chủ Công', this)">Chủ Công</div>
+                <div class="chip" data-cat="Vô CP" onclick="setFilter('cat', 'Vô CP', this)">Vô CP</div>
+                <div class="chip" data-cat="Hệ Thống" onclick="setFilter('cat', 'Hệ Thống', this)">Hệ Thống</div>
+            </div>
+
+            <div class="dropdown-wrapper">
+                <select id="author-select" class="custom-select" onchange="setFilter('author', this.value, null)">
+                    <option value="all">Tất cả tác giả</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon"></i>
+            </div>
+
+            <div style="flex:1"></div>
+
+            <div class="dropdown-wrapper">
+                <select id="sort-select" class="custom-select" onchange="setSort(this.value)">
+                    <option value="newest">Mới nhất</option>
+                    <option value="name_asc">Tên (A-Z)</option>
+                    <option value="count_desc">Số tập (Nhiều nhất)</option>
+                    <option value="count_asc">Số tập (Ít nhất)</option>
+                </select>
+                <i class="fa-solid fa-arrow-down-short-wide select-icon"></i>
+            </div>
         </div>
 
         <div class="content-area">
             <div id="loading" style="text-align:center; padding:40px; color:#555">
-                <i class="fa-solid fa-circle-notch fa-spin" style="font-size:30px; margin-bottom:10px"></i><br>Đang tải dữ liệu...
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size:30px; margin-bottom:10px"></i><br>Đang tải thư viện...
             </div>
             <div class="grid" id="grid"></div>
         </div>
@@ -264,17 +304,17 @@
         </div>
 
         <div class="p-left" onclick="openZen()">
-            <div class="p-thumb-pc" style="display:none"><i class="fa-solid fa-music"></i></div>
+            <div class="p-thumb-pc"><i class="fa-solid fa-music"></i></div>
             <div class="p-info">
                 <div class="p-title" id="track-name">Sẵn sàng</div>
-                <div class="p-sub" id="track-sub">Chưa chọn bài</div>
+                <div class="p-sub" id="track-sub">Chọn bài để phát</div>
             </div>
         </div>
 
         <div class="p-ctrl-mob">
-            <button class="btn" onclick="openMenu('menu-speed')" style="font-size:14px; width:auto; padding:0 5px; font-weight:700; color:#fff">1x</button>
+            <button class="btn" onclick="openMenu('menu-speed')" style="font-size:13px; font-weight:700;">1x</button>
             <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-mob"></i></button>
-            <button class="btn" onclick="openMenu('menu-list')" style="color:#fff"><i class="fa-solid fa-list-ul"></i></button>
+            <button class="btn" onclick="openMenu('menu-list')"><i class="fa-solid fa-list-ul"></i></button>
         </div>
 
         <div class="p-ctrl-pc">
@@ -283,7 +323,7 @@
                 <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-pc"></i></button>
                 <button class="btn" onclick="next()"><i class="fa-solid fa-forward-step"></i></button>
             </div>
-            <div style="display:flex; width:100%; align-items:center; gap:10px; font-size:11px; color:#888">
+            <div style="display:flex; width:100%; align-items:center; gap:12px; font-size:11px; color:#888; font-weight:600">
                 <span id="curr-pc">00:00</span>
                 <input type="range" id="seek-pc" value="0" min="0" max="100" step="0.1">
                 <span id="dur-pc">00:00</span>
@@ -291,14 +331,14 @@
         </div>
 
         <div class="p-extra">
-            <button class="btn" onclick="openMenu('menu-list')"><i class="fa-solid fa-list-ul"></i></button>
-            <button class="btn" onclick="openMenu('menu-speed')"><i class="fa-solid fa-gauge-high"></i></button>
+            <button class="btn" onclick="openMenu('menu-list')" title="Danh sách phát"><i class="fa-solid fa-list-ul"></i></button>
+            <button class="btn" onclick="openMenu('menu-speed')" title="Tốc độ"><i class="fa-solid fa-gauge-high"></i></button>
         </div>
     </div>
 
     <div class="mobile-nav">
-        <div class="m-item active" id="mb-home" onclick="changeTab('home')"><i class="fa-solid fa-house"></i>Home</div>
-        <div class="m-item" id="mb-hist" onclick="changeTab('hist')"><i class="fa-solid fa-clock-rotate-left"></i>Lịch sử</div>
+        <div class="m-item active" id="mb-home" onclick="changeTab('home')"><i class="fa-solid fa-house"></i>Khám phá</div>
+        <div class="m-item" id="mb-hist" onclick="changeTab('hist')"><i class="fa-solid fa-clock-rotate-left"></i>Đã nghe</div>
         <div class="m-item" id="mb-fav" onclick="changeTab('fav')"><i class="fa-solid fa-heart"></i>Yêu thích</div>
         <div class="m-item" onclick="openMenu('menu-data')"><i class="fa-solid fa-gear"></i>Cài đặt</div>
     </div>
@@ -306,22 +346,22 @@
     <div class="zen" id="zen">
         <div class="zen-bg"></div>
         <button class="btn" style="position:absolute; top:30px; left:20px; z-index:10; background:rgba(255,255,255,0.1); border-radius:50%; width:40px; height:40px" onclick="closeZen()"><i class="fa-solid fa-chevron-down"></i></button>
-        <div class="disk"><i class="fa-solid fa-music" style="font-size:60px; color:#555"></i></div>
+        <div class="disk"><i class="fa-solid fa-music" style="font-size:80px; color:#555"></i></div>
         <div style="text-align:center; padding:0 30px; margin-bottom:40px">
-            <h2 id="z-title" style="color:#fff; font-size:18px; margin-bottom:5px; line-height:1.4">...</h2>
-            <p id="z-sub" style="color:var(--primary); font-size:14px">...</p>
+            <h2 id="z-title" style="color:#fff; font-size:20px; margin-bottom:8px; line-height:1.4">...</h2>
+            <p id="z-sub" style="color:var(--primary); font-size:15px; font-weight:600">...</p>
         </div>
-        <div style="width:80%; max-width:400px; margin-bottom:30px">
-            <input type="range" id="seek-zen" value="0" min="0" max="100" step="0.1" style="margin-bottom:10px">
-            <div style="display:flex; justify-content:space-between; color:#aaa; font-size:12px">
+        <div style="width:85%; max-width:450px; margin-bottom:40px">
+            <input type="range" id="seek-zen" value="0" min="0" max="100" step="0.1" style="margin-bottom:15px">
+            <div style="display:flex; justify-content:space-between; color:#bbb; font-size:13px; font-weight:600">
                 <span id="curr-zen">00:00</span>
                 <span id="dur-zen">00:00</span>
             </div>
         </div>
-        <div style="display:flex; gap:30px; align-items:center">
-            <button class="btn" onclick="prev()" style="font-size:28px"><i class="fa-solid fa-backward-step"></i></button>
-            <button class="btn btn-play" style="width:70px; height:70px; font-size:28px" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-zen"></i></button>
-            <button class="btn" onclick="next()" style="font-size:28px"><i class="fa-solid fa-forward-step"></i></button>
+        <div style="display:flex; gap:40px; align-items:center">
+            <button class="btn" onclick="prev()" style="font-size:32px"><i class="fa-solid fa-backward-step"></i></button>
+            <button class="btn btn-play" style="width:80px; height:80px; font-size:32px" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-zen"></i></button>
+            <button class="btn" onclick="next()" style="font-size:32px"><i class="fa-solid fa-forward-step"></i></button>
         </div>
     </div>
 
@@ -329,8 +369,8 @@
 
     <div class="overlay" id="menu-list" onclick="closeMenu(event)">
         <div class="sheet">
-            <div style="font-size:18px; font-weight:700; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px; display:flex; justify-content:space-between; color:#fff">
-                Danh sách tập <i class="fa-solid fa-xmark" onclick="closeMenu({target:{classList:{contains:()=>true}}})" style="color:#666"></i>
+            <div style="font-size:18px; font-weight:700; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; display:flex; justify-content:space-between; color:#fff">
+                Danh sách tập <i class="fa-solid fa-xmark" onclick="closeMenu({target:{classList:{contains:()=>true}}})" style="color:#666; cursor:pointer"></i>
             </div>
             <div id="chap-list" style="overflow-y:auto; flex:1"></div>
         </div>
@@ -345,10 +385,10 @@
     
     <div class="overlay" id="menu-data" onclick="closeMenu(event)">
         <div class="sheet">
-            <div style="font-size:18px; font-weight:700; margin-bottom:15px; color:#fff">Cài đặt</div>
-            <div class="opt-item" onclick="exportData()">Sao lưu <i class="fa-solid fa-download"></i></div>
-            <div class="opt-item" onclick="document.getElementById('file-in').click()">Khôi phục <i class="fa-solid fa-upload"></i></div>
-            <div class="opt-item" style="color:#ef4444" onclick="resetData()">Xóa dữ liệu <i class="fa-solid fa-trash"></i></div>
+            <div style="font-size:18px; font-weight:700; margin-bottom:15px; color:#fff">Cài đặt dữ liệu</div>
+            <div class="opt-item" onclick="exportData()">Sao lưu lịch sử <i class="fa-solid fa-download"></i></div>
+            <div class="opt-item" onclick="document.getElementById('file-in').click()">Khôi phục dữ liệu <i class="fa-solid fa-upload"></i></div>
+            <div class="opt-item" style="color:#ef4444" onclick="resetData()">Xóa toàn bộ <i class="fa-solid fa-trash"></i></div>
             <input type="file" id="file-in" style="display:none" onchange="importData(this)">
         </div>
     </div>
@@ -358,18 +398,18 @@
     const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
     const db = supabase.createClient(DB_URL, DB_KEY);
 
-    let player, allData=[], list=[], curId='', curName='', activeTab='home';
-    let isPlaying=false, updateInt, drag=false;
-    let cachedTitles = {};
-    let isSwitching = false; 
-    let currentSpeed = 1;
+    let player, allData=[], displayList=[], curId='', curName='', activeTab='home';
+    let isPlaying=false, updateInt, drag=false, cachedTitles = {}, isSwitching = false, currentSpeed = 1;
+    
+    // FILTER STATE
+    let filters = { cat: 'all', author: 'all' };
+    let sortMode = 'newest';
 
     async function init() {
         const { data } = await db.from('playlists').select('*');
         allData = data || [];
-        allData.sort((a,b) => (a.category||'z').localeCompare(b.category||'z') || a.name.localeCompare(b.name));
-        list = allData;
-        render(list);
+        populateAuthors(); // Tạo danh sách tác giả
+        processData(); // Lọc và sắp xếp lần đầu
         document.getElementById('loading').style.display='none';
         
         var tag = document.createElement('script');
@@ -378,33 +418,108 @@
         genSpeed();
     }
 
+    // --- LOGIC LỌC & SẮP XẾP ---
+    function populateAuthors() {
+        const authors = new Set();
+        allData.forEach(x => {
+            if(x.author && x.author.length > 1) authors.add(x.author);
+        });
+        const sel = document.getElementById('author-select');
+        [...authors].sort().forEach(au => {
+            const opt = document.createElement('option');
+            opt.value = au; opt.innerText = au;
+            sel.appendChild(opt);
+        });
+    }
+
+    function setFilter(type, val, el) {
+        filters[type] = val;
+        if(type === 'cat') {
+            document.querySelectorAll('.filter-group .chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        }
+        processData();
+    }
+
+    function setSort(val) {
+        sortMode = val;
+        processData();
+    }
+
+    function processData() {
+        // 1. Lấy list gốc dựa trên Tab
+        let temp = [];
+        if(activeTab === 'home') temp = [...allData];
+        else if(activeTab === 'fav') {
+            const f = JSON.parse(localStorage.getItem('fav')||'[]');
+            temp = allData.filter(x => f.includes(x.playlist_id));
+        } else if(activeTab === 'hist') {
+            const h = JSON.parse(localStorage.getItem('hist')||'{}');
+            temp = allData.filter(x => h[x.playlist_id]);
+        }
+
+        // 2. Lọc theo Search text
+        const txt = document.getElementById('search').value.toLowerCase();
+        if(txt) temp = temp.filter(x => x.name.toLowerCase().includes(txt) || (x.author && x.author.toLowerCase().includes(txt)));
+
+        // 3. Lọc theo Category
+        if(filters.cat !== 'all') temp = temp.filter(x => x.category === filters.cat);
+
+        // 4. Lọc theo Author
+        if(filters.author !== 'all') temp = temp.filter(x => x.author === filters.author);
+
+        // 5. Sắp xếp
+        if(activeTab === 'hist') {
+             const h = JSON.parse(localStorage.getItem('hist')||'{}');
+             temp.sort((a,b) => h[b.playlist_id].at - h[a.playlist_id].at);
+        } else {
+            if(sortMode === 'name_asc') temp.sort((a,b) => a.name.localeCompare(b.name));
+            else if(sortMode === 'count_desc') temp.sort((a,b) => (parseInt(b.count)||0) - (parseInt(a.count)||0));
+            else if(sortMode === 'count_asc') temp.sort((a,b) => (parseInt(a.count)||0) - (parseInt(b.count)||0));
+            else temp.sort((a,b) => b.id - a.id); // Newest default
+        }
+
+        displayList = temp;
+        render(displayList);
+    }
+
     function render(data) {
         const g = document.getElementById('grid'); g.innerHTML = '';
         const favs = JSON.parse(localStorage.getItem('fav')||'[]');
         const hist = JSON.parse(localStorage.getItem('hist')||'{}');
 
-        if(!data.length) g.innerHTML = '<div style="color:#666; text-align:center">Trống</div>';
+        if(!data.length) {
+            g.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px"><i class="fa-solid fa-box-open" style="font-size:40px; margin-bottom:10px"></i><br>Không tìm thấy truyện nào</div>';
+            return;
+        }
 
         data.forEach(x => {
             const h = hist[x.playlist_id];
-            const realTitle = h && h.realTitle ? h.realTitle : (h ? `Tập ${h.idx+1}` : 'Chưa nghe');
-            const color = h ? 'var(--primary)' : '#666';
+            const realTitle = h && h.realTitle ? h.realTitle : (h ? `Đang nghe tập ${h.idx+1}` : 'Chưa bắt đầu');
+            const author = x.author || 'Đang cập nhật';
+            const ep = x.count || '? tập';
 
             const div = document.createElement('div');
             div.className = `card ${curId===x.playlist_id ? 'playing' : ''}`;
-            // Thêm phần hiển thị số tập
-            const epCount = x.count ? `<span style="opacity:0.6; font-weight:400; margin-left:5px"> • ${x.count} tập</span>` : '';
-            
             div.innerHTML = `
-                <div class="c-img"><i class="fa-solid fa-music"></i></div>
-                <div class="c-info">
-                    <div class="c-title">${x.name}</div>
-                    <div class="c-sub">
-                        <span class="c-badge">${x.category||'Truyện'} ${epCount}</span>
-                        <span style="color:${color}; font-size:10px; margin-left:8px"><i class="fa-solid fa-play" style="font-size:8px"></i> ${realTitle}</span>
+                <div class="card-top">
+                    <div class="c-info">
+                        <div class="c-title">${x.name}</div>
+                        <div class="c-author"><i class="fa-solid fa-user-pen" style="font-size:10px"></i> ${author}</div>
                     </div>
+                    <div class="c-icon"><i class="fa-solid fa-compact-disc ${curId===x.playlist_id ? 'fa-spin' : ''}"></i></div>
                 </div>
-                <button class="btn" style="color:${favs.includes(x.playlist_id)?'#ef4444':'#555'}" onclick="togFav(event,'${x.playlist_id}')"><i class="${favs.includes(x.playlist_id)?'fa-solid':'fa-regular'} fa-heart"></i></button>
+                <div class="c-meta">
+                    <span class="badge cat">${x.category||'Khác'}</span>
+                    <span class="badge ep">${ep}</span>
+                    <span class="badge ep" style="margin-left:auto; background:transparent; border:1px solid #333">${x.status||'Hoàn'}</span>
+                </div>
+                <div style="font-size:11px; color:${h ? 'var(--primary)' : '#52525b'}; font-weight:600; margin-top:auto">
+                    ${h ? '<i class="fa-solid fa-chart-simple"></i> ' + realTitle : '<i class="fa-regular fa-circle"></i> Chưa nghe'}
+                </div>
+                <button class="btn-fav ${favs.includes(x.playlist_id)?'liked':''}" onclick="togFav(event,'${x.playlist_id}')">
+                    <i class="${favs.includes(x.playlist_id)?'fa-solid':'fa-regular'} fa-heart"></i>
+                </button>
             `;
             div.onclick = (e) => {
                 if(!e.target.closest('button')) play(x.playlist_id, x.name, h?.idx||0, h?.time||0);
@@ -413,11 +528,12 @@
         });
     }
 
+    // --- PLAYER LOGIC (GIỮ NGUYÊN NHƯNG TỐI ƯU) ---
     function play(pid, name, idx, time) {
         const isNewPlaylist = (curId !== pid);
         curName = name; curId = pid;
         updateUI(`Đang tải tập ${idx+1}...`, curName);
-        render(list); 
+        render(displayList); 
 
         if(player && player.loadPlaylist) {
             if (isNewPlaylist) {
@@ -529,7 +645,7 @@
     }
 
     function genSpeed() {
-        const s = [0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]; // Đã thêm 3x
+        const s = [0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
         const d = document.getElementById('spd-list');
         d.innerHTML = '';
         s.forEach(x => {
@@ -555,16 +671,7 @@
                 if(el) el.classList.toggle('active', t === tab);
             });
         });
-        if(tab==='home') list = allData;
-        else if(tab==='hist') {
-            const h = JSON.parse(localStorage.getItem('hist')||'{}');
-            list = allData.filter(x => h[x.playlist_id]).sort((a,b) => h[b.playlist_id].at - h[a.playlist_id].at);
-        }
-        else if(tab==='fav') {
-            const f = JSON.parse(localStorage.getItem('fav')||'[]');
-            list = allData.filter(x => f.includes(x.playlist_id));
-        }
-        render(list);
+        processData();
     }
 
     function onYouTubeIframeAPIReady() {
@@ -574,18 +681,12 @@
         });
     }
 
-    function doSearch() { render(list.filter(x => x.name.toLowerCase().includes(document.getElementById('search').value.toLowerCase()))); }
-    function filter(cat, el) {
-        document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-        el.classList.add('active');
-        render(cat==='all' ? allData : allData.filter(x=>x.category===cat));
-    }
     function togFav(e, pid) {
         e.stopPropagation();
         let f = JSON.parse(localStorage.getItem('fav')||'[]');
         if(f.includes(pid)) f = f.filter(x=>x!==pid); else f.push(pid);
         localStorage.setItem('fav', JSON.stringify(f));
-        render(list);
+        render(displayList);
     }
 
     function openMenu(id) { document.querySelectorAll('.overlay').forEach(e=>e.classList.remove('open')); document.getElementById(id).classList.add('open'); }
