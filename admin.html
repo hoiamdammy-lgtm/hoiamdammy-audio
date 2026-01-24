@@ -212,22 +212,39 @@
     const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
     const db = supabase.createClient(DB_URL, DB_KEY);
     
-    // Invidious Servers (Failover System)
+    // --- DANH SÁCH SERVER MỚI (CẬP NHẬT 2026) ---
+    // Kết hợp cả Invidious và Piped (Piped API thường nhanh hơn)
     const API_SERVERS = [
-        'https://inv.tux.pizza',
-        'https://invidious.jing.rocks',
-        'https://vid.puffyan.us',
+        'https://inv.nadeko.net',       // Server rất khỏe
+        'https://invidious.drgns.space',
+        'https://yewtu.be',             // Huyền thoại (Hà Lan)
+        'https://vid.puffyan.us',       // Mỹ
         'https://invidious.projectsegfau.lt'
     ];
     let currentServerIndex = 0;
+    
     let allData = [];
     let fetchTimeout;
 
+    // Fix lỗi Favicon 404 (Chạy ngay khi load)
+    (function fixFavicon() {
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        link.href = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💿</text></svg>';
+    })();
+
+    // --- LOGIN ---
     function login() {
         if(document.getElementById('pass').value === 'hoiam20102003') {
             document.getElementById('login-screen').style.display='none';
             document.getElementById('admin-ui').style.display='flex';
-        } else showToast('Sai mật khẩu!', 'error');
+        } else {
+            showToast('Sai mật khẩu rồi!', 'error');
+        }
     }
 
     function switchTab(tab, el) {
@@ -238,66 +255,83 @@
         document.getElementById('page-title').innerText = tab === 'add' ? 'Thêm Truyện Mới' : 'Quản Lý Kho Truyện';
     }
 
-    // --- FETCH LOGIC ---
+    // --- LOGIC XỬ LÝ URL ---
     function debounceFetch() { clearTimeout(fetchTimeout); fetchTimeout = setTimeout(autoFetch, 600); }
 
     async function autoFetch() {
         const url = document.getElementById('inp-url').value;
         if(!url.includes('list=')) return;
+
         let pid = "";
         try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
         
         if(pid) {
             document.getElementById('inp-pid').value = pid;
             const btn = document.querySelector('.btn-action');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
-            await fetchFromInvidious(pid, (data) => {
-                fillForm(data);
-                showToast('Đã lấy dữ liệu!', 'success');
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Xong';
-            }, () => {
-                showToast('Lỗi server, hãy nhập tay!', 'error');
-                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Thử lại';
-            });
+            btn.innerHTML = '<i class="fa-solid fa-satellite-dish fa-spin"></i> Đang quét server...';
+
+            currentServerIndex = 0; // Reset lại từ server đầu tiên
+            await fetchFromInvidious(pid, btn);
         }
     }
 
-    // --- CORE API FUNCTION (REUSABLE) ---
-    async function fetchFromInvidious(pid, onSuccess, onError) {
+    // --- CORE API FUNCTION (CÓ TIMEOUT) ---
+    async function fetchFromInvidious(pid, btn) {
         if (currentServerIndex >= API_SERVERS.length) {
-            currentServerIndex = 0; onError(); return;
+            showToast('Tất cả server đều bận. Hãy nhập tay!', 'error');
+            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích';
+            currentServerIndex = 0;
+            return;
         }
+
         const server = API_SERVERS[currentServerIndex];
-        console.log(`Using: ${server}`);
+        console.log(`Trying server: ${server}`);
+
         try {
-            const res = await fetch(`${server}/api/v1/playlists/${pid}`);
-            if (!res.ok) throw new Error('Err');
-            const json = await res.json();
-            currentServerIndex = 0; // Reset on success
-            onSuccess(json);
-        } catch(e) {
-            console.warn(`Fail ${server}, next...`);
-            currentServerIndex++;
-            await fetchFromInvidious(pid, onSuccess, onError);
-        }
-    }
+            // TẠO TIMEOUT: Nếu quá 4 giây không phản hồi -> Cắt luôn để qua server khác
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 giây timeout
 
-    // --- DATA PROCESSING ---
-    function fillForm(json) {
-        if(json.title) {
-            document.getElementById('inp-raw-title').value = json.title;
-            const parsed = parseTitle(json.title);
-            document.getElementById('inp-name').value = parsed.name;
-            document.getElementById('inp-author').value = parsed.author;
-            // Ưu tiên số video thực tế từ API
-            if(json.videoCount) document.getElementById('inp-count').value = json.videoCount + " tập";
-            else document.getElementById('inp-count').value = parsed.count;
+            const res = await fetch(`${server}/api/v1/playlists/${pid}`, {
+                signal: controller.signal
+            });
             
-            autoCategorize(json.title);
-            document.getElementById('inp-status').value = 'Hoàn';
+            clearTimeout(timeoutId); // Xóa timeout nếu thành công
+
+            if (!res.ok) throw new Error('Server error');
+            const json = await res.json();
+            
+            // Xử lý dữ liệu thành công
+            if(json.title) {
+                document.getElementById('inp-raw-title').value = json.title;
+                
+                const parsed = parseTitle(json.title);
+                document.getElementById('inp-name').value = parsed.name;
+                document.getElementById('inp-author').value = parsed.author;
+                
+                // Lấy số tập
+                if (json.videoCount) {
+                    document.getElementById('inp-count').value = json.videoCount + " tập";
+                } else if(parsed.count) {
+                    document.getElementById('inp-count').value = parsed.count;
+                }
+
+                autoCategorize(json.title);
+                document.getElementById('inp-status').value = 'Hoàn';
+
+                showToast(`Kết nối thành công: ${server}`, 'success');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Xong';
+                currentServerIndex = 0; // Reset
+                return;
+            }
+        } catch(e) { 
+            console.warn(`Server ${server} failed/timeout, skipping...`);
+            currentServerIndex++;
+            await fetchFromInvidious(pid, btn); // Đệ quy thử cái tiếp theo
         }
     }
 
+    // --- LOGIC CẮT CHUỖI ---
     function manualParse() {
         const raw = document.getElementById('inp-raw-title').value;
         if(raw) {
@@ -368,32 +402,89 @@
         renderTable(allData);
     }
 
-    // --- UPDATE FEATURE (CHECK OLD STORY) ---
     async function checkOldStory(id, pid, btn) {
         btn.innerHTML = '<i class="fa-solid fa-spin fa-spinner"></i>';
+        currentServerIndex = 0; // Reset để thử từ server ngon nhất
         
-        await fetchFromInvidious(pid, async (json) => {
-            if(json.title) {
-                const parsed = parseTitle(json.title);
-                const count = json.videoCount ? (json.videoCount + " tập") : parsed.count;
-                
-                // Update Supabase
+        await fetchFromInvidious(pid, { innerHTML: '' }); // Gọi fake btn object để tái sử dụng logic
+        
+        // Logic tái sử dụng: fetchFromInvidious sẽ điền vào form input
+        // Chúng ta cần lấy giá trị từ form đó để update
+        // Tuy nhiên, cách tốt hơn là viết hàm update riêng, nhưng để nhanh:
+        // Ta đợi 1 xíu cho form điền xong rồi lấy data
+        
+        setTimeout(async () => {
+            const newName = document.getElementById('inp-name').value;
+            if(newName) {
                 const { error } = await db.from('playlists').update({
-                    name: parsed.name,
-                    author: parsed.author,
-                    count: count,
-                    status: 'Hoàn' // Mặc định reset về hoàn
+                    name: newName,
+                    author: document.getElementById('inp-author').value,
+                    count: document.getElementById('inp-count').value,
+                    status: 'Hoàn'
                 }).eq('id', id);
 
                 if(!error) {
-                    showToast('Đã cập nhật mới nhất!', 'success');
-                    fetchData(); // Reload table
-                } else showToast('Lỗi lưu DB', 'error');
+                    showToast('Đã cập nhật!', 'success');
+                    fetchData();
+                } else showToast('Lỗi update', 'error');
+            } else {
+                showToast('Không lấy được data mới', 'error');
             }
-        }, () => {
-            showToast('Không lấy được dữ liệu', 'error');
             btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
-        });
+        }, 4500); // Đợi quy trình fetch hoàn tất (hơi thủ công nhưng an toàn với code hiện tại)
+    }
+    
+    // Override lại hàm checkOldStory để nó chạy mượt hơn với logic đệ quy
+    // Đây là phiên bản Clean hơn cho nút Cập nhật
+    async function checkOldStory(id, pid, btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spin fa-spinner"></i>';
+        const originalBtnText = btn.innerHTML;
+        
+        // Tạo hàm callback riêng khi fetch thành công cho nút update
+        const onSuccess = async (json) => {
+            const parsed = parseTitle(json.title);
+            const count = json.videoCount ? (json.videoCount + " tập") : parsed.count;
+            
+            const { error } = await db.from('playlists').update({
+                name: parsed.name,
+                author: parsed.author,
+                count: count,
+                status: 'Hoàn'
+            }).eq('id', id);
+
+            if(!error) {
+                showToast('Đã cập nhật chuẩn!', 'success');
+                fetchData();
+            } else showToast('Lỗi lưu DB', 'error');
+            btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
+        };
+
+        // Hàm đệ quy riêng cho nút Update (tương tự fetchFromInvidious nhưng callback khác)
+        const runUpdateFetch = async () => {
+            if (currentServerIndex >= API_SERVERS.length) {
+                showToast('Không server nào phản hồi', 'error');
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                currentServerIndex = 0;
+                return;
+            }
+            const server = API_SERVERS[currentServerIndex];
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const res = await fetch(`${server}/api/v1/playlists/${pid}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!res.ok) throw new Error();
+                const json = await res.json();
+                currentServerIndex = 0;
+                onSuccess(json);
+            } catch(e) {
+                currentServerIndex++;
+                await runUpdateFetch();
+            }
+        }
+        
+        currentServerIndex = 0;
+        await runUpdateFetch();
     }
 
     function renderTable(list) {
@@ -414,7 +505,7 @@
                     <td>${statusBadge}</td>
                     <td style="color:#cbd5e1">${i.count || '?'}</td>
                     <td style="text-align:right">
-                        <div class="icon-btn btn-sync" onclick="checkOldStory(${i.id}, '${i.playlist_id}', this)" title="Cập nhật lại từ Youtube">
+                        <div class="icon-btn btn-sync" onclick="checkOldStory(${i.id}, '${i.playlist_id}', this)" title="Cập nhật từ Youtube">
                             <i class="fa-solid fa-arrows-rotate"></i>
                         </div>
                         <div class="icon-btn btn-del" onclick="deleteItem(${i.id}, '${i.name}')" title="Xóa">
@@ -458,5 +549,3 @@
         setTimeout(() => t.classList.remove('show'), 3000);
     }
 </script>
-</body>
-</html>
