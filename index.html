@@ -31,7 +31,6 @@
 
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; }
         
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
@@ -42,7 +41,7 @@
             height: 100dvh; display: flex; overflow: hidden; 
         }
 
-        /* --- 1. LOGO ĐĨA NHẠC ĐỘNG --- */
+        /* LOGO */
         .brand { 
             font-size: 20px; font-weight: 800; color: #fff; 
             display: flex; align-items: center; gap: 15px; margin-bottom: 35px; padding-left: 5px;
@@ -50,24 +49,15 @@
         .disk-logo {
             width: 40px; height: 40px; border-radius: 50%;
             background: radial-gradient(circle, #111 20%, #333 21%, #111 22%, #333 50%, #111 100%);
-            border: 2px solid #444;
-            display: flex; align-items: center; justify-content: center;
-            position: relative;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            animation: spinLogo 5s linear infinite;
+            border: 2px solid #444; display: flex; align-items: center; justify-content: center; position: relative;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); animation: spinLogo 5s linear infinite;
         }
-        .disk-logo::after {
-            content: ''; position: absolute; width: 12px; height: 12px;
-            background: var(--primary); border-radius: 50%;
-            box-shadow: 0 0 5px var(--primary);
-        }
+        .disk-logo::after { content: ''; position: absolute; width: 12px; height: 12px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 5px var(--primary); }
         @keyframes spinLogo { 100% { transform: rotate(360deg); } }
 
-        /* --- SIDEBAR --- */
+        /* SIDEBAR */
         .sidebar {
-            width: var(--sidebar-w); 
-            background: var(--sidebar-bg); 
-            border-right: 1px solid rgba(255,255,255,0.08);
+            width: var(--sidebar-w); background: var(--sidebar-bg); border-right: 1px solid rgba(255,255,255,0.08);
             display: none; flex-direction: column; padding: 24px 16px; z-index: 20; flex-shrink: 0;
         }
         .nav-item { 
@@ -78,13 +68,10 @@
         .nav-item:hover { background: var(--surface-hover); color: #fff; }
         .nav-item.active { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
 
-        /* --- MAIN --- */
+        /* MAIN */
         .app-main { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; min-width: 0; }
         
-        .header { 
-            height: 70px; padding: 0 20px; display: flex; align-items: center; gap: 15px; 
-            z-index: 10;
-        }
+        .header { height: 70px; padding: 0 20px; display: flex; align-items: center; gap: 15px; z-index: 10; }
         .search-box { flex: 1; position: relative; max-width: 480px; }
         .search-box input { 
             width: 100%; background: #1f1f22; border: 1px solid #333; 
@@ -118,28 +105,23 @@
             color: #555; flex-shrink: 0; margin-top: 2px;
         }
         .card.playing .c-img { background: var(--primary); color: #000; }
-
         .c-info { flex: 1; min-width: 0; }
-        
-        /* --- 3. SỬA LỖI HIỂN THỊ TÊN TRUYỆN (2 DÒNG) --- */
         .c-title { 
             font-weight: 700; font-size: 15px; margin-bottom: 6px; line-height: 1.4; color: #eee;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
         }
         .c-sub { font-size: 12px; color: var(--text-sub); display: flex; gap: 10px; align-items: center; }
+        .c-badge { background: #222; padding: 2px 8px; border-radius: 4px; display:inline-flex; align-items:center; }
 
-        /* --- PLAYER BAR --- */
+        /* PLAYER BAR */
         .player-bar {
             position: fixed; left: 0; right: 0; 
             background: rgba(20, 20, 23, 0.98); backdrop-filter: var(--glass); -webkit-backdrop-filter: var(--glass);
-            border-top: 1px solid rgba(255,255,255,0.15);
-            display: flex; transition: bottom 0.3s;
-            padding: 0 20px;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.8);
-            z-index: 100; /* Cao hơn mọi thứ */
+            border-top: 1px solid rgba(255,255,255,0.15); display: flex; transition: bottom 0.3s;
+            padding: 0 20px; box-shadow: 0 -5px 30px rgba(0,0,0,0.8); z-index: 100;
         }
 
-        /* --- MOBILE NAV --- */
+        /* MOBILE NAV */
         .mobile-nav {
             display: flex; position: fixed; bottom: 0; left: 0; right: 0; 
             height: calc(var(--nav-h) + var(--safe-b)); padding-bottom: var(--safe-b);
@@ -150,45 +132,32 @@
         .m-item.active { color: var(--primary); }
         .m-item i { font-size: 20px; }
 
-        /* --- RESPONSIVE FIXES (QUAN TRỌNG) --- */
+        /* RESPONSIVE */
         @media (max-width: 768px) {
             .sidebar { display: none !important; }
-            
-            /* PLAYER BAR MOBILE */
             .player-bar {
-                /* Đẩy player lên trên thanh Nav một khoảng an toàn */
-                bottom: calc(var(--nav-h) + var(--safe-b)); 
-                height: var(--player-h-mob);
-                padding: 0 15px;
-                display: flex; align-items: center; justify-content: space-between;
-                border-radius: 16px 16px 0 0; /* Bo tròn góc trên */
+                bottom: calc(var(--nav-h) + var(--safe-b)); height: var(--player-h-mob);
+                padding: 0 15px; align-items: center; justify-content: space-between;
+                border-radius: 16px 16px 0 0;
             }
-
-            /* Thêm khoảng trống dưới cùng để list không bị che */
             .content-area { padding-bottom: calc(var(--nav-h) + var(--player-h-mob) + 40px); }
             
-            /* Layout Mobile Player */
             .p-left { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; margin-right: 5px; }
-            
             .p-info { overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
-            /* Tên bài hát trên Player Mobile hiện 2 dòng */
             .p-title { 
                 font-size: 13px; font-weight: 700; color: #fff; line-height: 1.3;
                 display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal;
             }
             .p-sub { font-size: 11px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-            /* Khu vực nút bấm Mobile */
             .p-ctrl-mob { display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
             .p-ctrl-pc { display: none; }
             
-            /* Thanh tiến trình Mobile (Nằm trên cùng của Player Bar) */
-            .p-mob-progress { 
-                position: absolute; top: 0; left: 0; right: 0; height: 3px; 
-                background: rgba(255,255,255,0.1); 
-            }
+            /* SỬA LỖI DƯ NÚT: Ẩn p-extra trên mobile */
+            .p-extra { display: none !important; } 
+            
+            .p-mob-progress { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.1); }
             .p-bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.1s linear; }
-            /* Vùng chạm tua lớn hơn */
             #seek-mob-touch { position: absolute; top: -10px; left: 0; right: 0; height: 25px; opacity: 0; z-index: 110; cursor: pointer; }
         }
 
@@ -196,11 +165,8 @@
             .sidebar { display: flex; }
             .mobile-nav { display: none !important; }
             .player-bar {
-                left: var(--sidebar-w); bottom: 0;
-                height: var(--player-h-pc);
-                align-items: center; justify-content: space-between;
-                padding: 0 30px;
-                z-index: 200;
+                left: var(--sidebar-w); bottom: 0; height: var(--player-h-pc);
+                align-items: center; justify-content: space-between; padding: 0 30px; z-index: 200;
             }
             .content-area { padding-bottom: 120px; }
             .grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
@@ -211,12 +177,10 @@
             .p-info { width: 100%; }
             .p-ctrl-mob { display: none; }
             .p-mob-progress { display: none; }
-            
             .p-ctrl-pc { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 6px; max-width: 600px; }
             .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 10px; }
         }
 
-        /* Buttons & Controls */
         .btn { background: none; border: none; color: #ccc; font-size: 20px; cursor: pointer; padding: 8px; display:flex; align-items:center; justify-content:center; }
         .btn:active { transform: scale(0.9); }
         .btn-play { 
@@ -224,7 +188,6 @@
             box-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
 
-        /* PC Range */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; height: 20px; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; box-shadow: 0 0 10px #000; }
@@ -247,7 +210,6 @@
         .overlay.open { display: flex; }
         .sheet { 
             background: #18181b; width: 100%; max-width: 450px; border-radius: 20px 20px 0 0; padding: 20px; 
-            /* Sửa lỗi che khuất: Thêm padding đáy lớn để không bị Home Bar đè lên nội dung cuối */
             max-height: 80vh; overflow-y: auto; display:flex; flex-direction:column; border: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 50px; 
         }
@@ -262,8 +224,7 @@
 
     <div class="sidebar">
         <div class="brand">
-            <div class="disk-logo"></div>
-            AUDIO ĐAM MỸ
+            <div class="disk-logo"></div> AUDIO ĐAM MỸ
         </div>
         <div class="nav-item active" id="sb-home" onclick="changeTab('home')"><i class="fa-solid fa-house"></i> Trang chủ</div>
         <div class="nav-item" id="sb-hist" onclick="changeTab('hist')"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</div>
@@ -312,9 +273,7 @@
 
         <div class="p-ctrl-mob">
             <button class="btn" onclick="openMenu('menu-speed')" style="font-size:14px; width:auto; padding:0 5px; font-weight:700; color:#fff">1x</button>
-            
             <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-mob"></i></button>
-            
             <button class="btn" onclick="openMenu('menu-list')" style="color:#fff"><i class="fa-solid fa-list-ul"></i></button>
         </div>
 
@@ -347,16 +306,11 @@
     <div class="zen" id="zen">
         <div class="zen-bg"></div>
         <button class="btn" style="position:absolute; top:30px; left:20px; z-index:10; background:rgba(255,255,255,0.1); border-radius:50%; width:40px; height:40px" onclick="closeZen()"><i class="fa-solid fa-chevron-down"></i></button>
-        
-        <div class="disk">
-            <i class="fa-solid fa-music" style="font-size:60px; color:#555"></i>
-        </div>
-        
+        <div class="disk"><i class="fa-solid fa-music" style="font-size:60px; color:#555"></i></div>
         <div style="text-align:center; padding:0 30px; margin-bottom:40px">
             <h2 id="z-title" style="color:#fff; font-size:18px; margin-bottom:5px; line-height:1.4">...</h2>
             <p id="z-sub" style="color:var(--primary); font-size:14px">...</p>
         </div>
-
         <div style="width:80%; max-width:400px; margin-bottom:30px">
             <input type="range" id="seek-zen" value="0" min="0" max="100" step="0.1" style="margin-bottom:10px">
             <div style="display:flex; justify-content:space-between; color:#aaa; font-size:12px">
@@ -364,7 +318,6 @@
                 <span id="dur-zen">00:00</span>
             </div>
         </div>
-
         <div style="display:flex; gap:30px; align-items:center">
             <button class="btn" onclick="prev()" style="font-size:28px"><i class="fa-solid fa-backward-step"></i></button>
             <button class="btn btn-play" style="width:70px; height:70px; font-size:28px" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-zen"></i></button>
@@ -377,8 +330,7 @@
     <div class="overlay" id="menu-list" onclick="closeMenu(event)">
         <div class="sheet">
             <div style="font-size:18px; font-weight:700; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px; display:flex; justify-content:space-between; color:#fff">
-                Danh sách tập 
-                <i class="fa-solid fa-xmark" onclick="closeMenu({target:{classList:{contains:()=>true}}})" style="color:#666"></i>
+                Danh sách tập <i class="fa-solid fa-xmark" onclick="closeMenu({target:{classList:{contains:()=>true}}})" style="color:#666"></i>
             </div>
             <div id="chap-list" style="overflow-y:auto; flex:1"></div>
         </div>
@@ -440,13 +392,16 @@
 
             const div = document.createElement('div');
             div.className = `card ${curId===x.playlist_id ? 'playing' : ''}`;
+            // Thêm phần hiển thị số tập
+            const epCount = x.count ? `<span style="opacity:0.6; font-weight:400; margin-left:5px"> • ${x.count} tập</span>` : '';
+            
             div.innerHTML = `
                 <div class="c-img"><i class="fa-solid fa-music"></i></div>
                 <div class="c-info">
                     <div class="c-title">${x.name}</div>
                     <div class="c-sub">
-                        <span style="background:#222; padding:2px 6px; border-radius:4px">${x.category||'Truyện'}</span>
-                        <span style="color:${color}; font-size:10px; margin-left:5px"><i class="fa-solid fa-play" style="font-size:8px"></i> ${realTitle}</span>
+                        <span class="c-badge">${x.category||'Truyện'} ${epCount}</span>
+                        <span style="color:${color}; font-size:10px; margin-left:8px"><i class="fa-solid fa-play" style="font-size:8px"></i> ${realTitle}</span>
                     </div>
                 </div>
                 <button class="btn" style="color:${favs.includes(x.playlist_id)?'#ef4444':'#555'}" onclick="togFav(event,'${x.playlist_id}')"><i class="${favs.includes(x.playlist_id)?'fa-solid':'fa-regular'} fa-heart"></i></button>
@@ -574,7 +529,7 @@
     }
 
     function genSpeed() {
-        const s = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5];
+        const s = [0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]; // Đã thêm 3x
         const d = document.getElementById('spd-list');
         d.innerHTML = '';
         s.forEach(x => {
