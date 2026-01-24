@@ -13,90 +13,150 @@
     <style>
         :root {
             --bg: #09090b;
-            --sidebar-bg: #050505;
+            --sidebar-bg: rgba(9, 9, 11, 0.6);
             --surface: #18181b;
             --surface-hover: #27272a;
             --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.3);
             --text: #ffffff;
             --text-sub: #a1a1aa;
             
-            --nav-h: 60px; 
-            --player-h-mob: 110px;
+            --nav-h: 65px; 
+            --player-h-mob: 120px;
             --player-h-pc: 90px;
-            --sidebar-w: 240px;
+            --sidebar-w: 260px;
             --safe-b: env(safe-area-inset-bottom, 0px);
+            --glass: blur(20px) saturate(180%);
         }
 
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; }
         
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
         body { 
             font-family: 'Manrope', sans-serif; 
             background: var(--bg); color: var(--text); margin: 0; 
             height: 100dvh; display: flex; overflow: hidden; 
         }
 
-        /* --- SIDEBAR (PC Only) --- */
+        /* --- SIDEBAR (PC) --- */
         .sidebar {
-            width: var(--sidebar-w); background: var(--sidebar-bg); 
-            border-right: 1px solid #222;
-            display: none; flex-direction: column; padding: 20px; z-index: 20; flex-shrink: 0;
+            width: var(--sidebar-w); 
+            background: var(--sidebar-bg); 
+            backdrop-filter: var(--glass);
+            -webkit-backdrop-filter: var(--glass);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            display: none; flex-direction: column; padding: 24px 16px; z-index: 20; flex-shrink: 0;
         }
-        .brand { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; color: var(--text-sub); border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; font-size: 15px; margin-bottom: 2px; }
-        .nav-item:hover { background: var(--surface-hover); color: #fff; }
-        .nav-item.active { background: #222; color: var(--primary); }
+        .brand { 
+            font-size: 22px; font-weight: 800; color: var(--primary); 
+            display: flex; align-items: center; gap: 12px; margin-bottom: 35px; padding-left: 10px;
+            text-shadow: 0 0 20px var(--primary-glow);
+        }
+        .nav-item { 
+            display: flex; align-items: center; gap: 14px; padding: 14px 16px; 
+            color: var(--text-sub); border-radius: 12px; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-weight: 600; font-size: 15px; margin-bottom: 4px; 
+        }
+        .nav-item:hover { background: var(--surface-hover); color: #fff; transform: translateX(4px); }
+        .nav-item.active { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+        .nav-item i { width: 20px; text-align: center; }
 
         /* --- MAIN CONTENT --- */
-        .app-main { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; min-width: 0; }
+        .app-main { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; min-width: 0; background: radial-gradient(circle at top right, #131315 0%, #09090b 40%); }
         
         .header { 
-            height: 60px; padding: 0 15px; display: flex; align-items: center; gap: 10px; 
-            border-bottom: 1px solid #222; background: rgba(9,9,11,0.95); z-index: 10;
+            height: 70px; padding: 0 20px; display: flex; align-items: center; gap: 15px; 
+            background: transparent; z-index: 10;
         }
-        .search-box { flex: 1; position: relative; max-width: 500px; }
+        .search-box { flex: 1; position: relative; max-width: 480px; }
         .search-box input { 
-            width: 100%; background: #27272a; border: 1px solid transparent; 
-            padding: 8px 35px 8px 15px; border-radius: 30px; color: #fff; font-size: 14px; 
+            width: 100%; background: #1f1f22; border: 1px solid #333; 
+            padding: 10px 40px 10px 20px; border-radius: 12px; color: #fff; font-size: 14px; 
+            transition: 0.2s;
         }
-        .search-box input:focus { border-color: var(--primary); background: #000; }
+        .search-box input:focus { border-color: var(--primary); background: #27272a; box-shadow: 0 0 0 2px rgba(16,185,129,0.1); }
         .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
 
-        .filters { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; scrollbar-width: none; background: var(--bg); flex-shrink: 0; border-bottom: 1px solid #222; }
-        .chip { background: var(--surface); border: 1px solid #333; padding: 6px 14px; border-radius: 20px; font-size: 12px; white-space: nowrap; cursor: pointer; color: #ccc; font-weight: 600; }
-        .chip.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .filters { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 15px 20px; scrollbar-width: none; flex-shrink: 0; }
+        .chip { 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 8px 16px; border-radius: 100px; font-size: 13px; white-space: nowrap; 
+            cursor: pointer; color: #ccc; font-weight: 600; transition: 0.2s; 
+        }
+        .chip:hover { background: rgba(255,255,255,0.1); }
+        .chip.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 4px 15px var(--primary-glow); }
 
-        .content-area { flex: 1; overflow-y: auto; padding: 15px; }
-        .grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+        .content-area { flex: 1; overflow-y: auto; padding: 0 20px 20px 20px; }
+        .grid { display: grid; gap: 16px; grid-template-columns: 1fr; padding-bottom: 20px; }
 
         /* CARD STYLE */
-        .card { background: var(--surface); padding: 10px; border-radius: 10px; display: flex; align-items: center; gap: 12px; border: 1px solid transparent; cursor: pointer; }
-        .card:active { background: var(--surface-hover); transform: scale(0.98); }
+        .card { 
+            background: var(--surface); padding: 12px; border-radius: 16px; 
+            display: flex; align-items: center; gap: 16px; border: 1px solid rgba(255,255,255,0.05); 
+            cursor: pointer; transition: all 0.2s ease; position: relative; overflow: hidden;
+        }
+        .card:hover { transform: translateY(-2px); background: var(--surface-hover); border-color: rgba(255,255,255,0.1); }
         .card.playing { border-color: var(--primary); background: rgba(16,185,129,0.05); }
-        .c-img { width: 45px; height: 45px; background: #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #777; flex-shrink: 0; }
-        .card.playing .c-img { background: #000; color: var(--primary); }
+        
+        .c-img { 
+            width: 56px; height: 56px; background: #222; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; font-size: 20px; 
+            color: #555; flex-shrink: 0; position: relative;
+        }
+        .card.playing .c-img { background: var(--primary); color: #000; box-shadow: 0 4px 15px var(--primary-glow); }
+        /* Equalizer Bars Fake */
+        .playing-anim { display: flex; gap: 2px; height: 12px; align-items: flex-end; }
+        .bar { width: 3px; background: #000; animation: eq 0.5s infinite ease-in-out alternate; }
+        .bar:nth-child(2) { animation-delay: 0.1s; } .bar:nth-child(3) { animation-delay: 0.2s; }
+        @keyframes eq { 0% { height: 3px; } 100% { height: 12px; } }
+
         .c-info { flex: 1; min-width: 0; }
-        .c-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
-        .c-sub { font-size: 11px; color: var(--text-sub); display: flex; gap: 8px; align-items: center; }
+        .c-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .c-sub { font-size: 12px; color: var(--text-sub); display: flex; gap: 10px; align-items: center; }
+        .badge { background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 6px; font-size: 11px; }
+
+        /* SKELETON LOADING */
+        .skeleton { animation: shimmer 2s infinite linear; background: linear-gradient(to right, #1f1f22 4%, #27272a 25%, #1f1f22 36%); background-size: 1000px 100%; }
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+        .sk-card { height: 80px; border-radius: 16px; margin-bottom: 12px; }
 
         /* --- PLAYER BAR --- */
         .player-bar {
             position: fixed; left: 0; right: 0; z-index: 50;
-            background: rgba(15,15,17,0.98); backdrop-filter: blur(10px); border-top: 1px solid #333;
-            display: flex; 
-            transition: bottom 0.3s ease;
-            padding: 0 15px;
+            background: rgba(15, 15, 17, 0.9); backdrop-filter: var(--glass); -webkit-backdrop-filter: var(--glass);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; transition: bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 0 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
         }
 
         /* --- MOBILE NAV --- */
         .mobile-nav {
             display: flex; position: fixed; bottom: 0; left: 0; right: 0; 
             height: calc(var(--nav-h) + var(--safe-b)); padding-bottom: var(--safe-b);
-            background: #09090b; border-top: 1px solid #222; z-index: 60;
+            background: rgba(9,9,11,0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.08); z-index: 60;
             justify-content: space-around; align-items: center;
         }
-        .m-item { color: #666; font-size: 10px; padding: 5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 25%; }
-        .m-item i { font-size: 20px; }
+        .m-item { color: #666; font-size: 10px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 25%; border-radius: 12px; transition: 0.2s; }
+        .m-item i { font-size: 20px; margin-bottom: 2px; }
         .m-item.active { color: var(--primary); }
+        .m-item:active { background: rgba(255,255,255,0.05); transform: scale(0.95); }
+
+        /* --- TOAST --- */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { 
+            background: #27272a; color: #fff; padding: 12px 20px; border-radius: 50px; 
+            font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+            animation: slideIn 0.3s ease forwards; pointer-events: auto;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .toast i { color: var(--primary); }
 
         /* --- RESPONSIVE LAYOUTS --- */
         @media (max-width: 768px) {
@@ -104,15 +164,16 @@
             .player-bar {
                 bottom: calc(var(--nav-h) + var(--safe-b));
                 height: var(--player-h-mob);
-                flex-direction: column; justify-content: center; gap: 5px; padding: 10px 15px;
+                flex-direction: column; justify-content: center; gap: 8px; padding: 12px 20px;
+                border-radius: 20px 20px 0 0; border: 1px solid rgba(255,255,255,0.08); border-bottom: none;
             }
             .content-area { padding-bottom: calc(var(--nav-h) + var(--player-h-mob) + 20px); }
-            .p-top-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; }
+            .p-top-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 15px; }
             .p-info { flex: 1; text-align: left; overflow: hidden; }
             .p-ctrl-pc { display: none; }
-            .p-ctrl-mob { display: flex; gap: 15px; align-items: center; }
-            .p-mob-progress { width: 100%; display: flex; align-items: center; gap: 10px; margin-top: 5px; }
-            .p-mob-progress input { height: 20px; } 
+            .p-ctrl-mob { display: flex; gap: 18px; align-items: center; }
+            .p-mob-progress { width: 100%; display: flex; align-items: center; gap: 12px; margin-top: 5px; }
+            .card { border-radius: 12px; }
         }
 
         @media (min-width: 768px) {
@@ -122,47 +183,95 @@
                 left: var(--sidebar-w); bottom: 0;
                 height: var(--player-h-pc);
                 align-items: center; justify-content: space-between;
-                padding: 0 30px;
+                padding: 0 40px;
             }
-            .content-area { padding-bottom: 100px; }
-            .grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+            .content-area { padding-bottom: 120px; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
             .p-top-row { display: contents; } 
             .p-info { width: 30%; }
             .p-mob-progress { display: none; } 
             .p-ctrl-mob { display: none; }
-            .p-ctrl-pc { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 5px; max-width: 600px; }
-            .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 15px; }
+            .p-ctrl-pc { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 6px; max-width: 600px; }
+            .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 10px; }
         }
 
         /* Common Player */
-        .p-title { font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 14px; }
-        .p-sub { font-size: 11px; color: var(--primary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .btn { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 5px; }
-        .btn-play { width: 42px; height: 42px; background: #fff; color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #fff; margin-top: -4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
-        .time-txt { font-size: 10px; color: #888; width: 35px; text-align: center; font-variant-numeric: tabular-nums; }
+        .p-title { font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 15px; }
+        .p-sub { font-size: 12px; color: var(--primary); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.9; }
+        .btn { 
+            background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 8px; border-radius: 50%; 
+            transition: 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn:active { transform: scale(0.9); }
+        .btn-play { 
+            width: 48px; height: 48px; background: #fff; color: #000; border-radius: 50%; 
+            box-shadow: 0 0 15px rgba(255,255,255,0.3); 
+        }
+        .btn-play:hover { background: #eee; transform: scale(1.05); }
+        
+        /* Custom Range Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; height: 20px; }
+        input[type=range]::-webkit-slider-runnable-track { 
+            width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; transition: 0.2s; 
+        }
+        input[type=range]:hover::-webkit-slider-runnable-track { background: rgba(255,255,255,0.3); }
+        input[type=range]::-webkit-slider-thumb { 
+            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #fff; 
+            margin-top: -5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); transition: 0.2s; transform: scale(0.8);
+        }
+        input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); }
+        
+        .time-txt { font-size: 11px; color: #888; width: 40px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 500; }
 
         /* ZEN MODE */
-        .zen { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .zen { 
+            position: fixed; inset: 0; background: #000; z-index: 200; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            opacity: 0; pointer-events: none; transition: 0.4s cubic-bezier(0.2, 0, 0.2, 1); 
+        }
         .zen.active { opacity: 1; pointer-events: auto; }
-        .zen-bg { position: absolute; inset: 0; opacity: 0.3; filter: blur(50px); background-size: cover; z-index: -1; }
-        .disk { width: 250px; height: 250px; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid #333; margin-bottom: 30px; animation: spin 10s linear infinite; animation-play-state: paused; }
+        .zen-bg { position: absolute; inset: 0; opacity: 0.4; filter: blur(80px); background-size: cover; z-index: -1; transition: background-image 1s ease; }
+        .disk-wrap { position: relative; width: 280px; height: 280px; margin-bottom: 40px; display: flex; align-items: center; justify-content: center; }
+        .disk-glow { position: absolute; inset: -20px; border-radius: 50%; background: var(--primary); opacity: 0; filter: blur(30px); transition: 0.5s; }
+        .zen.playing .disk-glow { opacity: 0.4; animation: pulse 2s infinite; }
+        .disk { 
+            width: 100%; height: 100%; background: #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            border: 2px solid rgba(255,255,255,0.1); position: relative; z-index: 2;
+            animation: spin 20s linear infinite; animation-play-state: paused; 
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+        }
         .zen.playing .disk { animation-play-state: running; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 0.5; } }
 
-        /* OVERLAYS */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 300; display: none; align-items: flex-end; justify-content: center; }
-        .overlay.open { display: flex; }
-        .sheet { background: #18181b; width: 100%; max-width: 450px; border-radius: 20px 20px 0 0; padding: 20px; max-height: 70vh; overflow-y: auto; display:flex; flex-direction:column; }
-        @media (min-width: 768px) { .overlay { align-items: center; } .sheet { border-radius: 16px; } }
-        .opt-item { padding: 15px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; color: #ddd; cursor: pointer; flex-shrink: 0; }
-        .opt-item:hover { background: #222; color: #fff; }
-        .active-chap { color: var(--primary); font-weight: 700; }
+        /* OVERLAYS & SHEETS */
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 300; 
+            display: none; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity 0.3s;
+        }
+        .overlay.open { display: flex; opacity: 1; }
+        .sheet { 
+            background: #18181b; width: 100%; max-width: 420px; border-radius: 24px 24px 0 0; padding: 24px; 
+            max-height: 75vh; overflow-y: auto; display:flex; flex-direction:column; 
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .overlay.open .sheet { transform: translateY(0); }
+        @media (min-width: 768px) { .overlay { align-items: center; } .sheet { border-radius: 24px; transform: scale(0.9); opacity: 0; } .overlay.open .sheet { transform: scale(1); opacity: 1; } }
+        
+        .opt-item { 
+            padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; 
+            color: #ddd; cursor: pointer; flex-shrink: 0; border-radius: 12px; transition: 0.2s; font-weight: 500; 
+        }
+        .opt-item:hover { background: rgba(255,255,255,0.05); color: #fff; padding-left: 20px; }
+        .active-chap { color: var(--primary); font-weight: 700; background: rgba(16,185,129,0.05); }
+        .sheet-head { font-size: 18px; font-weight: 700; margin: 0 0 15px 0; display:flex; justify-content:space-between; align-items:center; }
     </style>
 </head>
 <body>
+
+    <div class="toast-container" id="toast-area"></div>
 
     <div class="sidebar">
         <div class="brand"><i class="fa-solid fa-layer-group"></i> AUDIO ĐAM MỸ</div>
@@ -176,7 +285,7 @@
     <div class="app-main">
         <div class="header">
             <div class="search-box">
-                <input type="text" id="search" placeholder="Tìm kiếm..." onkeyup="doSearch()">
+                <input type="text" id="search" placeholder="Tìm tên truyện, tác giả..." onkeyup="doSearch()">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </div>
         </div>
@@ -186,17 +295,22 @@
             <div class="chip" onclick="filter('Chủ Thụ', this)">Chủ Thụ</div>
             <div class="chip" onclick="filter('Chủ Công', this)">Chủ Công</div>
             <div class="chip" onclick="filter('Vô CP', this)">Vô CP</div>
+            <div class="chip" onclick="filter('Hệ Thống', this)">Hệ Thống</div>
         </div>
 
         <div class="content-area">
-            <div id="loading" style="text-align:center; padding:40px; color:#555">Đang tải...</div>
-            <div class="grid" id="grid"></div>
+            <div id="loading">
+                <div class="skeleton sk-card"></div>
+                <div class="skeleton sk-card"></div>
+                <div class="skeleton sk-card"></div>
+            </div>
+            <div class="grid" id="grid" style="display:none"></div>
         </div>
     </div>
 
     <div class="player-bar">
         <div class="p-top-row">
-            <div class="p-info" onclick="openZen()">
+            <div class="p-info" onclick="openZen()" style="cursor:pointer">
                 <div class="p-title" id="track-name">Sẵn sàng</div>
                 <div class="p-sub" id="track-sub">Chưa chọn bài</div>
             </div>
@@ -211,15 +325,17 @@
             <span class="time-txt" id="dur-mob">00:00</span>
         </div>
         <div class="p-ctrl-pc">
-            <div style="display:flex; gap:20px; align-items:center">
+            <div style="display:flex; gap:25px; align-items:center">
+                <button class="btn" onclick="toggleShuffle()" id="btn-shuffle" style="color:#666"><i class="fa-solid fa-shuffle"></i></button>
                 <button class="btn" onclick="prev()"><i class="fa-solid fa-backward-step"></i></button>
                 <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-pc"></i></button>
                 <button class="btn" onclick="next()"><i class="fa-solid fa-forward-step"></i></button>
+                <button class="btn" onclick="toggleLoop()" id="btn-loop" style="color:#666"><i class="fa-solid fa-repeat"></i></button>
             </div>
-            <div style="display:flex; width:100%; align-items:center; gap:10px; font-size:11px; color:#888">
-                <span id="curr-pc">00:00</span>
+            <div style="display:flex; width:100%; align-items:center; gap:12px; font-size:11px; color:#888">
+                <span id="curr-pc" style="min-width:35px; text-align:right">00:00</span>
                 <input type="range" id="seek-pc" value="0" min="0" max="100" step="0.1">
-                <span id="dur-pc">00:00</span>
+                <span id="dur-pc" style="min-width:35px">00:00</span>
             </div>
         </div>
         <div class="p-extra">
@@ -237,16 +353,32 @@
 
     <div class="zen" id="zen">
         <div class="zen-bg"></div>
-        <button class="btn" style="position:absolute; top:20px; left:20px; z-index:10; background:rgba(0,0,0,0.5); border-radius:50%" onclick="closeZen()"><i class="fa-solid fa-chevron-down"></i></button>
-        <div class="disk"><i class="fa-solid fa-music" style="font-size:50px; color:#fff"></i></div>
-        <div style="text-align:center; padding:0 20px; margin-bottom:30px">
-            <h2 id="z-title" style="color:#fff; font-size:16px; margin-bottom:5px; line-height:1.4">...</h2>
-            <p id="z-sub" style="color:var(--primary); font-size:13px">...</p>
+        <button class="btn" style="position:absolute; top:25px; left:25px; z-index:10; background:rgba(255,255,255,0.1); padding:10px" onclick="closeZen()"><i class="fa-solid fa-chevron-down"></i></button>
+        
+        <div class="disk-wrap">
+            <div class="disk-glow"></div>
+            <div class="disk">
+                <i class="fa-solid fa-music" style="font-size:60px; color:var(--text-sub)"></i>
+            </div>
         </div>
+
+        <div style="text-align:center; padding:0 30px; margin-bottom:40px; max-width:600px">
+            <h2 id="z-title" style="color:#fff; font-size:20px; margin-bottom:8px; line-height:1.4">...</h2>
+            <p id="z-sub" style="color:var(--primary); font-size:14px; font-weight:600">...</p>
+        </div>
+        
+        <div style="width:80%; max-width:500px; margin-bottom:30px">
+             <input type="range" id="seek-zen" value="0" min="0" max="100" step="0.1" style="margin-bottom:10px">
+            <div style="display:flex; justify-content:space-between; color:#888; font-size:12px">
+                <span id="curr-zen">00:00</span>
+                <span id="dur-zen">00:00</span>
+            </div>
+        </div>
+
         <div style="display:flex; gap:30px; align-items:center">
-            <button class="btn" onclick="prev()" style="font-size:24px"><i class="fa-solid fa-backward-step"></i></button>
-            <button class="btn btn-play" style="width:65px; height:65px; font-size:24px" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-zen"></i></button>
-            <button class="btn" onclick="next()" style="font-size:24px"><i class="fa-solid fa-forward-step"></i></button>
+            <button class="btn" onclick="prev()" style="font-size:28px"><i class="fa-solid fa-backward-step"></i></button>
+            <button class="btn btn-play" style="width:70px; height:70px; font-size:26px" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-zen"></i></button>
+            <button class="btn" onclick="next()" style="font-size:28px"><i class="fa-solid fa-forward-step"></i></button>
         </div>
     </div>
 
@@ -254,18 +386,33 @@
 
     <div class="overlay" id="menu-more" onclick="closeMenu(event)">
         <div class="sheet">
+            <div class="sheet-head">Menu <i class="fa-solid fa-xmark" onclick="closeMenu({target:{classList:{contains:()=>true}}})" style="cursor:pointer; font-size:20px; color:#666"></i></div>
             <div class="opt-item" onclick="openMenu('menu-list')"><span>Danh sách tập</span> <i class="fa-solid fa-list-ol"></i></div>
             <div class="opt-item" onclick="openMenu('menu-speed')"><span>Tốc độ</span> <i class="fa-solid fa-gauge"></i></div>
-            <div class="opt-item" onclick="openMenu('menu-data')"><span>Cài đặt</span> <i class="fa-solid fa-gear"></i></div>
+            <div class="opt-item" onclick="openMenu('menu-data')"><span>Cài đặt & Dữ liệu</span> <i class="fa-solid fa-gear"></i></div>
         </div>
     </div>
-    <div class="overlay" id="menu-list" onclick="closeMenu(event)"><div class="sheet"><h3 style="margin:0 0 10px 0; border-bottom:1px solid #333; padding-bottom:10px; font-size:16px">Danh sách tập</h3><div id="chap-list" style="overflow-y:auto; flex:1"></div></div></div>
-    <div class="overlay" id="menu-speed" onclick="closeMenu(event)"><div class="sheet"><div id="spd-list"></div></div></div>
+
+    <div class="overlay" id="menu-list" onclick="closeMenu(event)">
+        <div class="sheet" style="height:70vh">
+            <div class="sheet-head">Danh sách tập</div>
+            <div id="chap-list" style="overflow-y:auto; flex:1"></div>
+        </div>
+    </div>
+
+    <div class="overlay" id="menu-speed" onclick="closeMenu(event)">
+        <div class="sheet">
+            <div class="sheet-head">Tốc độ phát</div>
+            <div id="spd-list"></div>
+        </div>
+    </div>
+
     <div class="overlay" id="menu-data" onclick="closeMenu(event)">
         <div class="sheet">
-            <div class="opt-item" onclick="exportData()">Sao lưu <i class="fa-solid fa-download"></i></div>
-            <div class="opt-item" onclick="document.getElementById('file-in').click()">Khôi phục <i class="fa-solid fa-upload"></i></div>
-            <div class="opt-item" style="color:#ef4444" onclick="resetData()">Xóa hết <i class="fa-solid fa-trash"></i></div>
+            <div class="sheet-head">Dữ liệu</div>
+            <div class="opt-item" onclick="exportData()">Sao lưu dữ liệu <i class="fa-solid fa-download"></i></div>
+            <div class="opt-item" onclick="document.getElementById('file-in').click()">Khôi phục dữ liệu <i class="fa-solid fa-upload"></i></div>
+            <div class="opt-item" style="color:#ef4444" onclick="resetData()">Xóa toàn bộ <i class="fa-solid fa-trash"></i></div>
             <input type="file" id="file-in" style="display:none" onchange="importData(this)">
         </div>
     </div>
@@ -279,15 +426,20 @@
     let isPlaying=false, updateInt, drag=false;
     let cachedTitles = {};
     let isSwitching = false; 
-    let currentSpeed = 1; // Default speed
+    let currentSpeed = 1;
 
     async function init() {
         const { data } = await db.from('playlists').select('*');
         allData = data || [];
         allData.sort((a,b) => (a.category||'z').localeCompare(b.category||'z') || a.name.localeCompare(b.name));
         list = allData;
-        render(list);
-        document.getElementById('loading').style.display='none';
+        
+        // Simulate loading
+        setTimeout(() => {
+            document.getElementById('loading').style.display='none';
+            document.getElementById('grid').style.display='grid';
+            render(list);
+        }, 800);
         
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
@@ -301,31 +453,54 @@
         const favs = JSON.parse(localStorage.getItem('fav')||'[]');
         const hist = JSON.parse(localStorage.getItem('hist')||'{}');
 
-        if(!data.length) g.innerHTML = '<div style="color:#666; text-align:center">Trống</div>';
+        if(!data.length) g.innerHTML = '<div style="color:#666; text-align:center; grid-column:1/-1; padding-top:40px">Không tìm thấy truyện nào</div>';
 
-        data.forEach(x => {
+        data.forEach((x, i) => {
             const h = hist[x.playlist_id];
             const realTitle = h && h.realTitle ? h.realTitle : (h ? `Tập ${h.idx+1}` : 'Chưa nghe');
             const color = h ? 'var(--primary)' : '#666';
+            const isPlayingThis = (curId === x.playlist_id);
 
             const div = document.createElement('div');
-            div.className = `card ${curId===x.playlist_id ? 'playing' : ''}`;
+            div.className = `card ${isPlayingThis ? 'playing' : ''}`;
+            div.style.animation = `slideIn 0.3s ease forwards ${i*0.05}s`;
+            div.style.opacity = '0';
+            div.style.transform = 'translateY(10px)';
+            
+            // Animation fill mode fix inline
+            setTimeout(() => { div.style.opacity=1; div.style.transform='translateY(0)'; }, i*50);
+
             div.innerHTML = `
-                <div class="c-img"><i class="fa-solid fa-music"></i></div>
+                <div class="c-img">
+                    ${isPlayingThis && isPlaying ? 
+                    '<div class="playing-anim"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>' : 
+                    '<i class="fa-solid fa-music"></i>'}
+                </div>
                 <div class="c-info">
                     <div class="c-title">${x.name}</div>
                     <div class="c-sub">
-                        <span style="background:#222; padding:2px 6px; border-radius:4px">${x.category||'Truyện'}</span>
-                        <span style="color:${color}; font-size:10px; margin-left:5px"><i class="fa-solid fa-play" style="font-size:8px"></i> ${realTitle}</span>
+                        <span class="badge">${x.category||'Truyện'}</span>
+                        <span style="color:${color}; font-size:11px"><i class="fa-solid fa-play" style="font-size:9px"></i> ${realTitle}</span>
                     </div>
                 </div>
-                <button class="btn" style="color:${favs.includes(x.playlist_id)?'#ef4444':'#555'}" onclick="togFav(event,'${x.playlist_id}')"><i class="${favs.includes(x.playlist_id)?'fa-solid':'fa-regular'} fa-heart"></i></button>
+                <button class="btn" style="color:${favs.includes(x.playlist_id)?'#ef4444':'#555'}" onclick="togFav(event,'${x.playlist_id}')">
+                    <i class="${favs.includes(x.playlist_id)?'fa-solid':'fa-regular'} fa-heart"></i>
+                </button>
             `;
             div.onclick = (e) => {
                 if(!e.target.closest('button')) play(x.playlist_id, x.name, h?.idx||0, h?.time||0);
             };
             g.appendChild(div);
         });
+    }
+
+    function showToast(msg, icon='fa-check') {
+        const c = document.getElementById('toast-area');
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.innerHTML = `<i class="fa-solid ${icon}"></i> ${msg}`;
+        c.appendChild(t);
+        setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(), 300); }, 2000);
     }
 
     function play(pid, name, idx, time) {
@@ -366,8 +541,8 @@
                 updateUI(realTitle, curName);
                 saveHist(idx, player.getCurrentTime(), realTitle);
                 genChapList(idx);
+                render(list); // Re-render to show playing anim
                 
-                // Re-apply speed if changed by playlist load
                 if(player.getPlaybackRate() !== currentSpeed) {
                     player.setPlaybackRate(currentSpeed);
                 }
@@ -376,7 +551,7 @@
         } else if (e.data === 0) { 
             next(); 
         } else { 
-            isPlaying = false; setIcon(false); stopUpdate(); 
+            isPlaying = false; setIcon(false); stopUpdate(); render(list);
         }
     }
 
@@ -385,6 +560,14 @@
         document.getElementById('track-sub').innerText = sub;
         document.getElementById('z-title').innerText = title;
         document.getElementById('z-sub').innerText = sub;
+        // Set Zen BG Color random for mood
+        document.querySelector('.zen-bg').style.background = `radial-gradient(circle at center, ${stringToColor(sub)} 0%, #000 70%)`;
+    }
+
+    function stringToColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        return `hsl(${hash % 360}, 60%, 20%)`; 
     }
 
     function startUpdate() {
@@ -395,12 +578,13 @@
             const d = player.getDuration();
             const p = (c/d)*100;
             
-            ['curr-pc','curr-mob'].forEach(i => document.getElementById(i).innerText = fmt(c));
-            ['dur-pc','dur-mob'].forEach(i => document.getElementById(i).innerText = fmt(d));
+            ['curr-pc','curr-mob','curr-zen'].forEach(i => document.getElementById(i).innerText = fmt(c));
+            ['dur-pc','dur-mob','dur-zen'].forEach(i => document.getElementById(i).innerText = fmt(d));
             
             if(!drag) {
                 document.getElementById('seek-pc').value = p;
                 document.getElementById('seek-mob').value = p;
+                document.getElementById('seek-zen').value = p;
             }
             if(Math.floor(c)%5===0) saveHist(player.getPlaylistIndex(), c, document.getElementById('track-name').innerText);
         }, 1000);
@@ -416,7 +600,8 @@
     function prev() { if(player) player.previousVideo(); }
     function next() { if(player) player.nextVideo(); }
     function seek(v) { if(player) player.seekTo((v/100)*player.getDuration(), true); }
-    ['seek-pc', 'seek-mob'].forEach(id => {
+    
+    ['seek-pc', 'seek-mob', 'seek-zen'].forEach(id => {
         const el = document.getElementById(id);
         el.oninput = () => drag=true;
         el.onchange = (e) => { drag=false; seek(e.target.value); };
@@ -446,7 +631,6 @@
         });
     }
 
-    // --- NEW GEN SPEED FUNCTION (0.25 to 3) ---
     function genSpeed() {
         const s = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
         const d = document.getElementById('spd-list');
@@ -459,13 +643,13 @@
                 currentSpeed = x;
                 player.setPlaybackRate(x); 
                 closeMenu({target:document.getElementById('menu-speed')});
-                genSpeed(); // Re-render to show checkmark
+                genSpeed();
+                showToast(`Tốc độ: ${x}x`);
             };
             d.appendChild(div);
         });
     }
 
-    // --- TABS & UTILS ---
     function changeTab(tab) {
         activeTab = tab;
         ['sb','mb'].forEach(p => {
@@ -502,19 +686,51 @@
     function togFav(e, pid) {
         e.stopPropagation();
         let f = JSON.parse(localStorage.getItem('fav')||'[]');
-        if(f.includes(pid)) f = f.filter(x=>x!==pid); else f.push(pid);
+        let action = '';
+        if(f.includes(pid)) { f = f.filter(x=>x!==pid); action='Đã bỏ thích'; } 
+        else { f.push(pid); action='Đã thêm vào yêu thích'; }
         localStorage.setItem('fav', JSON.stringify(f));
         render(list);
+        showToast(action, 'fa-heart');
     }
 
     function openMenu(id) { document.querySelectorAll('.overlay').forEach(e=>e.classList.remove('open')); document.getElementById(id).classList.add('open'); }
-    function closeMenu(e) { if(e.target.classList.contains('overlay') || e.target.classList.contains('opt-item')) e.target.closest('.overlay')?.classList.remove('open'); }
+    function closeMenu(e) { if(e.target.classList.contains('overlay') || e.target.classList.contains('opt-item') || e.target.classList.contains('fa-xmark')) e.target.closest('.overlay')?.classList.remove('open'); }
     function openZen() { document.getElementById('zen').classList.add('active'); }
     function closeZen() { document.getElementById('zen').classList.remove('active'); }
     function fmt(s) { return new Date(s * 1000).toISOString().substr(11, 8).replace(/^00:/, ''); }
-    function exportData() { const d = {fav: localStorage.getItem('fav'), hist: localStorage.getItem('hist')}; const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:'application/json'})); a.download='backup.json'; a.click(); }
-    function importData(e) { const r = new FileReader(); r.onload = x => { const d = JSON.parse(x.target.result); if(d.fav) localStorage.setItem('fav', d.fav); if(d.hist) localStorage.setItem('hist', d.hist); location.reload(); }; r.readAsText(e.files[0]); }
-    function resetData() { localStorage.clear(); location.reload(); }
+    
+    function exportData() { 
+        const d = {fav: localStorage.getItem('fav'), hist: localStorage.getItem('hist')}; 
+        const a = document.createElement('a'); 
+        a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:'application/json'})); 
+        a.download='backup_audio_dammei.json'; 
+        a.click(); 
+        showToast('Đã tải xuống bản sao lưu');
+    }
+    
+    function importData(e) { 
+        const r = new FileReader(); 
+        r.onload = x => { 
+            try {
+                const d = JSON.parse(x.target.result); 
+                if(d.fav) localStorage.setItem('fav', d.fav); 
+                if(d.hist) localStorage.setItem('hist', d.hist); 
+                showToast('Khôi phục thành công');
+                setTimeout(() => location.reload(), 1000); 
+            } catch(err) { showToast('File lỗi!', 'fa-circle-exclamation'); }
+        }; 
+        r.readAsText(e.files[0]); 
+    }
+    function resetData() { 
+        if(confirm('Bạn chắc chắn muốn xóa hết lịch sử và yêu thích?')) {
+            localStorage.clear(); location.reload(); 
+        }
+    }
+
+    // Shuffle & Loop placeholders (UI only for now)
+    function toggleShuffle() { document.getElementById('btn-shuffle').style.color = document.getElementById('btn-shuffle').style.color === 'var(--primary)' ? '#666' : 'var(--primary)'; showToast('Chuyển chế độ phát ngẫu nhiên'); }
+    function toggleLoop() { document.getElementById('btn-loop').style.color = document.getElementById('btn-loop').style.color === 'var(--primary)' ? '#666' : 'var(--primary)'; showToast('Chuyển chế độ lặp lại'); }
 
     init();
 </script>
