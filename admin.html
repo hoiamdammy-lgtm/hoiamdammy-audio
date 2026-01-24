@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hồi Âm CMS - Deep Scraper</title>
+    <title>Hồi Âm CMS - Deep Scraper Final</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg: #0f172a; --sidebar: #020617; --card: #1e293b; --border: #334155;
-            --primary: #10b981; /* Màu xanh Hacker */
+            --primary: #10b981; /* Xanh Hacker */
             --text: #f8fafc; --text-muted: #94a3b8;
             --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6;
         }
@@ -56,7 +56,6 @@
         td { padding: 16px; border-bottom: 1px solid var(--border); color: #e2e8f0; vertical-align: middle; }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
         .bg-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-        
         .icon-btn { width: 32px; height: 32px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: 0.2s; margin-left: 4px; }
         .icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
         .btn-edit:hover { background: rgba(59, 130, 246, 0.2); color: var(--info); }
@@ -230,19 +229,19 @@
     async function deepScrapeYoutube(pid, btn, isAddNew = true) {
         try {
             const targetUrl = 'https://www.youtube.com/playlist?list=' + pid;
-            // Dùng CodeTabs để lấy HTML
             const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl);
             
             const res = await fetch(proxyUrl);
             const html = await res.text();
 
-            // 1. Cố gắng parse JSON từ biến ytInitialData
+            // 1. Phân tích JSON ẩn (ytInitialData) - FIX LỖI SCRIPT TAG
             let data = null;
             const jsonStart = html.indexOf('var ytInitialData =');
             if (jsonStart !== -1) {
-                const jsonEnd = html.indexOf(';</script>', jsonStart);
+                // Sử dụng escape character cho tag đóng script để tránh lỗi HTML parser
+                const jsonEnd = html.indexOf(';<\/script>', jsonStart);
                 const jsonStr = html.substring(jsonStart + 19, jsonEnd);
-                try { data = JSON.parse(jsonStr); } catch(e) {}
+                try { data = JSON.parse(jsonStr); } catch(e) { console.log('Lỗi parse JSON:', e); }
             }
 
             // 2. Lấy tiêu đề
