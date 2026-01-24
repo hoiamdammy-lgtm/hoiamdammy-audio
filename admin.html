@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hồi Âm CMS - Ultimate</title>
+    <title>Hồi Âm CMS - Piped Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg: #0f172a; --sidebar: #020617; --card: #1e293b; --border: #334155;
-            --primary: #3b82f6; --primary-hover: #2563eb; --text: #f8fafc; --text-muted: #94a3b8;
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --info: #0ea5e9;
+            --primary: #8b5cf6; /* Đổi màu chủ đạo sang tím (Piped Style) */
+            --primary-hover: #7c3aed; --text: #f8fafc; --text-muted: #94a3b8;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
         }
         * { box-sizing: border-box; outline: none; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; overflow: hidden; font-size: 14px; }
@@ -27,9 +28,11 @@
         /* SIDEBAR */
         .sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px; gap: 8px; flex-shrink: 0; }
         .brand { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 32px; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        .brand i { color: var(--primary); }
+        
         .nav-link { padding: 12px 16px; border-radius: 8px; color: var(--text-muted); cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
         .nav-link:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .nav-link.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .nav-link.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
 
         /* MAIN CONTENT */
         .main-content { flex: 1; display: flex; flex-direction: column; position: relative; min-width: 0; }
@@ -47,10 +50,9 @@
         
         label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         input, select { width: 100%; background: #020617; border: 1px solid var(--border); color: #fff; padding: 12px 16px; border-radius: 8px; font-size: 14px; transition: 0.2s; }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15); }
         input[readonly] { background: #0f172a; cursor: default; color: #64748b; }
 
-        /* BUTTONS */
         .btn { border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: #fff; width: 100%; margin-top: 10px; }
         .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
@@ -80,7 +82,7 @@
         .icon-btn { width: 32px; height: 32px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: 0.2s; margin-left: 4px; }
         .icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
         .btn-del:hover { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-        .btn-sync:hover { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+        .btn-sync:hover { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
 
         /* TOAST */
         #toast { position: fixed; bottom: 30px; right: 30px; background: #fff; color: #0f172a; padding: 16px 24px; border-radius: 12px; font-weight: 600; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: translateY(100px); opacity: 0; transition: all 0.3s; display: flex; align-items: center; gap: 10px; z-index: 1000; }
@@ -94,7 +96,6 @@
             .form-row { flex-direction: column; gap: 15px; }
             .header { padding: 0 20px; }
             .view-section { padding: 20px; }
-            .hide-mob { display: none; }
         }
     </style>
 </head>
@@ -102,17 +103,17 @@
 
     <div id="login-screen">
         <div class="login-box">
-            <h2 style="margin-top:0; color: var(--primary); margin-bottom: 20px;"><i class="fa-solid fa-user-shield"></i> ADMIN PANEL</h2>
-            <input type="password" id="pass" placeholder="Mật khẩu quản trị..." style="margin-bottom: 20px; text-align: center;">
-            <button class="btn btn-primary" onclick="login()">Đăng Nhập</button>
+            <h2 style="margin-top:0; color: var(--primary); margin-bottom: 20px;"><i class="fa-solid fa-rocket"></i> PIPED CMS</h2>
+            <input type="password" id="pass" placeholder="Mật khẩu..." style="margin-bottom: 20px; text-align: center;">
+            <button class="btn btn-primary" onclick="login()">Truy Cập</button>
         </div>
     </div>
 
     <div id="admin-ui" style="display:none; width:100%; height:100%;">
         
         <div class="sidebar">
-            <div class="brand"><i class="fa-solid fa-layer-group"></i> HỒI ÂM CMS</div>
-            <div class="nav-link active" onclick="switchTab('add', this)"><i class="fa-solid fa-circle-plus"></i> Thêm Mới</div>
+            <div class="brand"><i class="fa-solid fa-layer-group"></i> HỒI ÂM CMS <span style="font-size:10px; background:var(--primary); padding:2px 6px; border-radius:4px; margin-left:auto">V3</span></div>
+            <div class="nav-link active" onclick="switchTab('add', this)"><i class="fa-solid fa-plus-circle"></i> Thêm Mới</div>
             <div class="nav-link" onclick="switchTab('list', this); fetchData()"><i class="fa-solid fa-database"></i> Kho Truyện</div>
             <div style="flex:1"></div>
             <div class="nav-link" onclick="location.reload()" style="color: var(--danger);"><i class="fa-solid fa-right-from-bracket"></i> Thoát</div>
@@ -122,7 +123,7 @@
             <div class="header">
                 <h2 id="page-title">Thêm Truyện Mới</h2>
                 <div style="font-size:12px; color:var(--success); font-weight:600; background:rgba(16,185,129,0.1); padding:6px 12px; border-radius:20px">
-                    <i class="fa-solid fa-link"></i> Server Connected
+                    <i class="fa-solid fa-signal"></i> Piped API
                 </div>
             </div>
 
@@ -132,14 +133,14 @@
                         <label>1. Link Youtube Playlist</label>
                         <div style="position: relative;">
                             <input type="text" id="inp-url" placeholder="https://www.youtube.com/playlist?list=..." oninput="debounceFetch()">
-                            <button class="btn-action" onclick="autoFetch()"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto Get</button>
+                            <button class="btn-action" onclick="autoFetch()"><i class="fa-solid fa-bolt"></i> Piped Scan</button>
                         </div>
                     </div>
                     <div style="height: 1px; background: var(--border); margin: 24px 0;"></div>
                     <div class="form-group">
-                        <label style="color: var(--primary);">2. Tên Gốc (Nếu Auto lỗi)</label>
+                        <label style="color: var(--primary);">2. Tên Gốc (Dán thủ công nếu cần)</label>
                         <div style="position: relative;">
-                            <input type="text" id="inp-raw-title" placeholder="Dán tiêu đề gốc vào đây..." style="padding-right: 120px;">
+                            <input type="text" id="inp-raw-title" placeholder="Tiêu đề gốc..." style="padding-right: 120px;">
                             <button class="btn-action" onclick="manualParse()"><i class="fa-solid fa-scissors"></i> Cắt Tên</button>
                         </div>
                     </div>
@@ -148,7 +149,7 @@
                         <div class="col"><label>4. Tác Giả</label><input type="text" id="inp-author" placeholder="..."></div>
                     </div>
                     <div class="form-row">
-                        <div class="col"><label>5. Số tập</label><input type="text" id="inp-count" placeholder="VD: 64 tập"></div>
+                        <div class="col"><label>5. Số tập</label><input type="text" id="inp-count" placeholder="..."></div>
                         <div class="col">
                             <label>6. Trạng Thái</label>
                             <select id="inp-status">
@@ -169,7 +170,7 @@
                         </div>
                     </div>
                     <div class="form-group"><label>8. Playlist ID</label><input type="text" id="inp-pid" readonly></div>
-                    <button class="btn btn-primary" onclick="addStory()"><i class="fa-solid fa-floppy-disk"></i> LƯU NGAY</button>
+                    <button class="btn btn-primary" onclick="addStory()"><i class="fa-solid fa-cloud-arrow-up"></i> LƯU VÀO DATABASE</button>
                 </div>
             </div>
 
@@ -185,7 +186,7 @@
                         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 14px; color: var(--text-muted);"></i>
                         <input type="text" id="search-list" placeholder="Tìm kiếm..." style="padding-left: 40px;" onkeyup="filterList()">
                     </div>
-                    <button class="btn" style="background: var(--card); border: 1px solid var(--border); color: var(--text);" onclick="fetchData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    <button class="btn" style="background: var(--card); border: 1px solid var(--border); color: var(--text);" onclick="fetchData()"><i class="fa-solid fa-rotate"></i> Làm mới</button>
                 </div>
                 <div class="table-wrapper">
                     <table>
@@ -212,39 +213,27 @@
     const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
     const db = supabase.createClient(DB_URL, DB_KEY);
     
-    // --- DANH SÁCH SERVER MỚI (CẬP NHẬT 2026) ---
-    // Kết hợp cả Invidious và Piped (Piped API thường nhanh hơn)
+    // --- PIPED API SERVER LIST (FAST & STABLE) ---
     const API_SERVERS = [
-        'https://inv.nadeko.net',       // Server rất khỏe
-        'https://invidious.drgns.space',
-        'https://yewtu.be',             // Huyền thoại (Hà Lan)
-        'https://vid.puffyan.us',       // Mỹ
-        'https://invidious.projectsegfau.lt'
+        'https://pipedapi.kavin.rocks',
+        'https://api.piped.ot.ax',
+        'https://pipedapi.tokhmi.xyz',
+        'https://api.piped.sakurajima.moe',
+        'https://pipedapi.adminforge.de'
     ];
     let currentServerIndex = 0;
     
+    // Favicon Fix
+    (function(){let l=document.querySelector("link[rel~='icon']");if(!l){l=document.createElement('link');l.rel='icon';document.head.appendChild(l);}l.href='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💿</text></svg>';})();
+
     let allData = [];
     let fetchTimeout;
 
-    // Fix lỗi Favicon 404 (Chạy ngay khi load)
-    (function fixFavicon() {
-        let link = document.querySelector("link[rel~='icon']");
-        if (!link) {
-            link = document.createElement('link');
-            link.rel = 'icon';
-            document.getElementsByTagName('head')[0].appendChild(link);
-        }
-        link.href = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💿</text></svg>';
-    })();
-
-    // --- LOGIN ---
     function login() {
         if(document.getElementById('pass').value === 'hoiam20102003') {
             document.getElementById('login-screen').style.display='none';
             document.getElementById('admin-ui').style.display='flex';
-        } else {
-            showToast('Sai mật khẩu rồi!', 'error');
-        }
+        } else showToast('Sai mật khẩu!', 'error');
     }
 
     function switchTab(tab, el) {
@@ -255,83 +244,84 @@
         document.getElementById('page-title').innerText = tab === 'add' ? 'Thêm Truyện Mới' : 'Quản Lý Kho Truyện';
     }
 
-    // --- LOGIC XỬ LÝ URL ---
+    // --- AUTO FETCH LOGIC (PIPED) ---
     function debounceFetch() { clearTimeout(fetchTimeout); fetchTimeout = setTimeout(autoFetch, 600); }
 
     async function autoFetch() {
         const url = document.getElementById('inp-url').value;
         if(!url.includes('list=')) return;
-
         let pid = "";
         try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
         
         if(pid) {
             document.getElementById('inp-pid').value = pid;
             const btn = document.querySelector('.btn-action');
-            btn.innerHTML = '<i class="fa-solid fa-satellite-dish fa-spin"></i> Đang quét server...';
-
-            currentServerIndex = 0; // Reset lại từ server đầu tiên
-            await fetchFromInvidious(pid, btn);
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Piped Scanning...';
+            currentServerIndex = 0;
+            await fetchFromPiped(pid, btn, true); // True = mode add new
         }
     }
 
-    // --- CORE API FUNCTION (CÓ TIMEOUT) ---
-    async function fetchFromInvidious(pid, btn) {
+    async function fetchFromPiped(pid, btn, isAddNew = true) {
         if (currentServerIndex >= API_SERVERS.length) {
             showToast('Tất cả server đều bận. Hãy nhập tay!', 'error');
-            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích';
+            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Thử lại';
             currentServerIndex = 0;
             return;
         }
 
         const server = API_SERVERS[currentServerIndex];
-        console.log(`Trying server: ${server}`);
+        console.log(`Trying: ${server}`);
 
         try {
-            // TẠO TIMEOUT: Nếu quá 4 giây không phản hồi -> Cắt luôn để qua server khác
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 giây timeout
-
-            const res = await fetch(`${server}/api/v1/playlists/${pid}`, {
-                signal: controller.signal
-            });
+            const id = setTimeout(() => controller.abort(), 5000); // 5s timeout
             
-            clearTimeout(timeoutId); // Xóa timeout nếu thành công
+            const res = await fetch(`${server}/playlists/${pid}`, { signal: controller.signal });
+            clearTimeout(id);
 
-            if (!res.ok) throw new Error('Server error');
+            if (!res.ok) throw new Error('Err');
             const json = await res.json();
             
-            // Xử lý dữ liệu thành công
-            if(json.title) {
-                document.getElementById('inp-raw-title').value = json.title;
-                
-                const parsed = parseTitle(json.title);
-                document.getElementById('inp-name').value = parsed.name;
-                document.getElementById('inp-author').value = parsed.author;
-                
-                // Lấy số tập
-                if (json.videoCount) {
-                    document.getElementById('inp-count').value = json.videoCount + " tập";
-                } else if(parsed.count) {
-                    document.getElementById('inp-count').value = parsed.count;
+            // XỬ LÝ DỮ LIỆU PIPED
+            // Piped trả về: { name: "...", uploader: "...", relatedStreams: [...] }
+            if(json.name) {
+                if(isAddNew) {
+                    fillForm(json);
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Xong';
+                } else {
+                    // Trả về dữ liệu để dùng cho hàm update
+                    return json;
                 }
-
-                autoCategorize(json.title);
-                document.getElementById('inp-status').value = 'Hoàn';
-
-                showToast(`Kết nối thành công: ${server}`, 'success');
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Xong';
-                currentServerIndex = 0; // Reset
-                return;
+                showToast(`Kết nối: ${server}`, 'success');
+                currentServerIndex = 0;
             }
-        } catch(e) { 
-            console.warn(`Server ${server} failed/timeout, skipping...`);
+        } catch(e) {
+            console.warn(`Fail ${server}, next...`);
             currentServerIndex++;
-            await fetchFromInvidious(pid, btn); // Đệ quy thử cái tiếp theo
+            return await fetchFromPiped(pid, btn, isAddNew);
         }
     }
 
-    // --- LOGIC CẮT CHUỖI ---
+    // --- DATA PARSING ---
+    function fillForm(json) {
+        document.getElementById('inp-raw-title').value = json.name;
+        
+        const parsed = parseTitle(json.name);
+        document.getElementById('inp-name').value = parsed.name;
+        document.getElementById('inp-author').value = parsed.author; // Ưu tiên cắt từ tên
+        
+        // Lấy số tập chính xác từ relatedStreams length
+        if (json.relatedStreams && json.relatedStreams.length > 0) {
+            document.getElementById('inp-count').value = json.relatedStreams.length + " tập";
+        } else {
+            document.getElementById('inp-count').value = parsed.count;
+        }
+        
+        autoCategorize(json.name);
+        document.getElementById('inp-status').value = 'Hoàn';
+    }
+
     function manualParse() {
         const raw = document.getElementById('inp-raw-title').value;
         if(raw) {
@@ -402,89 +392,46 @@
         renderTable(allData);
     }
 
+    // --- CHECK OLD STORY (NÚT XOAY) ---
     async function checkOldStory(id, pid, btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spin fa-spinner"></i>';
-        currentServerIndex = 0; // Reset để thử từ server ngon nhất
+        const icon = btn.querySelector('i');
+        icon.className = 'fa-solid fa-circle-notch fa-spin';
         
-        await fetchFromInvidious(pid, { innerHTML: '' }); // Gọi fake btn object để tái sử dụng logic
+        // Reset server index để lấy dữ liệu mới nhất
+        currentServerIndex = 0;
         
-        // Logic tái sử dụng: fetchFromInvidious sẽ điền vào form input
-        // Chúng ta cần lấy giá trị từ form đó để update
-        // Tuy nhiên, cách tốt hơn là viết hàm update riêng, nhưng để nhanh:
-        // Ta đợi 1 xíu cho form điền xong rồi lấy data
-        
-        setTimeout(async () => {
-            const newName = document.getElementById('inp-name').value;
-            if(newName) {
+        try {
+            // Gọi hàm Piped nhưng với mode isAddNew = false để nó trả về JSON chứ không điền form
+            const json = await fetchFromPiped(pid, btn, false);
+            
+            if(json && json.name) {
+                const parsed = parseTitle(json.name);
+                // Lấy số tập chính xác từ mảng video
+                const realCount = (json.relatedStreams && json.relatedStreams.length > 0) 
+                                ? json.relatedStreams.length + " tập" 
+                                : parsed.count;
+
                 const { error } = await db.from('playlists').update({
-                    name: newName,
-                    author: document.getElementById('inp-author').value,
-                    count: document.getElementById('inp-count').value,
-                    status: 'Hoàn'
+                    name: parsed.name,
+                    author: parsed.author,
+                    count: realCount,
+                    status: 'Hoàn' // Reset lại trạng thái
                 }).eq('id', id);
 
                 if(!error) {
-                    showToast('Đã cập nhật!', 'success');
-                    fetchData();
-                } else showToast('Lỗi update', 'error');
+                    showToast('Đã cập nhật dữ liệu mới!', 'success');
+                    fetchData(); // Reload bảng
+                } else {
+                    showToast('Lỗi Database', 'error');
+                }
             } else {
-                showToast('Không lấy được data mới', 'error');
+                showToast('Không lấy được dữ liệu từ Piped', 'error');
             }
-            btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
-        }, 4500); // Đợi quy trình fetch hoàn tất (hơi thủ công nhưng an toàn với code hiện tại)
-    }
-    
-    // Override lại hàm checkOldStory để nó chạy mượt hơn với logic đệ quy
-    // Đây là phiên bản Clean hơn cho nút Cập nhật
-    async function checkOldStory(id, pid, btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spin fa-spinner"></i>';
-        const originalBtnText = btn.innerHTML;
-        
-        // Tạo hàm callback riêng khi fetch thành công cho nút update
-        const onSuccess = async (json) => {
-            const parsed = parseTitle(json.title);
-            const count = json.videoCount ? (json.videoCount + " tập") : parsed.count;
-            
-            const { error } = await db.from('playlists').update({
-                name: parsed.name,
-                author: parsed.author,
-                count: count,
-                status: 'Hoàn'
-            }).eq('id', id);
-
-            if(!error) {
-                showToast('Đã cập nhật chuẩn!', 'success');
-                fetchData();
-            } else showToast('Lỗi lưu DB', 'error');
-            btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
-        };
-
-        // Hàm đệ quy riêng cho nút Update (tương tự fetchFromInvidious nhưng callback khác)
-        const runUpdateFetch = async () => {
-            if (currentServerIndex >= API_SERVERS.length) {
-                showToast('Không server nào phản hồi', 'error');
-                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                currentServerIndex = 0;
-                return;
-            }
-            const server = API_SERVERS[currentServerIndex];
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
-                const res = await fetch(`${server}/api/v1/playlists/${pid}`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (!res.ok) throw new Error();
-                const json = await res.json();
-                currentServerIndex = 0;
-                onSuccess(json);
-            } catch(e) {
-                currentServerIndex++;
-                await runUpdateFetch();
-            }
+        } catch(e) {
+            console.error(e);
+            showToast('Lỗi kết nối', 'error');
         }
-        
-        currentServerIndex = 0;
-        await runUpdateFetch();
+        icon.className = 'fa-solid fa-arrows-rotate';
     }
 
     function renderTable(list) {
@@ -505,7 +452,7 @@
                     <td>${statusBadge}</td>
                     <td style="color:#cbd5e1">${i.count || '?'}</td>
                     <td style="text-align:right">
-                        <div class="icon-btn btn-sync" onclick="checkOldStory(${i.id}, '${i.playlist_id}', this)" title="Cập nhật từ Youtube">
+                        <div class="icon-btn btn-sync" onclick="checkOldStory(${i.id}, '${i.playlist_id}', this)" title="Cập nhật lại từ Youtube">
                             <i class="fa-solid fa-arrows-rotate"></i>
                         </div>
                         <div class="icon-btn btn-del" onclick="deleteItem(${i.id}, '${i.name}')" title="Xóa">
@@ -549,3 +496,5 @@
         setTimeout(() => t.classList.remove('show'), 3000);
     }
 </script>
+</body>
+</html>
