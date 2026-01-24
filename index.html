@@ -16,13 +16,13 @@
             --sidebar-bg: rgba(9, 9, 11, 0.6);
             --surface: #18181b;
             --surface-hover: #27272a;
-            --primary: #8b5cf6; /* Đổi sang màu tím Trendy hơn */
+            --primary: #8b5cf6;
             --primary-glow: rgba(139, 92, 246, 0.4);
             --text: #ffffff;
             --text-sub: #a1a1aa;
             
-            --nav-h: 70px; 
-            --player-h-mob: 85px; 
+            --nav-h: 65px; /* Giảm chiều cao nav mobile một chút cho gọn */
+            --player-h-mob: 80px; 
             --player-h-pc: 90px;
             --sidebar-w: 260px;
             --safe-b: env(safe-area-inset-bottom, 20px); 
@@ -73,18 +73,18 @@
         .search-box input:focus { border-color: var(--primary); background: #27272a; }
         .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; }
 
-        /* CONTROL BAR (FILTER & SORT) */
+        /* CONTROL BAR */
         .control-bar {
             padding: 0 24px 16px 24px; display: flex; gap: 12px; flex-shrink: 0; overflow-x: auto; scrollbar-width: none; align-items: center;
         }
-        .filter-group { display: flex; background: #1f1f22; border-radius: 10px; padding: 4px; border: var(--border); }
+        .filter-group { display: flex; background: #1f1f22; border-radius: 10px; padding: 4px; border: var(--border); flex-shrink: 0; }
         .chip { 
             padding: 6px 16px; border-radius: 8px; font-size: 13px; white-space: nowrap; 
             cursor: pointer; color: var(--text-sub); font-weight: 600; transition: 0.2s;
         }
         .chip.active { background: var(--surface-hover); color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         
-        .dropdown-wrapper { position: relative; }
+        .dropdown-wrapper { position: relative; flex-shrink: 0; }
         .custom-select {
             background: #1f1f22; border: var(--border); color: var(--text-sub);
             padding: 8px 30px 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 600;
@@ -133,10 +133,11 @@
         .btn-fav:hover { background: rgba(255,255,255,0.1); color: #ef4444; }
         .btn-fav.liked { color: #ef4444; }
 
-        /* PLAYER BAR */
+        /* PLAYER BAR CHUNG */
         .player-bar {
             position: fixed; left: 0; right: 0; bottom: 0;
-            background: rgba(9, 9, 11, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            background: rgba(9, 9, 11, 0.95); /* Tăng độ đậm nền */
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-top: var(--border); display: flex; transition: bottom 0.3s;
             padding: 0 24px; z-index: 100;
         }
@@ -145,38 +146,50 @@
         .mobile-nav {
             display: flex; position: fixed; bottom: 0; left: 0; right: 0; 
             height: calc(var(--nav-h) + var(--safe-b)); padding-bottom: var(--safe-b);
-            background: rgba(9, 9, 11, 0.95); border-top: var(--border); z-index: 90;
-            justify-content: space-around; align-items: center; backdrop-filter: blur(20px);
+            background: #09090b; /* Nền đặc để không bị lộ nội dung bên dưới */
+            border-top: var(--border); z-index: 200; /* Z-index cao nhất để luôn nổi */
+            justify-content: space-around; align-items: center;
         }
         .m-item { color: #71717a; font-size: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 25%; font-weight: 500; }
         .m-item.active { color: var(--primary); }
         .m-item i { font-size: 20px; }
 
-        /* RESPONSIVE */
+        /* === FIX GIAO DIỆN MOBILE === */
         @media (max-width: 768px) {
             .sidebar { display: none !important; }
             .header { padding: 0 16px; }
             .control-bar { padding: 0 16px 12px 16px; }
-            .content-area { padding: 0 16px 180px 16px; }
+            
+            /* Tăng padding bottom để list không bị che bởi player + nav */
+            .content-area { padding: 0 16px calc(var(--nav-h) + var(--player-h-mob) + 40px) 16px; }
+            
             .grid { grid-template-columns: 1fr; gap: 12px; }
-            .card { flex-direction: row; align-items: center; padding: 12px; }
-            .card-top { margin-bottom: 0; align-items: center; }
-            .c-meta { display: none; } /* Ẩn bớt trên mobile cho gọn */
-            .c-info { gap: 2px; }
-            .btn-fav { position: relative; bottom: auto; right: auto; margin-left: auto; }
+            .card { flex-direction: row; align-items: center; padding: 12px; min-height: 80px; }
+            .card-top { margin-bottom: 0; align-items: center; width: 100%; }
+            .c-meta { display: none; }
+            .c-info { gap: 4px; flex: 1; min-width: 0; /* Fix lỗi text tràn flexbox */ margin-right: 10px;}
+            .c-title { font-size: 14px; margin-bottom: 2px; }
+            .c-icon { width: 40px; height: 40px; font-size: 16px; flex-shrink: 0; }
+            .btn-fav { position: static; width: auto; height: auto; margin-left: 10px; }
             
+            /* Player Bar trên Mobile */
             .player-bar {
-                bottom: calc(var(--nav-h) + var(--safe-b)); height: var(--player-h-mob);
+                bottom: calc(var(--nav-h) + var(--safe-b) - 1px); /* Nằm ngay trên Nav */
+                height: var(--player-h-mob);
                 padding: 0 16px; align-items: center; justify-content: space-between;
-                border-radius: 16px 16px 0 0; border: var(--border); border-bottom: none;
+                border-radius: 12px 12px 0 0; /* Bo góc trên cho đẹp */
+                border: var(--border); border-bottom: none;
+                z-index: 150; /* Thấp hơn Nav một chút nhưng cao hơn content */
             }
-            .p-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; margin-right: 10px; }
-            .p-info { overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
-            .p-title { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .p-sub { font-size: 12px; color: var(--primary); }
             
-            .p-ctrl-mob { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+            .p-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; margin-right: 10px; min-width: 0; }
+            .p-info { overflow: hidden; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+            .p-title { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .p-sub { font-size: 12px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            
+            .p-ctrl-mob { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
             .p-ctrl-pc, .p-extra { display: none; }
+            
             .p-mob-progress { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.1); }
             .p-bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.1s linear; }
             #seek-mob-touch { position: absolute; top: -10px; left: 0; right: 0; height: 25px; opacity: 0; z-index: 110; }
@@ -204,8 +217,8 @@
         .btn:hover { color: #fff; transform: scale(1.1); }
         .btn:active { transform: scale(0.9); }
         .btn-play { 
-            width: 44px; height: 44px; background: #fff; color: #000; border-radius: 50%; font-size: 18px; 
-            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+            width: 40px; height: 40px; background: #fff; color: #000; border-radius: 50%; font-size: 16px; 
+            box-shadow: 0 0 15px rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
         }
         .btn-play:hover { color: #000; transform: scale(1.05); }
 
@@ -232,7 +245,7 @@
         .opt-item:hover { background: rgba(255,255,255,0.05); }
         .active-chap { color: var(--primary); font-weight: 700; background: rgba(139, 92, 246, 0.1); }
         
-        /* ZEN MODE STYLES omitted for brevity but included in logic */
+        /* ZEN MODE */
         .zen { position: fixed; inset: 0; background: #000; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
         .zen.active { opacity: 1; pointer-events: auto; }
         .zen-bg { position: absolute; inset: 0; opacity: 0.5; filter: blur(80px); background-size: cover; z-index: -1; }
@@ -312,7 +325,7 @@
         </div>
 
         <div class="p-ctrl-mob">
-            <button class="btn" onclick="openMenu('menu-speed')" style="font-size:13px; font-weight:700;">1x</button>
+            <button class="btn" onclick="openMenu('menu-speed')" style="font-size:12px; font-weight:700;">1x</button>
             <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-mob"></i></button>
             <button class="btn" onclick="openMenu('menu-list')"><i class="fa-solid fa-list-ul"></i></button>
         </div>
