@@ -21,8 +21,8 @@
             --text: #ffffff;
             --text-sub: #a1a1aa;
             
-            --nav-h: 65px; /* Giảm chiều cao nav mobile một chút cho gọn */
-            --player-h-mob: 80px; 
+            --nav-h: 65px; 
+            --player-h-mob: 90px; /* Tăng nhẹ chiều cao để chứa nút mới */
             --player-h-pc: 90px;
             --sidebar-w: 260px;
             --safe-b: env(safe-area-inset-bottom, 20px); 
@@ -136,7 +136,7 @@
         /* PLAYER BAR CHUNG */
         .player-bar {
             position: fixed; left: 0; right: 0; bottom: 0;
-            background: rgba(9, 9, 11, 0.95); /* Tăng độ đậm nền */
+            background: rgba(9, 9, 11, 0.95); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-top: var(--border); display: flex; transition: bottom 0.3s;
             padding: 0 24px; z-index: 100;
@@ -146,8 +146,8 @@
         .mobile-nav {
             display: flex; position: fixed; bottom: 0; left: 0; right: 0; 
             height: calc(var(--nav-h) + var(--safe-b)); padding-bottom: var(--safe-b);
-            background: #09090b; /* Nền đặc để không bị lộ nội dung bên dưới */
-            border-top: var(--border); z-index: 200; /* Z-index cao nhất để luôn nổi */
+            background: #09090b; 
+            border-top: var(--border); z-index: 200; 
             justify-content: space-around; align-items: center;
         }
         .m-item { color: #71717a; font-size: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 25%; font-weight: 500; }
@@ -159,27 +159,25 @@
             .sidebar { display: none !important; }
             .header { padding: 0 16px; }
             .control-bar { padding: 0 16px 12px 16px; }
-            
-            /* Tăng padding bottom để list không bị che bởi player + nav */
             .content-area { padding: 0 16px calc(var(--nav-h) + var(--player-h-mob) + 40px) 16px; }
             
             .grid { grid-template-columns: 1fr; gap: 12px; }
             .card { flex-direction: row; align-items: center; padding: 12px; min-height: 80px; }
             .card-top { margin-bottom: 0; align-items: center; width: 100%; }
             .c-meta { display: none; }
-            .c-info { gap: 4px; flex: 1; min-width: 0; /* Fix lỗi text tràn flexbox */ margin-right: 10px;}
+            .c-info { gap: 4px; flex: 1; min-width: 0; margin-right: 10px;}
             .c-title { font-size: 14px; margin-bottom: 2px; }
             .c-icon { width: 40px; height: 40px; font-size: 16px; flex-shrink: 0; }
             .btn-fav { position: static; width: auto; height: auto; margin-left: 10px; }
             
             /* Player Bar trên Mobile */
             .player-bar {
-                bottom: calc(var(--nav-h) + var(--safe-b) - 1px); /* Nằm ngay trên Nav */
+                bottom: calc(var(--nav-h) + var(--safe-b) - 1px); 
                 height: var(--player-h-mob);
                 padding: 0 16px; align-items: center; justify-content: space-between;
-                border-radius: 12px 12px 0 0; /* Bo góc trên cho đẹp */
+                border-radius: 12px 12px 0 0; 
                 border: var(--border); border-bottom: none;
-                z-index: 150; /* Thấp hơn Nav một chút nhưng cao hơn content */
+                z-index: 150; 
             }
             
             .p-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; margin-right: 10px; min-width: 0; }
@@ -187,12 +185,27 @@
             .p-title { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .p-sub { font-size: 12px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             
+            /* Mobile Controls: Thêm nút -10s, +10s */
             .p-ctrl-mob { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
             .p-ctrl-pc, .p-extra { display: none; }
             
             .p-mob-progress { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.1); }
             .p-bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.1s linear; }
+            
+            /* Thanh tua & Tooltip thời gian */
             #seek-mob-touch { position: absolute; top: -10px; left: 0; right: 0; height: 25px; opacity: 0; z-index: 110; }
+            
+            /* Tooltip hiển thị thời gian khi kéo */
+            #seek-tooltip {
+                position: absolute; top: -35px; background: var(--primary); color: #fff;
+                padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700;
+                transform: translateX(-50%); pointer-events: none; opacity: 0; transition: opacity 0.2s;
+                white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            }
+            #seek-tooltip::after {
+                content: ''; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+                border-width: 5px; border-style: solid; border-color: var(--primary) transparent transparent transparent;
+            }
         }
 
         @media (min-width: 768px) {
@@ -208,7 +221,7 @@
             .p-title { font-size: 15px; font-weight: 700; }
             .p-sub { font-size: 13px; color: #aaa; }
             
-            .p-ctrl-mob, .p-mob-progress { display: none; }
+            .p-ctrl-mob, .p-mob-progress, #seek-tooltip { display: none; }
             .p-ctrl-pc { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 8px; max-width: 500px; }
             .p-extra { width: 30%; display: flex; justify-content: flex-end; gap: 15px; }
         }
@@ -221,6 +234,8 @@
             box-shadow: 0 0 15px rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
         }
         .btn-play:hover { color: #000; transform: scale(1.05); }
+
+        .btn-mini { font-size: 14px; color: #ccc; width: 30px; height: 30px; }
 
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; height: 20px; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
@@ -245,6 +260,11 @@
         .opt-item:hover { background: rgba(255,255,255,0.05); }
         .active-chap { color: var(--primary); font-weight: 700; background: rgba(139, 92, 246, 0.1); }
         
+        /* Time Input Modal */
+        .time-input-wrap { display: flex; gap: 10px; margin: 20px 0; justify-content: center; }
+        .time-input { background: #333; border: 1px solid #555; color: #fff; font-size: 24px; width: 60px; height: 60px; border-radius: 12px; text-align: center; font-weight: 700; }
+        .time-sep { font-size: 24px; font-weight: 700; padding-top: 15px; color: #777; }
+
         /* ZEN MODE */
         .zen { position: fixed; inset: 0; background: #000; z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
         .zen.active { opacity: 1; pointer-events: auto; }
@@ -312,6 +332,7 @@
 
     <div class="player-bar">
         <div class="p-mob-progress">
+            <div id="seek-tooltip">00:00</div>
             <div class="p-bar-fill" id="fill-mob"></div>
             <input type="range" id="seek-mob-touch" value="0" min="0" max="100" step="0.1">
         </div>
@@ -325,8 +346,10 @@
         </div>
 
         <div class="p-ctrl-mob">
-            <button class="btn" onclick="openMenu('menu-speed')" style="font-size:12px; font-weight:700;">1x</button>
+            <button class="btn" onclick="openMenu('menu-jump')" style="font-size:16px"><i class="fa-regular fa-clock"></i></button>
+            <button class="btn btn-mini" onclick="skip(-10)"><i class="fa-solid fa-rotate-left"></i></button>
             <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-mob"></i></button>
+            <button class="btn btn-mini" onclick="skip(10)"><i class="fa-solid fa-rotate-right"></i></button>
             <button class="btn" onclick="openMenu('menu-list')"><i class="fa-solid fa-list-ul"></i></button>
         </div>
 
@@ -396,6 +419,21 @@
         </div>
     </div>
     
+    <div class="overlay" id="menu-jump" onclick="closeMenu(event)">
+        <div class="sheet">
+            <div style="font-size:18px; font-weight:700; margin-bottom:15px; color:#fff">Nhảy đến thời gian</div>
+            <div style="text-align:center; color:#aaa; margin-bottom:10px">Nhập thời gian (Giờ : Phút : Giây)</div>
+            <div class="time-input-wrap">
+                <input type="number" id="jump-h" class="time-input" placeholder="00" min="0">
+                <div class="time-sep">:</div>
+                <input type="number" id="jump-m" class="time-input" placeholder="00" min="0" max="59">
+                <div class="time-sep">:</div>
+                <input type="number" id="jump-s" class="time-input" placeholder="00" min="0" max="59">
+            </div>
+            <button class="btn" style="background:var(--primary); color:#fff; width:100%; border-radius:12px; font-weight:700; padding:15px" onclick="submitJump()">NHẢY TỚI</button>
+        </div>
+    </div>
+    
     <div class="overlay" id="menu-data" onclick="closeMenu(event)">
         <div class="sheet">
             <div style="font-size:18px; font-weight:700; margin-bottom:15px; color:#fff">Cài đặt dữ liệu</div>
@@ -413,35 +451,74 @@
 
     let player, allData=[], displayList=[], curId='', curName='', activeTab='home';
     let isPlaying=false, updateInt, drag=false, cachedTitles = {}, isSwitching = false, currentSpeed = 1;
-    
-    // FILTER STATE
     let filters = { cat: 'all', author: 'all' };
     let sortMode = 'newest';
 
     async function init() {
         const { data } = await db.from('playlists').select('*');
         allData = data || [];
-        populateAuthors(); // Tạo danh sách tác giả
-        processData(); // Lọc và sắp xếp lần đầu
+        populateAuthors();
+        processData();
         document.getElementById('loading').style.display='none';
         
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         document.head.appendChild(tag);
         genSpeed();
+        setupSeekTooltip();
     }
 
-    // --- LOGIC LỌC & SẮP XẾP ---
+    // FEATURE: Seek Bar Tooltip logic
+    function setupSeekTooltip() {
+        const range = document.getElementById('seek-mob-touch');
+        const tooltip = document.getElementById('seek-tooltip');
+        
+        const updateTooltip = (e) => {
+            if(!player || !player.getDuration) return;
+            const val = e.target.value;
+            const duration = player.getDuration();
+            if(duration) {
+                const seconds = (val / 100) * duration;
+                tooltip.innerText = fmt(seconds);
+                tooltip.style.left = val + '%';
+                tooltip.style.opacity = 1;
+            }
+        };
+
+        range.addEventListener('input', updateTooltip);
+        range.addEventListener('touchstart', updateTooltip);
+        range.addEventListener('touchend', () => tooltip.style.opacity = 0);
+        range.addEventListener('change', () => tooltip.style.opacity = 0);
+    }
+
+    // FEATURE: Tua 10s
+    function skip(sec) {
+        if(!player || !player.getCurrentTime) return;
+        const current = player.getCurrentTime();
+        const duration = player.getDuration();
+        let target = current + sec;
+        if(target < 0) target = 0;
+        if(target > duration) target = duration;
+        player.seekTo(target, true);
+    }
+
+    // FEATURE: Nhập giờ
+    function submitJump() {
+        if(!player) return;
+        const h = parseInt(document.getElementById('jump-h').value) || 0;
+        const m = parseInt(document.getElementById('jump-m').value) || 0;
+        const s = parseInt(document.getElementById('jump-s').value) || 0;
+        const totalSeconds = (h * 3600) + (m * 60) + s;
+        player.seekTo(totalSeconds, true);
+        closeMenu({target:{classList:{contains:()=>true}}}); // Close logic reuse
+    }
+
     function populateAuthors() {
         const authors = new Set();
-        allData.forEach(x => {
-            if(x.author && x.author.length > 1) authors.add(x.author);
-        });
+        allData.forEach(x => { if(x.author && x.author.length > 1) authors.add(x.author); });
         const sel = document.getElementById('author-select');
         [...authors].sort().forEach(au => {
-            const opt = document.createElement('option');
-            opt.value = au; opt.innerText = au;
-            sel.appendChild(opt);
+            const opt = document.createElement('option'); opt.value = au; opt.innerText = au; sel.appendChild(opt);
         });
     }
 
@@ -454,13 +531,9 @@
         processData();
     }
 
-    function setSort(val) {
-        sortMode = val;
-        processData();
-    }
+    function setSort(val) { sortMode = val; processData(); }
 
     function processData() {
-        // 1. Lấy list gốc dựa trên Tab
         let temp = [];
         if(activeTab === 'home') temp = [...allData];
         else if(activeTab === 'fav') {
@@ -471,17 +544,11 @@
             temp = allData.filter(x => h[x.playlist_id]);
         }
 
-        // 2. Lọc theo Search text
         const txt = document.getElementById('search').value.toLowerCase();
         if(txt) temp = temp.filter(x => x.name.toLowerCase().includes(txt) || (x.author && x.author.toLowerCase().includes(txt)));
-
-        // 3. Lọc theo Category
         if(filters.cat !== 'all') temp = temp.filter(x => x.category === filters.cat);
-
-        // 4. Lọc theo Author
         if(filters.author !== 'all') temp = temp.filter(x => x.author === filters.author);
 
-        // 5. Sắp xếp
         if(activeTab === 'hist') {
              const h = JSON.parse(localStorage.getItem('hist')||'{}');
              temp.sort((a,b) => h[b.playlist_id].at - h[a.playlist_id].at);
@@ -489,11 +556,9 @@
             if(sortMode === 'name_asc') temp.sort((a,b) => a.name.localeCompare(b.name));
             else if(sortMode === 'count_desc') temp.sort((a,b) => (parseInt(b.count)||0) - (parseInt(a.count)||0));
             else if(sortMode === 'count_asc') temp.sort((a,b) => (parseInt(a.count)||0) - (parseInt(b.count)||0));
-            else temp.sort((a,b) => b.id - a.id); // Newest default
+            else temp.sort((a,b) => b.id - a.id);
         }
-
-        displayList = temp;
-        render(displayList);
+        displayList = temp; render(displayList);
     }
 
     function render(data) {
@@ -541,7 +606,6 @@
         });
     }
 
-    // --- PLAYER LOGIC (GIỮ NGUYÊN NHƯNG TỐI ƯU) ---
     function play(pid, name, idx, time) {
         const isNewPlaylist = (curId !== pid);
         curName = name; curId = pid;
@@ -581,11 +645,8 @@
                 genChapList(idx);
                 if(player.getPlaybackRate() !== currentSpeed) player.setPlaybackRate(currentSpeed);
             }
-        } else if (e.data === 0) { 
-            next(); 
-        } else { 
-            isPlaying = false; setIcon(false); stopUpdate(); 
-        }
+        } else if (e.data === 0) { next(); } 
+        else { isPlaying = false; setIcon(false); stopUpdate(); }
     }
 
     function updateUI(title, sub) {
@@ -668,7 +729,7 @@
             div.onclick = () => { 
                 currentSpeed = x;
                 player.setPlaybackRate(x); 
-                document.querySelector('.p-ctrl-mob button').innerText = x + 'x';
+                document.querySelector('.p-ctrl-mob button').innerText = x + 'x'; // Reset text if needed, or keep Icon
                 closeMenu({target:document.getElementById('menu-speed')});
                 genSpeed();
             };
