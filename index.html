@@ -22,7 +22,7 @@
             --text-sub: #a1a1aa;
             
             --nav-h: 65px; 
-            --player-h-mob: 90px; /* Tăng nhẹ chiều cao để chứa nút mới */
+            --player-h-mob: 90px;
             --player-h-pc: 90px;
             --sidebar-w: 260px;
             --safe-b: env(safe-area-inset-bottom, 20px); 
@@ -159,6 +159,7 @@
             .sidebar { display: none !important; }
             .header { padding: 0 16px; }
             .control-bar { padding: 0 16px 12px 16px; }
+            
             .content-area { padding: 0 16px calc(var(--nav-h) + var(--player-h-mob) + 40px) 16px; }
             
             .grid { grid-template-columns: 1fr; gap: 12px; }
@@ -180,19 +181,19 @@
                 z-index: 150; 
             }
             
-            .p-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; margin-right: 10px; min-width: 0; }
+            .p-left { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; margin-right: 5px; min-width: 0; }
             .p-info { overflow: hidden; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-            .p-title { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .p-sub { font-size: 12px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .p-title { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .p-sub { font-size: 11px; color: var(--primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             
-            /* Mobile Controls: Thêm nút -10s, +10s */
-            .p-ctrl-mob { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+            /* Mobile Controls: 
+               Thêm Speed, Jump, +/- 10s. Giảm size để vừa. 
+            */
+            .p-ctrl-mob { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
             .p-ctrl-pc, .p-extra { display: none; }
             
             .p-mob-progress { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.1); }
             .p-bar-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.1s linear; }
-            
-            /* Thanh tua & Tooltip thời gian */
             #seek-mob-touch { position: absolute; top: -10px; left: 0; right: 0; height: 25px; opacity: 0; z-index: 110; }
             
             /* Tooltip hiển thị thời gian khi kéo */
@@ -346,7 +347,8 @@
         </div>
 
         <div class="p-ctrl-mob">
-            <button class="btn" onclick="openMenu('menu-jump')" style="font-size:16px"><i class="fa-regular fa-clock"></i></button>
+            <button class="btn" onclick="openMenu('menu-speed')" style="font-size:12px; font-weight:700; width:30px; color:#fff" id="btn-speed-mob">1x</button>
+            <button class="btn" onclick="openMenu('menu-jump')" style="font-size:16px"><i class="fa-solid fa-stopwatch"></i></button>
             <button class="btn btn-mini" onclick="skip(-10)"><i class="fa-solid fa-rotate-left"></i></button>
             <button class="btn btn-play" onclick="toggle()"><i class="fa-solid fa-play" id="icon-play-mob"></i></button>
             <button class="btn btn-mini" onclick="skip(10)"><i class="fa-solid fa-rotate-right"></i></button>
@@ -367,6 +369,7 @@
         </div>
 
         <div class="p-extra">
+            <button class="btn" onclick="openMenu('menu-jump')" title="Nhập thời gian"><i class="fa-solid fa-stopwatch"></i></button>
             <button class="btn" onclick="openMenu('menu-list')" title="Danh sách phát"><i class="fa-solid fa-list-ul"></i></button>
             <button class="btn" onclick="openMenu('menu-speed')" title="Tốc độ"><i class="fa-solid fa-gauge-high"></i></button>
         </div>
@@ -729,7 +732,7 @@
             div.onclick = () => { 
                 currentSpeed = x;
                 player.setPlaybackRate(x); 
-                document.querySelector('.p-ctrl-mob button').innerText = x + 'x'; // Reset text if needed, or keep Icon
+                document.getElementById('btn-speed-mob').innerText = x + 'x';
                 closeMenu({target:document.getElementById('menu-speed')});
                 genSpeed();
             };
