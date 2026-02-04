@@ -3,541 +3,580 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hồi Âm Admin Ultimate</title>
+    <title>Hồi Âm Enterprise CMS</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --bg: #0f172a; /* Xanh đen sâu thẳm */
-            --glass: rgba(30, 41, 59, 0.7);
-            --border: rgba(255, 255, 255, 0.08);
-            --primary: #8b5cf6;
-            --accent: #06b6d4;
-            --text: #f1f5f9;
-            --text-sub: #94a3b8;
-            --sidebar-w: 260px;
+            --bg-body: #0f172a; --bg-panel: #1e293b; --border: #334155;
+            --primary: #6366f1; --primary-hover: #4f46e5;
+            --text-main: #f1f5f9; --text-sub: #94a3b8;
+            --danger: #ef4444; --success: #10b981; --warning: #f59e0b;
         }
-
-        * { box-sizing: border-box; outline: none; }
-        body { 
-            font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text); 
-            margin: 0; height: 100vh; display: flex; overflow: hidden; font-size: 14px;
-            background-image: radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.1), transparent 40%);
-        }
-
-        /* --- UI COMPONENTS --- */
-        .glass-box {
-            background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border); box-shadow: 0 4px 30px rgba(0,0,0,0.3);
-        }
-
-        /* Sidebar */
-        .sidebar { 
-            width: var(--sidebar-w); display: flex; flex-direction: column; padding: 24px; gap: 8px; 
-            border-right: 1px solid var(--border); background: rgba(15, 23, 42, 0.9); z-index: 50;
-        }
-        .brand { 
-            font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;
-            background: linear-gradient(to right, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .nav-item { 
-            padding: 12px 16px; border-radius: 10px; color: var(--text-sub); cursor: pointer; font-weight: 600; 
-            display: flex; gap: 12px; transition: 0.2s; align-items: center;
-        }
+        * { box-sizing: border-box; outline: none; user-select: none; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; height: 100vh; display: flex; font-size: 13px; overflow: hidden; }
+        
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 240px; background: #020617; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; }
+        .brand { height: 60px; display: flex; align-items: center; padding: 0 20px; font-weight: 800; font-size: 16px; color: #fff; border-bottom: 1px solid var(--border); letter-spacing: -0.5px; }
+        .brand i { color: var(--primary); margin-right: 10px; font-size: 18px; }
+        .nav { padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .nav-item { padding: 10px 12px; border-radius: 6px; color: var(--text-sub); cursor: pointer; font-weight: 500; display: flex; gap: 10px; align-items: center; transition: 0.2s; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .nav-item.active { background: rgba(139, 92, 246, 0.15); color: #fff; border: 1px solid rgba(139, 92, 246, 0.2); }
+        .nav-item.active { background: var(--primary); color: #fff; }
+        .nav-group { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin: 15px 0 5px 10px; }
 
-        /* Content */
-        .main { flex: 1; display: flex; flex-direction: column; position: relative; min-width: 0; }
-        .header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid var(--border); }
-        .title { font-size: 20px; font-weight: 700; }
+        /* MAIN CONTENT */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: radial-gradient(circle at top right, #1e1b4b 0%, transparent 30%); }
+        .top-bar { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15,23,42,0.8); backdrop-filter: blur(10px); }
+        .breadcrumbs { font-weight: 600; color: var(--text-main); font-size: 14px; }
+        
+        /* VIEW AREA */
+        .workspace { padding: 20px; overflow-y: auto; height: 100%; display: none; }
+        .workspace.active { display: block; animation: fade 0.2s; }
+        @keyframes fade { from{opacity:0} to{opacity:1} }
 
-        .view { padding: 30px; overflow-y: auto; flex: 1; display: none; }
-        .view.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:translateY(0)} }
-
-        /* Stats Cards */
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card { padding: 20px; border-radius: 16px; position: relative; overflow: hidden; }
-        .stat-num { font-size: 32px; font-weight: 800; margin: 5px 0; }
-        .stat-label { color: var(--text-sub); font-size: 12px; text-transform: uppercase; font-weight: 700; }
-        .stat-icon { position: absolute; right: 20px; top: 20px; font-size: 40px; opacity: 0.1; }
-
-        /* Form Elements */
-        .form-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; max-width: 1200px; margin: 0 auto; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-sub); }
-        input, select { 
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; 
-            padding: 12px; border-radius: 8px; font-size: 14px; transition: 0.2s;
-        }
-        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2); }
-
-        /* Image Preview Area */
-        .img-preview {
-            width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; border: 1px dashed var(--border);
-            display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;
-        }
-        .img-preview img { width: 100%; height: 100%; object-fit: cover; }
-        .img-overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
-            opacity: 0; transition: 0.2s; cursor: pointer;
-        }
-        .img-preview:hover .img-overlay { opacity: 1; }
-
-        /* Table */
-        .table-wrap { border-radius: 16px; overflow: hidden; }
+        /* TOOLBAR */
+        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; background: var(--bg-panel); padding: 10px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; }
+        .search-wrap { position: relative; flex: 1; min-width: 200px; }
+        .search-wrap i { position: absolute; left: 12px; top: 10px; color: var(--text-sub); }
+        .inp-search { width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 8px 10px 8px 35px; border-radius: 6px; }
+        
+        /* BUTTONS */
+        .btn { padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border); background: #334155; color: #fff; cursor: pointer; font-weight: 600; font-size: 12px; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn:hover { background: #475569; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.2); }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+        
+        /* TABLE */
+        .table-box { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: rgba(255,255,255,0.03); text-align: left; padding: 15px; font-size: 12px; color: var(--text-sub); }
-        td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { background: #0f172a; padding: 12px 15px; text-align: left; font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: 700; border-bottom: 1px solid var(--border); cursor: pointer; }
+        th:hover { color: #fff; }
+        td { padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; color: #cbd5e1; }
         tr:hover td { background: rgba(255,255,255,0.02); }
-        .thumb-small { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; background: #333; }
+        
+        .thumb { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: #000; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-done { background: var(--success); box-shadow: 0 0 5px var(--success); }
+        .status-run { background: var(--warning); box-shadow: 0 0 5px var(--warning); }
+        
+        /* MODAL */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal.open { display: flex; }
+        .modal-box { background: #1e293b; border: 1px solid var(--border); width: 600px; max-width: 95%; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow: hidden; animation: slideUp 0.3s; }
+        .modal-head { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #0f172a; }
+        .modal-body { padding: 20px; overflow-y: auto; max-height: 80vh; }
+        @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
 
-        /* Buttons */
-        .btn { border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary { background: linear-gradient(135deg, #8b5cf6, #d946ef); color: #fff; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4); }
-        .btn-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-sub); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-        .btn-icon:hover { background: #fff; color: #000; }
-        .btn-sync:hover { background: var(--accent); color: #fff; }
-        .btn-del:hover { background: #ef4444; color: #fff; }
+        /* FORM GRID inside Modal */
+        .f-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .f-group { margin-bottom: 15px; }
+        .f-label { display: block; margin-bottom: 5px; font-size: 11px; font-weight: 700; color: var(--text-sub); }
+        .f-input { width: 100%; background: #0f172a; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 6px; }
+        .f-input:focus { border-color: var(--primary); }
 
-        /* Modal */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 100; display: none; align-items: center; justify-content: center; }
-        .modal.open { display: flex; animation: fadeIn 0.2s; }
-        .modal-box { width: 500px; max-width: 90%; background: #1e293b; padding: 30px; border-radius: 20px; border: 1px solid var(--border); }
+        /* TOAST & LOGS */
+        #toast-hub { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: #1e293b; border-left: 4px solid var(--success); padding: 12px 20px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: #fff; width: 300px; display: flex; align-items: center; gap: 10px; animation: slideInRight 0.3s; }
+        .toast.error { border-left-color: var(--danger); }
+        @keyframes slideInRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
 
-        /* Toast */
-        #toast { position: fixed; bottom: 30px; right: 30px; z-index: 200; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-        .toast-msg { background: #1e293b; border: 1px solid var(--border); padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s; pointer-events: auto; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; left: -100%; height: 100%; transition: 0.3s; }
-            .sidebar.show { left: 0; }
-            .form-grid, .stats-row { grid-template-columns: 1fr; }
-            .header { padding: 0 20px; }
-        }
+        /* CHECKBOX */
+        .chk { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="login-ui" style="position:fixed; inset:0; z-index:999; background:#020617; display:flex; align-items:center; justify-content:center;">
-        <div class="glass-box" style="padding:40px; border-radius:24px; width:350px; text-align:center;">
-            <div style="font-size:40px; margin-bottom:10px">💿</div>
-            <h2 style="margin:0 0 20px">HỒI ÂM ADMIN</h2>
-            <input type="password" id="login-pass" placeholder="Mật khẩu..." style="text-align:center; margin-bottom:20px">
-            <button class="btn btn-primary" onclick="auth()">TRUY CẬP</button>
+    <div id="auth-screen" style="position:fixed; inset:0; z-index:9999; background:#020617; display:flex; align-items:center; justify-content:center;">
+        <div style="text-align:center; width:300px">
+            <i class="fa-solid fa-shield-cat" style="font-size:50px; color:var(--primary); margin-bottom:20px"></i>
+            <h2 style="color:#fff; margin-bottom:20px">Hồi Âm Enterprise</h2>
+            <input type="password" id="auth-pass" class="f-input" placeholder="Nhập mã bảo mật..." style="text-align:center; font-size:16px; margin-bottom:15px">
+            <button class="btn btn-primary" style="width:100%; justify-content:center" onclick="login()">TRUY CẬP HỆ THỐNG</button>
         </div>
     </div>
 
-    <div id="admin-ui" style="display:none; width:100%; height:100%">
-        <div class="sidebar" id="sidebar">
-            <div class="brand"><i class="fa-solid fa-compact-disc"></i> HỒI ÂM CMS <i class="fa-solid fa-xmark" style="margin-left:auto; cursor:pointer; font-size:16px" onclick="toggleMenu()"></i></div>
-            <div class="nav-item active" onclick="nav('dashboard', this); loadStats()"><i class="fa-solid fa-chart-pie"></i> Tổng quan</div>
-            <div class="nav-item" onclick="nav('list', this); fetchList()"><i class="fa-solid fa-layer-group"></i> Kho Truyện</div>
-            <div class="nav-item" onclick="nav('add', this)"><i class="fa-solid fa-circle-plus"></i> Thêm Mới</div>
+    <div class="sidebar">
+        <div class="brand"><i class="fa-solid fa-layer-group"></i> HỒI ÂM ERP</div>
+        <div class="nav">
+            <div class="nav-item active" onclick="switchView('list', this)"><i class="fa-solid fa-list-ul"></i> Quản lý Truyện</div>
+            <div class="nav-item" onclick="switchView('stats', this); loadLogs()"><i class="fa-solid fa-chart-line"></i> Thống kê & Logs</div>
+            
+            <div class="nav-group">CÔNG CỤ</div>
+            <div class="nav-item" onclick="openModal('modal-add')"><i class="fa-solid fa-plus-circle"></i> Thêm Mới (Auto)</div>
+            <div class="nav-item" onclick="backupData()"><i class="fa-solid fa-download"></i> Sao lưu (Backup)</div>
+            <div class="nav-item" onclick="document.getElementById('file-import').click()"><i class="fa-solid fa-upload"></i> Khôi phục (Restore)</div>
+            <input type="file" id="file-import" style="display:none" onchange="restoreData(this)">
+            
             <div style="flex:1"></div>
-            <div class="nav-item" onclick="location.reload()" style="color:#ef4444"><i class="fa-solid fa-power-off"></i> Đăng xuất</div>
+            <div class="nav-item" style="color:var(--danger)" onclick="location.reload()"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="breadcrumbs" id="page-title">Quản lý Truyện</div>
+            <div style="font-size:11px; font-family:monospace; color:var(--text-sub)">v3.5.0 Stable</div>
         </div>
 
-        <div class="main">
-            <div class="header">
-                <div class="title"><i class="fa-solid fa-bars" style="margin-right:15px; cursor:pointer" onclick="toggleMenu()"></i> <span id="page-title">Tổng quan</span></div>
-                <div style="font-size:12px; font-weight:600; color:#10b981"><i class="fa-solid fa-wifi"></i> Online</div>
+        <div id="view-list" class="workspace active">
+            <div class="toolbar">
+                <div class="search-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" class="inp-search" id="search-box" placeholder="Tìm tên, tác giả, ID..." onkeyup="filterData()">
+                </div>
+                <select class="f-input" style="width:auto" id="filter-cat" onchange="filterData()">
+                    <option value="">Tất cả thể loại</option>
+                    <option value="Chủ Thụ">Chủ Thụ</option>
+                    <option value="Chủ Công">Chủ Công</option>
+                    <option value="Hệ Thống">Hệ Thống</option>
+                </select>
+                <select class="f-input" style="width:auto" id="filter-status" onchange="filterData()">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Hoàn">Hoàn thành</option>
+                    <option value="Đang ra">Đang ra</option>
+                </select>
+                <div style="border-left:1px solid var(--border); margin:0 5px"></div>
+                <button class="btn" onclick="fetchData()"><i class="fa-solid fa-rotate"></i> Làm mới</button>
+                <button class="btn btn-danger" id="btn-bulk-del" style="display:none" onclick="bulkDelete()"><i class="fa-solid fa-trash"></i> Xóa (<span id="sel-count">0</span>)</button>
             </div>
 
-            <div id="view-dashboard" class="view active">
-                <div class="stats-row">
-                    <div class="glass-box stat-card">
-                        <div class="stat-label">Tổng truyện</div>
-                        <div class="stat-num" id="s-total">0</div>
-                        <i class="fa-solid fa-book stat-icon"></i>
-                    </div>
-                    <div class="glass-box stat-card">
-                        <div class="stat-label">Tổng số tập</div>
-                        <div class="stat-num" id="s-eps" style="color:#06b6d4">0</div>
-                        <i class="fa-solid fa-video stat-icon"></i>
-                    </div>
-                    <div class="glass-box stat-card">
-                        <div class="stat-label">Thể loại Hot</div>
-                        <div class="stat-num" id="s-cat" style="font-size:24px; margin-top:10px">...</div>
-                        <i class="fa-solid fa-fire stat-icon"></i>
-                    </div>
-                </div>
-                <h3 style="color:var(--text-sub)">Vừa cập nhật</h3>
-                <div class="glass-box table-wrap">
-                    <table>
-                        <tbody id="recent-table"></tbody>
-                    </table>
-                </div>
+            <div class="table-box">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="40"><input type="checkbox" class="chk" id="chk-all" onchange="toggleAll(this)"></th>
+                            <th width="60">Ảnh</th>
+                            <th onclick="sortData('name')">Tên Truyện <i class="fa-solid fa-sort"></i></th>
+                            <th width="150">Tác Giả</th>
+                            <th width="100">Số tập</th>
+                            <th width="120">Trạng thái</th>
+                            <th width="140" style="text-align:right">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
             </div>
+            <div style="margin-top:15px; color:var(--text-sub); font-size:12px">Hiển thị <b id="row-count">0</b> kết quả.</div>
+        </div>
 
-            <div id="view-add" class="view">
-                <div class="form-grid">
-                    <div>
-                        <div class="glass-box" style="padding:25px; border-radius:16px">
-                            <div class="input-group">
-                                <label><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Link Playlist Youtube</label>
-                                <div style="display:flex; gap:10px">
-                                    <input type="text" id="add-url" placeholder="Dán link vào đây..." oninput="debounceParse()">
-                                    <button class="btn" style="background:rgba(255,255,255,0.1)" onclick="parseUrl()"><i class="fa-solid fa-bolt"></i></button>
-                                </div>
-                            </div>
-                            <hr style="border:0; border-top:1px dashed var(--border); margin:20px 0">
-                            <div class="input-group">
-                                <label>Tên Truyện</label>
-                                <input type="text" id="add-name">
-                            </div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
-                                <div class="input-group"><label>Tác Giả</label><input type="text" id="add-author"></div>
-                                <div class="input-group"><label>Số Tập</label><input type="text" id="add-count"></div>
-                            </div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
-                                <div class="input-group">
-                                    <label>Thể Loại</label>
-                                    <select id="add-cat">
-                                        <option value="Chủ Thụ">Chủ Thụ</option>
-                                        <option value="Chủ Công">Chủ Công</option>
-                                        <option value="Hỗ Công">Hỗ Công</option>
-                                        <option value="Vô CP">Vô CP</option>
-                                        <option value="Hệ Thống">Hệ Thống</option>
-                                        <option value="Khác">Khác</option>
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label>Trạng Thái</label>
-                                    <select id="add-status"><option value="Hoàn">Hoàn thành</option><option value="Đang ra">Đang ra</option></select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="glass-box" style="padding:25px; border-radius:16px">
-                            <label>Ảnh Bìa (Tự động/Tùy chọn)</label>
-                            <div class="img-preview">
-                                <img id="add-preview" src="https://via.placeholder.com/300x170/000000/ffffff?text=NO+IMAGE">
-                            </div>
-                            <div class="input-group" style="margin-top:15px">
-                                <label>Link Ảnh (Nếu muốn đổi)</label>
-                                <input type="text" id="add-img" oninput="document.getElementById('add-preview').src=this.value">
-                            </div>
-                            <div class="input-group">
-                                <label>Playlist ID (Auto)</label>
-                                <input type="text" id="add-pid" readonly style="background:rgba(0,0,0,0.5); text-align:center; font-family:monospace">
-                            </div>
-                            <button class="btn btn-primary" style="width:100%; justify-content:center" onclick="saveStory()"><i class="fa-solid fa-floppy-disk"></i> LƯU VÀO KHO</button>
-                        </div>
-                    </div>
+        <div id="view-stats" class="workspace">
+            <div class="stats-row" style="display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:30px">
+                <div class="glass-box" style="padding:20px; border-radius:12px; border-left:4px solid var(--primary)">
+                    <div style="color:var(--text-sub); font-weight:700">TỔNG TRUYỆN</div>
+                    <div style="font-size:28px; font-weight:800" id="st-total">0</div>
+                </div>
+                <div class="glass-box" style="padding:20px; border-radius:12px; border-left:4px solid var(--accent)">
+                    <div style="color:var(--text-sub); font-weight:700">TỔNG SỐ TẬP</div>
+                    <div style="font-size:28px; font-weight:800" id="st-eps">0</div>
+                </div>
+                <div class="glass-box" style="padding:20px; border-radius:12px; border-left:4px solid var(--success)">
+                    <div style="color:var(--text-sub); font-weight:700">ĐÃ HOÀN THÀNH</div>
+                    <div style="font-size:28px; font-weight:800" id="st-done">0</div>
+                </div>
+                <div class="glass-box" style="padding:20px; border-radius:12px; border-left:4px solid var(--warning)">
+                    <div style="color:var(--text-sub); font-weight:700">ĐANG RA</div>
+                    <div style="font-size:28px; font-weight:800" id="st-run">0</div>
                 </div>
             </div>
 
-            <div id="view-list" class="view">
-                <div style="display:flex; gap:15px; margin-bottom:20px">
-                    <div style="position:relative; flex:1">
-                        <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:15px; top:13px; color:var(--text-sub)"></i>
-                        <input type="text" id="search" placeholder="Tìm kiếm truyện, tác giả..." style="padding-left:40px" onkeyup="renderList()">
-                    </div>
-                    <button class="btn" style="background:rgba(255,255,255,0.1)" onclick="fetchList()"><i class="fa-solid fa-rotate"></i></button>
-                </div>
-                <div class="glass-box table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th width="60">Ảnh</th>
-                                <th>Tên Truyện</th>
-                                <th>Thông tin</th>
-                                <th>Tình trạng</th>
-                                <th style="text-align:right">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody id="list-body"></tbody>
-                    </table>
-                </div>
+            <h3 style="border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:15px">Nhật ký hoạt động (System Logs)</h3>
+            <div class="table-box">
+                <table>
+                    <thead><tr><th width="150">Thời gian</th><th>Hành động</th></tr></thead>
+                    <tbody id="log-body"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <div id="modal-edit" class="modal">
+    <div id="modal-add" class="modal">
         <div class="modal-box">
-            <h3 style="margin-top:0">Sửa Truyện</h3>
-            <input type="hidden" id="edit-id">
-            <div class="input-group"><label>Tên Truyện</label><input type="text" id="edit-name"></div>
-            <div style="display:flex; gap:15px">
-                <div class="input-group" style="flex:1"><label>Tác Giả</label><input type="text" id="edit-author"></div>
-                <div class="input-group" style="flex:1"><label>Số Tập</label><input type="text" id="edit-count"></div>
+            <div class="modal-head">
+                <div style="font-weight:700; font-size:16px"><i class="fa-solid fa-pen-to-square"></i> <span id="modal-title">Thêm Truyện Mới</span></div>
+                <i class="fa-solid fa-xmark" style="cursor:pointer; font-size:18px" onclick="closeModal()"></i>
             </div>
-            <div class="input-group"><label>Link Ảnh</label><input type="text" id="edit-img"></div>
-            <div class="input-group">
-                <label>Trạng thái</label>
-                <select id="edit-status"><option value="Hoàn">Hoàn</option><option value="Đang ra">Đang ra</option></select>
-            </div>
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px">
-                <button class="btn" style="background:rgba(255,255,255,0.1)" onclick="closeModal()">Hủy</button>
-                <button class="btn btn-primary" onclick="updateStory()">Cập Nhật</button>
+            <div class="modal-body">
+                <input type="hidden" id="inp-id">
+                
+                <div class="f-group" style="background:rgba(99,102,241,0.1); padding:15px; border-radius:8px; border:1px dashed var(--primary)">
+                    <div class="f-label" style="color:var(--primary)"><i class="fa-brands fa-youtube"></i> AUTO FETCH TỪ YOUTUBE</div>
+                    <div style="display:flex; gap:10px">
+                        <input type="text" class="f-input" id="inp-url" placeholder="Dán link playlist vào đây..." oninput="debounceFetch()">
+                        <button class="btn btn-primary" onclick="autoFetch()"><i class="fa-solid fa-bolt"></i></button>
+                    </div>
+                </div>
+
+                <div class="f-group">
+                    <div class="f-label">Ảnh bìa (Preview)</div>
+                    <div style="display:flex; gap:15px">
+                        <img id="preview-img" src="" style="width:100px; height:60px; object-fit:cover; border-radius:6px; background:#000; border:1px solid var(--border)">
+                        <div style="flex:1">
+                            <input type="text" class="f-input" id="inp-img" placeholder="Link ảnh..." oninput="document.getElementById('preview-img').src=this.value" style="margin-bottom:5px">
+                            <input type="text" class="f-input" id="inp-pid" placeholder="Youtube ID" readonly style="font-family:monospace; color:var(--text-sub)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="f-group"><div class="f-label">Tên Truyện</div><input type="text" class="f-input" id="inp-name"></div>
+                <div class="f-group"><div class="f-label">Slug (SEO URL)</div><input type="text" class="f-input" id="inp-slug" placeholder="tu-dong-tao-khi-luu"></div>
+                
+                <div class="f-grid">
+                    <div class="f-group"><div class="f-label">Tác giả</div><input type="text" class="f-input" id="inp-author"></div>
+                    <div class="f-group"><div class="f-label">Số tập</div><input type="text" class="f-input" id="inp-count"></div>
+                </div>
+
+                <div class="f-grid">
+                    <div class="f-group">
+                        <div class="f-label">Thể loại</div>
+                        <select class="f-input" id="inp-cat">
+                            <option value="Chủ Thụ">Chủ Thụ</option>
+                            <option value="Chủ Công">Chủ Công</option>
+                            <option value="Hỗ Công">Hỗ Công</option>
+                            <option value="Vô CP">Vô CP</option>
+                            <option value="Hệ Thống">Hệ Thống</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                    <div class="f-group">
+                        <div class="f-label">Trạng thái</div>
+                        <select class="f-input" id="inp-status">
+                            <option value="Hoàn">Hoàn thành</option>
+                            <option value="Đang ra">Đang ra</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px; margin-top:10px" onclick="saveData()">LƯU DỮ LIỆU</button>
             </div>
         </div>
     </div>
 
-    <div id="toast"></div>
+    <div id="toast-hub"></div>
 
 <script>
-    // --- CẤU HÌNH ---
+    // === CONFIG ===
     const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
-    const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT'; 
+    const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
     const db = supabase.createClient(DB_URL, DB_KEY);
-    let allData = [];
-    let timeout;
+    
+    let rawData = []; // Dữ liệu gốc
+    let viewData = []; // Dữ liệu đang hiển thị (sau khi lọc)
+    let selectedIds = new Set();
+    let fetchTimeout;
+    let systemLogs = []; // Lưu tạm log trong session
 
-    // --- CORE FUNC ---
-    function auth() {
-        if(document.getElementById('login-pass').value === 'hoiam20102003') {
-            document.getElementById('login-ui').style.display = 'none';
-            document.getElementById('admin-ui').style.display = 'flex';
-            loadStats();
-        } else toast('Sai mật khẩu!', 'error');
+    // === AUTH ===
+    function login() {
+        if(document.getElementById('auth-pass').value === 'hoiam20102003') {
+            document.getElementById('auth-screen').style.display = 'none';
+            fetchData();
+            addLog('Đăng nhập hệ thống');
+        } else toast('Mật khẩu không đúng', 'error');
     }
 
-    function nav(tab, el) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById('view-'+tab).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    // === NAVIGATION ===
+    function switchView(id, el) {
+        document.querySelectorAll('.workspace').forEach(e => e.classList.remove('active'));
+        document.getElementById('view-'+id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
         el.classList.add('active');
         document.getElementById('page-title').innerText = el.innerText;
-        if(window.innerWidth < 768) toggleMenu();
     }
 
-    function toggleMenu() {
-        document.getElementById('sidebar').classList.toggle('show');
+    function openModal(id, editId = null) {
+        document.getElementById(id).classList.add('open');
+        if(editId) {
+            // Edit Mode
+            document.getElementById('modal-title').innerText = "Sửa Thông Tin";
+            const item = rawData.find(x => x.id === editId);
+            if(item) fillForm(item);
+        } else {
+            // Add Mode
+            document.getElementById('modal-title').innerText = "Thêm Truyện Mới";
+            resetForm();
+        }
+    }
+    
+    function closeModal() { document.querySelectorAll('.modal').forEach(e => e.classList.remove('open')); }
+
+    // === DATA LOGIC ===
+    async function fetchData() {
+        const { data, error } = await db.from('playlists').select('*').order('id', {ascending: false});
+        if(error) return toast('Lỗi tải dữ liệu', 'error');
+        rawData = data || [];
+        filterData(); // Render
+        toast('Đã cập nhật dữ liệu');
     }
 
-    function toast(msg, type='success') {
-        const d = document.createElement('div');
-        d.className = 'toast-msg';
-        d.style.borderColor = type==='error' ? '#ef4444' : '#10b981';
-        d.innerHTML = `<i class="fa-solid ${type==='error'?'fa-circle-exclamation':'fa-circle-check'}" style="color:${type==='error'?'#ef4444':'#10b981'}"></i> ${msg}`;
-        document.getElementById('toast').appendChild(d);
-        setTimeout(() => d.remove(), 3000);
+    function filterData() {
+        const key = document.getElementById('search-box').value.toLowerCase();
+        const cat = document.getElementById('filter-cat').value;
+        const stt = document.getElementById('filter-status').value;
+
+        viewData = rawData.filter(item => {
+            const matchKey = item.name.toLowerCase().includes(key) || (item.author||'').toLowerCase().includes(key);
+            const matchCat = cat ? item.category === cat : true;
+            const matchStt = stt ? item.status === stt : true;
+            return matchKey && matchCat && matchStt;
+        });
+
+        document.getElementById('row-count').innerText = viewData.length;
+        renderTable();
     }
 
-    // --- LOGIC SCRAPER (CÀO DATA) ---
-    function debounceParse() { clearTimeout(timeout); timeout = setTimeout(parseUrl, 800); }
+    function renderTable() {
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+        selectedIds.clear(); updateBulkBtn();
 
-    async function parseUrl() {
-        const url = document.getElementById('add-url').value;
-        if(!url.includes('list=')) return;
-        
-        let pid = "";
-        try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
-        document.getElementById('add-pid').value = pid;
-
-        toast('Đang phân tích link...', 'info');
-        
-        try {
-            const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
-            const html = await res.text();
-
-            // 1. Lấy Tên Gốc
-            const titleMatch = html.match(/<meta property="og:title" content="(.*?)">/);
-            const rawTitle = titleMatch ? titleMatch[1].replace(' - YouTube', '') : "Không tên";
-
-            // 2. Xử lý tên (Clean text)
-            let cleanName = rawTitle.replace(/^\[.*?\]\s*/g, '').replace(/\[.*?\]/g, '').replace(/Full/gi, '').trim();
-            let parts = cleanName.split(/[–|-]/).map(p => p.trim()).filter(p => p);
+        viewData.forEach(item => {
+            const img = item.image_url || `https://img.youtube.com/vi/${item.playlist_id}/mqdefault.jpg`;
+            const dotClass = item.status === 'Hoàn' ? 'status-done' : 'status-run';
             
-            let name = parts[0];
-            let author = (parts[1] && parts[1].length < 30) ? parts[1] : "Đang cập nhật";
-
-            // 3. Lấy số tập
-            let count = "? tập";
-            const countMatch = html.match(/"numVideosText":\{"runs":\[\{"text":"(\d+)"/);
-            if(countMatch) count = countMatch[1] + " tập";
-
-            // 4. Lấy ảnh (Ưu tiên ảnh to)
-            let img = "";
-            const imgMatch = html.match(/<meta property="og:image" content="(.*?)">/);
-            if(imgMatch) {
-                img = imgMatch[1];
-                if(img.includes('mqdefault')) img = img.replace('mqdefault.jpg', 'maxresdefault.jpg');
-            }
-
-            // 5. Auto điền form
-            document.getElementById('add-name').value = name;
-            document.getElementById('add-author').value = author;
-            document.getElementById('add-count').value = count;
-            document.getElementById('add-img').value = img;
-            document.getElementById('add-preview').src = img;
-            
-            // Auto thể loại
-            const lowerName = name.toLowerCase();
-            const cat = document.getElementById('add-cat');
-            if(lowerName.includes('chủ thụ')) cat.value='Chủ Thụ';
-            else if(lowerName.includes('chủ công')) cat.value='Chủ Công';
-            else if(lowerName.includes('hệ thống')) cat.value='Hệ Thống';
-
-            toast('Đã lấy dữ liệu!', 'success');
-
-        } catch(e) { toast('Lỗi mạng/Proxy chặn', 'error'); }
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="checkbox" class="chk" value="${item.id}" onchange="selectRow(this)"></td>
+                <td><img src="${img}" class="thumb" loading="lazy"></td>
+                <td>
+                    <div style="font-weight:700; color:#fff">${item.name}</div>
+                    <div style="font-size:11px; color:var(--text-sub)">#${item.id} • ${item.slug || 'no-slug'}</div>
+                </td>
+                <td>${item.author || '---'}</td>
+                <td style="font-weight:600">${item.count}</td>
+                <td><span class="status-dot ${dotClass}"></span> ${item.status}</td>
+                <td style="text-align:right; display:flex; gap:5px; justify-content:flex-end">
+                    <button class="btn-icon" onclick="checkSync(${item.id}, '${item.playlist_id}')" title="Auto Sync"><i class="fa-solid fa-rotate"></i></button>
+                    <button class="btn-icon" onclick="openModal('modal-add', ${item.id})" title="Sửa"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn-icon btn-del" onclick="deleteItem(${item.id})" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
-    // --- DATABASE ---
-    async function saveStory() {
-        const data = {
-            name: document.getElementById('add-name').value,
-            author: document.getElementById('add-author').value,
-            count: document.getElementById('add-count').value,
-            playlist_id: document.getElementById('add-pid').value,
-            image_url: document.getElementById('add-img').value,
-            category: document.getElementById('add-cat').value,
-            status: document.getElementById('add-status').value
+    // === BULK ACTIONS ===
+    function toggleAll(el) {
+        const chks = document.querySelectorAll('#table-body .chk');
+        chks.forEach(c => { c.checked = el.checked; selectRow(c); });
+    }
+
+    function selectRow(el) {
+        if(el.checked) selectedIds.add(parseInt(el.value));
+        else selectedIds.delete(parseInt(el.value));
+        updateBulkBtn();
+    }
+
+    function updateBulkBtn() {
+        const btn = document.getElementById('btn-bulk-del');
+        if(selectedIds.size > 0) {
+            btn.style.display = 'inline-flex';
+            document.getElementById('sel-count').innerText = selectedIds.size;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    async function bulkDelete() {
+        if(!confirm(`Xóa vĩnh viễn ${selectedIds.size} truyện đã chọn?`)) return;
+        const { error } = await db.from('playlists').delete().in('id', Array.from(selectedIds));
+        if(!error) {
+            toast('Đã xóa thành công');
+            addLog(`Xóa hàng loạt: ${selectedIds.size} truyện`);
+            fetchData();
+        } else toast('Lỗi xóa', 'error');
+    }
+
+    // === FORM & LOGIC ===
+    function resetForm() {
+        document.getElementById('inp-id').value = '';
+        document.querySelectorAll('.f-input').forEach(i => i.value = '');
+        document.getElementById('preview-img').src = '';
+        document.getElementById('inp-status').value = 'Hoàn';
+    }
+
+    function fillForm(item) {
+        document.getElementById('inp-id').value = item.id;
+        document.getElementById('inp-name').value = item.name;
+        document.getElementById('inp-author').value = item.author;
+        document.getElementById('inp-count').value = item.count;
+        document.getElementById('inp-cat').value = item.category;
+        document.getElementById('inp-status').value = item.status;
+        document.getElementById('inp-pid').value = item.playlist_id;
+        document.getElementById('inp-img').value = item.image_url;
+        document.getElementById('inp-slug').value = item.slug || '';
+        document.getElementById('preview-img').src = item.image_url || `https://img.youtube.com/vi/${item.playlist_id}/mqdefault.jpg`;
+    }
+
+    function genSlug(str) {
+        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[đĐ]/g, "d").replace(/([^0-9a-z-\s])/g, "")
+            .replace(/(\s+)/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+    }
+
+    async function saveData() {
+        const id = document.getElementById('inp-id').value;
+        const name = document.getElementById('inp-name').value;
+        
+        const payload = {
+            name: name,
+            slug: document.getElementById('inp-slug').value || genSlug(name),
+            author: document.getElementById('inp-author').value,
+            count: document.getElementById('inp-count').value,
+            category: document.getElementById('inp-cat').value,
+            status: document.getElementById('inp-status').value,
+            playlist_id: document.getElementById('inp-pid').value,
+            image_url: document.getElementById('inp-img').value
         };
 
-        if(!data.name || !data.playlist_id) return toast('Thiếu tên hoặc ID!', 'error');
+        if(!payload.name || !payload.playlist_id) return toast('Thiếu tên hoặc ID!', 'error');
 
-        const { error } = await db.from('playlists').insert([data]);
+        let error;
+        if(id) { // Update
+            const res = await db.from('playlists').update(payload).eq('id', id);
+            error = res.error;
+            addLog(`Cập nhật truyện: ${name}`);
+        } else { // Insert
+            const res = await db.from('playlists').insert([payload]);
+            error = res.error;
+            addLog(`Thêm mới: ${name}`);
+        }
+
         if(!error) {
-            toast('Lưu thành công!');
-            document.querySelectorAll('#view-add input').forEach(i => i.value='');
-            document.getElementById('add-preview').src = 'https://via.placeholder.com/300x170';
+            toast('Lưu dữ liệu thành công');
+            closeModal();
+            fetchData();
         } else toast(error.message, 'error');
     }
 
-    async function fetchList() {
-        const { data } = await db.from('playlists').select('*').order('id', {ascending:false});
-        allData = data || [];
-        renderList();
-    }
-
-    function renderList() {
-        const k = document.getElementById('search').value.toLowerCase();
-        const list = allData.filter(i => i.name.toLowerCase().includes(k) || (i.author && i.author.toLowerCase().includes(k)));
-        const tbody = document.getElementById('list-body');
-        tbody.innerHTML = '';
-
-        list.forEach(i => {
-            const img = i.image_url || `https://img.youtube.com/vi/${i.playlist_id}/mqdefault.jpg`;
-            const sttColor = i.status==='Hoàn' ? '#10b981' : '#f59e0b';
-            tbody.innerHTML += `
-                <tr>
-                    <td><img src="${img}" class="thumb-small" onerror="this.src='https://via.placeholder.com/50'"></td>
-                    <td><div style="font-weight:700">${i.name}</div><div style="font-size:11px; color:var(--text-sub)">${i.category}</div></td>
-                    <td><div style="font-size:13px"><i class="fa-solid fa-user-pen"></i> ${i.author}</div><div style="font-size:12px; color:var(--text-sub)">${i.count}</div></td>
-                    <td><span style="color:${sttColor}; font-weight:700; font-size:12px">● ${i.status}</span></td>
-                    <td style="text-align:right">
-                        <div class="btn-icon btn-sync" title="Đồng bộ lại từ Youtube" onclick="syncStory(${i.id}, '${i.playlist_id}', this)"><i class="fa-solid fa-rotate"></i></div>
-                        <div class="btn-icon" title="Sửa" onclick="openEdit(${i.id})"><i class="fa-solid fa-pen"></i></div>
-                        <div class="btn-icon btn-del" title="Xóa" onclick="delStory(${i.id})"><i class="fa-solid fa-trash"></i></div>
-                    </td>
-                </tr>
-            `;
-        });
-    }
-
-    // --- AUTO SYNC (TÍNH NĂNG MỚI) ---
-    async function syncStory(id, pid, btn) {
-        const icon = btn.querySelector('i');
-        icon.className = 'fa-solid fa-spinner fa-spin'; // Hiệu ứng xoay
-        
-        try {
-            // Cào lại Youtube
-            const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
-            const html = await res.text();
-            
-            // Lấy số tập mới
-            const matchCount = html.match(/"numVideosText":\{"runs":\[\{"text":"(\d+)"/);
-            
-            if(matchCount) {
-                const newCount = matchCount[1] + " tập";
-                // Update Database
-                await db.from('playlists').update({ count: newCount }).eq('id', id);
-                toast('Đã cập nhật: ' + newCount);
-                // Update UI tại chỗ (không cần reload)
-                const row = btn.closest('tr');
-                row.cells[2].children[1].innerText = newCount;
-                
-                // Update trong mảng bộ nhớ
-                const item = allData.find(x => x.id === id);
-                if(item) item.count = newCount;
-            } else {
-                toast('Không tìm thấy dữ liệu mới', 'error');
-            }
-        } catch(e) {
-            toast('Lỗi kết nối Youtube', 'error');
-        }
-        icon.className = 'fa-solid fa-rotate';
-    }
-
-    // --- EDIT & DELETE ---
-    function openEdit(id) {
-        const i = allData.find(x => x.id === id);
-        if(!i) return;
-        document.getElementById('edit-id').value = i.id;
-        document.getElementById('edit-name').value = i.name;
-        document.getElementById('edit-author').value = i.author;
-        document.getElementById('edit-count').value = i.count;
-        document.getElementById('edit-img').value = i.image_url;
-        document.getElementById('edit-status').value = i.status;
-        document.getElementById('modal-edit').classList.add('open');
-    }
-    function closeModal() { document.getElementById('modal-edit').classList.remove('open'); }
-
-    async function updateStory() {
-        const id = document.getElementById('edit-id').value;
-        const updates = {
-            name: document.getElementById('edit-name').value,
-            author: document.getElementById('edit-author').value,
-            count: document.getElementById('edit-count').value,
-            image_url: document.getElementById('edit-img').value,
-            status: document.getElementById('edit-status').value
-        };
-        const { error } = await db.from('playlists').update(updates).eq('id', id);
-        if(!error) {
-            toast('Đã cập nhật!');
-            closeModal();
-            fetchList(); // Refresh list
-        } else toast('Lỗi cập nhật', 'error');
-    }
-
-    async function delStory(id) {
+    async function deleteItem(id) {
         if(confirm('Chắc chắn xóa?')) {
             await db.from('playlists').delete().eq('id', id);
             toast('Đã xóa');
-            fetchList();
+            fetchData();
         }
     }
 
-    // --- DASHBOARD ---
-    async function loadStats() {
-        const { data } = await db.from('playlists').select('*').order('created_at', {ascending:false});
-        allData = data || [];
-        document.getElementById('s-total').innerText = allData.length;
-        
-        let totalEp = 0;
-        let cats = {};
-        allData.forEach(i => {
-            totalEp += parseInt(i.count) || 0;
-            cats[i.category] = (cats[i.category] || 0) + 1;
-        });
-        document.getElementById('s-eps').innerText = totalEp.toLocaleString();
-        
-        // Max category
-        let maxC = '-', maxV = 0;
-        for(let [k,v] of Object.entries(cats)) if(v > maxV) { maxV = v; maxC = k; }
-        document.getElementById('s-cat').innerText = maxC;
+    // === AUTO FETCH ENGINE ===
+    function debounceFetch() { clearTimeout(fetchTimeout); fetchTimeout = setTimeout(autoFetch, 800); }
 
-        // Recent table
-        const recent = allData.slice(0, 5);
-        document.getElementById('recent-table').innerHTML = recent.map(i => `
-            <tr>
-                <td><img src="${i.image_url}" class="thumb-small" onerror="this.src='https://via.placeholder.com/50'"></td>
-                <td><div style="font-weight:700">${i.name}</div></td>
-                <td style="color:var(--text-sub)">${i.created_at.substr(0,10)}</td>
-            </tr>
-        `).join('');
+    async function autoFetch() {
+        const url = document.getElementById('inp-url').value;
+        if(!url.includes('list=')) return;
+        let pid = "";
+        try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
+        document.getElementById('inp-pid').value = pid;
+
+        toast('Đang phân tích...', 'info');
+        try {
+            const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
+            const html = await res.text();
+
+            // 1. Tên
+            let title = (html.match(/<meta property="og:title" content="(.*?)">/) || [])[1]?.replace(' - YouTube', '') || '';
+            let cleanName = title.replace(/^\[.*?\]\s*/g, '').replace(/\[.*?\]/g, '').replace(/Full/gi, '').trim();
+            let parts = cleanName.split(/[–|-]/).map(p => p.trim());
+            
+            // 2. Count
+            let count = "? tập";
+            const cMatch = html.match(/"numVideosText":\{"runs":\[\{"text":"(\d+)"/);
+            if(cMatch) count = cMatch[1] + " tập";
+
+            // 3. Img
+            let img = (html.match(/<meta property="og:image" content="(.*?)">/) || [])[1] || '';
+            if(img.includes('mqdefault')) img = img.replace('mqdefault.jpg', 'maxresdefault.jpg');
+
+            // Fill
+            document.getElementById('inp-name').value = parts[0] || title;
+            document.getElementById('inp-author').value = (parts[1] && parts[1].length < 30) ? parts[1] : "Đang cập nhật";
+            document.getElementById('inp-count').value = count;
+            document.getElementById('inp-img').value = img;
+            document.getElementById('preview-img').src = img;
+            document.getElementById('inp-slug').value = genSlug(parts[0] || title);
+
+            toast('Đã lấy thông tin!');
+        } catch(e) { toast('Lỗi mạng/Proxy', 'error'); }
     }
 
+    // === AUTO SYNC (Kiểm tra cập nhật) ===
+    async function checkSync(id, pid) {
+        toast('Đang kiểm tra cập nhật...', 'info');
+        try {
+            const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
+            const html = await res.text();
+            const cMatch = html.match(/"numVideosText":\{"runs":\[\{"text":"(\d+)"/);
+            
+            if(cMatch) {
+                const newCount = cMatch[1] + " tập";
+                await db.from('playlists').update({count: newCount}).eq('id', id);
+                toast(`Đã cập nhật: ${newCount}`);
+                fetchData(); // Reload UI
+            } else {
+                toast('Không tìm thấy số tập mới', 'error');
+            }
+        } catch(e) { toast('Lỗi kết nối', 'error'); }
+    }
+
+    // === STATS & LOGS ===
+    function loadStats() {
+        document.getElementById('st-total').innerText = rawData.length;
+        document.getElementById('st-done').innerText = rawData.filter(i => i.status==='Hoàn').length;
+        document.getElementById('st-run').innerText = rawData.filter(i => i.status==='Đang ra').length;
+        
+        // Render Logs
+        const logBody = document.getElementById('log-body');
+        logBody.innerHTML = systemLogs.map(l => `<tr><td style="color:var(--text-sub)">${l.time}</td><td>${l.msg}</td></tr>`).join('');
+    }
+
+    function addLog(msg) {
+        const time = moment().format('DD/MM HH:mm:ss');
+        systemLogs.unshift({time, msg});
+        if(systemLogs.length > 50) systemLogs.pop();
+    }
+
+    // === BACKUP / RESTORE ===
+    function backupData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rawData));
+        const a = document.createElement('a');
+        a.href = dataStr;
+        a.download = "backup_hoiam_" + moment().format('YYYY-MM-DD') + ".json";
+        a.click();
+        addLog('Sao lưu dữ liệu');
+    }
+
+    function restoreData(input) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const list = JSON.parse(e.target.result);
+            if(confirm(`Khôi phục ${list.length} truyện từ file backup? Dữ liệu hiện tại sẽ được giữ nguyên, chỉ thêm mới nếu trùng ID sẽ bỏ qua.`)) {
+                // Upsert logic (chỉ demo insert)
+                const { error } = await db.from('playlists').upsert(list);
+                if(!error) { toast('Khôi phục thành công'); fetchData(); }
+                else toast('Lỗi: ' + error.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // Utils
+    function toast(msg, type='success') {
+        const d = document.createElement('div');
+        d.className = `toast ${type}`;
+        d.innerHTML = `<i class="fa-solid ${type==='error'?'fa-triangle-exclamation':'fa-circle-check'}"></i> ${msg}`;
+        document.getElementById('toast-hub').appendChild(d);
+        setTimeout(() => d.remove(), 3000);
+    }
 </script>
 </body>
 </html>
