@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hồi Âm Admin Pro</title>
+    <title>Hồi Âm Admin Pro Max</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg-dark: #030712;
-            --bg-card: rgba(30, 41, 59, 0.7); /* Sáng hơn xíu để nổi bật */
+            --bg-card: rgba(30, 41, 59, 0.7);
             --glass-border: rgba(255, 255, 255, 0.1);
             --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
+            --sidebar-w: 260px;
         }
 
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -43,8 +44,8 @@
 
         /* SIDEBAR */
         .sidebar { 
-            width: 260px; display: flex; flex-direction: column; padding: 24px; gap: 8px; flex-shrink: 0; z-index: 100;
-            border-right: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.6);
+            width: var(--sidebar-w); display: flex; flex-direction: column; padding: 24px; gap: 8px; flex-shrink: 0; z-index: 100;
+            border-right: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.8); transition: transform 0.3s ease;
         }
         .brand { 
             font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 30px; 
@@ -63,11 +64,22 @@
         /* MAIN */
         .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
         .header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
-        .page-title { font-size: 20px; font-weight: 700; color: #fff; }
+        .page-title { font-size: 20px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 15px; }
+        
+        /* Mobile Menu Toggle */
+        .menu-toggle { display: none; font-size: 24px; cursor: pointer; }
 
         .view-section { flex: 1; overflow-y: auto; padding: 0 30px 40px 30px; display: none; }
         .view-section.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* DASHBOARD STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden; }
+        .stat-card::after { content: ''; position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+        .stat-val { font-size: 32px; font-weight: 800; color: #fff; }
+        .stat-label { font-size: 13px; color: var(--text-sub); text-transform: uppercase; font-weight: 700; }
+        .stat-icon { position: absolute; right: 20px; top: 20px; font-size: 24px; opacity: 0.2; }
 
         /* FORM */
         .form-layout { display: flex; gap: 30px; max-width: 1100px; margin: 0 auto; }
@@ -118,11 +130,24 @@
         .badge.finished { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
         .badge.ongoing { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
 
+        /* MODAL (New Feature) */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 200; display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
+        .modal.open { display: flex; opacity: 1; }
+        .modal-content { width: 500px; max-width: 90%; background: #1e293b; border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; transform: scale(0.9); transition: 0.3s; }
+        .modal.open .modal-content { transform: scale(1); }
+
         /* TOAST */
         #toast { position: fixed; bottom: 30px; right: 30px; background: #0f172a; border: 1px solid var(--glass-border); padding: 16px 24px; border-radius: 12px; color: #fff; font-weight: 600; transform: translateY(100px); opacity: 0; transition: 0.3s; z-index: 3000; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         #toast.show { transform: translateY(0); opacity: 1; }
 
-        @media (max-width: 900px) { .form-layout { flex-direction: column; } .form-right { width: 100%; } .sidebar { display: none; } .header { padding: 0 20px; } }
+        @media (max-width: 900px) { 
+            .form-layout { flex-direction: column; } .form-right { width: 100%; } 
+            .sidebar { position: fixed; left: -260px; height: 100%; bottom: 0; }
+            .sidebar.active { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+            .header { padding: 0 20px; } 
+            .menu-toggle { display: block; }
+            .page-title { font-size: 18px; }
+        }
     </style>
 </head>
 <body>
@@ -136,71 +161,112 @@
         </div>
     </div>
 
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:#fff">Sửa Thông Tin</h3>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <label>Tên Truyện</label>
+                <input type="text" id="edit-name">
+            </div>
+            <div class="form-row">
+                <div class="col"><label>Tác Giả</label><input type="text" id="edit-author"></div>
+                <div class="col"><label>Số Tập</label><input type="text" id="edit-count"></div>
+            </div>
+            <div class="form-row">
+                <div class="col"><label>Thể Loại</label><select id="edit-cat"><option value="Chủ Thụ">Chủ Thụ</option><option value="Chủ Công">Chủ Công</option><option value="Hỗ Công">Hỗ Công</option><option value="Vô CP">Vô CP</option><option value="Hệ Thống">Hệ Thống</option><option value="Khác">Khác</option></select></div>
+                <div class="col"><label>Trạng Thái</label><select id="edit-status"><option value="Hoàn">Hoàn</option><option value="Đang ra">Đang ra</option></select></div>
+            </div>
+            <div class="form-group">
+                <label>Link Ảnh</label>
+                <input type="text" id="edit-img">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px">
+                <button class="btn" style="background:#334155; color:#fff" onclick="closeEdit()">Hủy</button>
+                <button class="btn btn-primary" style="width:auto" onclick="saveEdit()">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+
     <div id="admin-ui" style="display:none; width:100%; height:100%;">
-        <div class="sidebar glass-panel">
-            <div class="brand"><i class="fa-solid fa-compact-disc"></i> HỒI ÂM CMS</div>
-            <div class="nav-link active" onclick="switchTab('add', this)"><i class="fa-solid fa-plus"></i> Thêm Mới</div>
-            <div class="nav-link" onclick="switchTab('list', this); fetchData()"><i class="fa-solid fa-list"></i> Danh Sách</div>
+        <div class="sidebar glass-panel" id="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-compact-disc"></i> HỒI ÂM CMS
+                <i class="fa-solid fa-xmark menu-toggle" style="margin-left:auto; font-size:18px" onclick="toggleMenu()"></i>
+            </div>
+            <div class="nav-link active" onclick="switchTab('dashboard', this); loadStats()"><i class="fa-solid fa-chart-pie"></i> Tổng Quan</div>
+            <div class="nav-link" onclick="switchTab('list', this); fetchData()"><i class="fa-solid fa-list"></i> Kho Truyện</div>
+            <div class="nav-link" onclick="switchTab('add', this)"><i class="fa-solid fa-plus"></i> Thêm Mới</div>
             <div style="flex:1"></div>
             <div class="nav-link" onclick="location.reload()" style="color:#ef4444"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</div>
         </div>
 
         <div class="main-content">
             <div class="header">
-                <div class="page-title" id="page-title">Thêm Truyện Mới</div>
+                <div class="page-title">
+                    <i class="fa-solid fa-bars menu-toggle" onclick="toggleMenu()"></i>
+                    <span id="page-title">Tổng Quan</span>
+                </div>
                 <div style="font-size: 12px; color: var(--text-sub);">Database: <span style="color:#10b981">● Online</span></div>
             </div>
 
-            <div id="view-add" class="view-section active">
+            <div id="view-dashboard" class="view-section active">
+                <div class="stats-grid">
+                    <div class="glass-panel stat-card">
+                        <div class="stat-label">Tổng số truyện</div>
+                        <div class="stat-val" id="stat-total">0</div>
+                        <i class="fa-solid fa-book stat-icon"></i>
+                    </div>
+                    <div class="glass-panel stat-card">
+                        <div class="stat-label">Tổng số tập</div>
+                        <div class="stat-val" id="stat-episodes">0</div>
+                        <i class="fa-solid fa-layer-group stat-icon"></i>
+                    </div>
+                    <div class="glass-panel stat-card">
+                        <div class="stat-label">Thể loại hot</div>
+                        <div class="stat-val" id="stat-cat" style="font-size:24px">...</div>
+                        <i class="fa-solid fa-fire stat-icon"></i>
+                    </div>
+                </div>
+                <div class="glass-panel" style="padding:20px; border-radius:16px">
+                    <h3 style="margin-top:0; color:var(--text-sub)">Truyện mới cập nhật</h3>
+                    <div id="recent-list"></div>
+                </div>
+            </div>
+
+            <div id="view-add" class="view-section">
                 <div class="form-layout">
                     <div class="form-left glass-panel form-card">
                         <div class="form-group">
                             <label><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Link Youtube Playlist</label>
                             <div style="position: relative;">
-                                <input type="text" id="inp-url" placeholder="Paste link vào đây để tự động lấy tất cả..." oninput="debounceFetch()">
+                                <input type="text" id="inp-url" placeholder="Paste link vào đây..." oninput="debounceFetch()">
                                 <button class="btn-parse" onclick="autoFetch()"><i class="fa-solid fa-bolt"></i> GET INFO</button>
                             </div>
                         </div>
-
                         <div style="margin: 20px 0; border-top: 1px dashed var(--glass-border);"></div>
-
                         <div class="form-group">
                             <label>Tên Gốc (Youtube)</label>
                             <input type="text" id="inp-raw-title" readonly style="opacity: 0.7; font-style: italic;">
                         </div>
-
                         <div class="form-row">
-                            <div class="col" style="flex: 2"><label>Tên Truyện (Hiển thị)</label><input type="text" id="inp-name"></div>
+                            <div class="col" style="flex: 2"><label>Tên Truyện</label><input type="text" id="inp-name"></div>
                             <div class="col"><label>Tác Giả</label><input type="text" id="inp-author"></div>
                         </div>
-
                         <div class="form-row">
                             <div class="col"><label>Số Tập</label><input type="text" id="inp-count"></div>
                             <div class="col"><label>Trạng Thái</label><select id="inp-status"><option value="Hoàn">Hoàn thành</option><option value="Đang ra">Đang cập nhật</option></select></div>
                             <div class="col"><label>Thể Loại</label><select id="inp-cat"><option value="Chủ Thụ">Chủ Thụ</option><option value="Chủ Công">Chủ Công</option><option value="Hỗ Công">Hỗ Công</option><option value="Vô CP">Vô CP</option><option value="Hệ Thống">Hệ Thống</option><option value="Khác">Khác</option></select></div>
                         </div>
                     </div>
-
                     <div class="form-right glass-panel form-card">
-                        <label>Ảnh Bìa (Tự động lấy)</label>
+                        <label>Ảnh Bìa</label>
                         <div class="preview-box" id="img-preview-box">
-                            <div class="placeholder">
-                                <i class="fa-regular fa-image" style="font-size: 30px;"></i>
-                                <span>Chưa có ảnh</span>
-                            </div>
+                            <div class="placeholder"><i class="fa-regular fa-image" style="font-size: 30px;"></i><span>Trống</span></div>
                             <img id="img-preview" src="" alt="">
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Link Ảnh (URL)</label>
-                            <input type="text" id="inp-img" style="font-size: 11px;">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Playlist ID</label>
-                            <input type="text" id="inp-pid" readonly style="font-family: monospace; letter-spacing: 1px; text-align: center; background: rgba(0,0,0,0.3);">
-                        </div>
-
+                        <div class="form-group"><label>Link Ảnh</label><input type="text" id="inp-img" style="font-size: 11px;"></div>
+                        <div class="form-group"><label>Playlist ID</label><input type="text" id="inp-pid" readonly style="font-family: monospace; text-align: center; background: rgba(0,0,0,0.3);"></div>
                         <button class="btn btn-primary" onclick="addStory()">LƯU TRUYỆN <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
                 </div>
@@ -214,7 +280,6 @@
                     </div>
                     <button class="btn" style="background: rgba(255,255,255,0.1); color: #fff; width: auto;" onclick="fetchData()"><i class="fa-solid fa-rotate"></i></button>
                 </div>
-
                 <div class="glass-panel table-container">
                     <table>
                         <thead>
@@ -237,39 +302,77 @@
     <div id="toast"></div>
 
     <script>
-        // CẤU HÌNH SUPABASE
         const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
-        const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT'; // Key public của bạn
+        const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
         const db = supabase.createClient(DB_URL, DB_KEY);
 
         let allData = [];
         let fetchTimeout;
 
-        // AUTH
+        // AUTH & UI
         function login() {
             if(document.getElementById('pass').value === 'hoiam20102003') {
                 document.getElementById('login-screen').style.display='none';
                 document.getElementById('admin-ui').style.display='flex';
+                loadStats(); // Auto load stats
             } else showToast('Sai mật khẩu!', 'error');
         }
 
-        // TABS
         function switchTab(tab, el) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
             document.getElementById('view-'+tab).classList.add('active');
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('page-title').innerText = tab === 'add' ? 'Thêm Truyện Mới' : 'Kho Truyện';
+            
+            const titles = { 'dashboard': 'Tổng Quan', 'add': 'Thêm Truyện', 'list': 'Kho Truyện' };
+            document.getElementById('page-title').innerText = titles[tab];
+            
+            if(window.innerWidth < 900) document.getElementById('sidebar').classList.remove('active');
         }
 
-        // === LOGIC CÀO DỮ LIỆU ===
+        function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
+
+        // --- DASHBOARD LOGIC ---
+        async function loadStats() {
+            const { data } = await db.from('playlists').select('*');
+            allData = data || [];
+            
+            document.getElementById('stat-total').innerText = allData.length;
+            
+            // Tính tổng số tập
+            let eps = 0;
+            const cats = {};
+            allData.forEach(i => {
+                const num = parseInt(i.count) || 0;
+                eps += num;
+                cats[i.category] = (cats[i.category] || 0) + 1;
+            });
+            document.getElementById('stat-episodes').innerText = eps.toLocaleString();
+            
+            // Tìm thể loại hot nhất
+            let maxCat = '-', maxVal = 0;
+            for(const [k, v] of Object.entries(cats)) {
+                if(v > maxVal) { maxVal = v; maxCat = k; }
+            }
+            document.getElementById('stat-cat').innerText = maxCat;
+
+            // Render 5 truyện mới nhất
+            const recent = [...allData].sort((a,b) => b.id - a.id).slice(0, 5);
+            const rDiv = document.getElementById('recent-list');
+            rDiv.innerHTML = recent.map(i => `
+                <div style="display:flex; gap:10px; align-items:center; padding:10px; border-bottom:1px solid var(--glass-border)">
+                    <img src="${i.image_url||'#'}" style="width:40px; height:40px; border-radius:6px; object-fit:cover; background:#333">
+                    <div><div style="font-weight:700">${i.name}</div><div style="font-size:11px; color:#888">${i.created_at.substr(0,10)}</div></div>
+                </div>
+            `).join('');
+        }
+
+        // --- AUTO FETCH & FORM LOGIC ---
         function debounceFetch() { clearTimeout(fetchTimeout); fetchTimeout = setTimeout(autoFetch, 600); }
 
         async function autoFetch() {
             const url = document.getElementById('inp-url').value;
             if(!url.includes('list=')) return;
-            
-            // Lấy ID Playlist
             let pid = "";
             try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
             
@@ -283,89 +386,50 @@
 
         async function deepScrapeYoutube(pid, btn) {
             try {
-                // Dùng Proxy để bypass CORS
-                const targetUrl = 'https://www.youtube.com/playlist?list=' + pid;
-                const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl);
-                
-                const res = await fetch(proxyUrl);
+                const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
                 const html = await res.text();
 
-                // 1. Lấy Tiêu đề
-                let title = "";
                 let titleMatch = html.match(/<meta property="og:title" content="(.*?)">/);
-                title = titleMatch ? titleMatch[1].replace(' - YouTube', '') : "";
+                let title = titleMatch ? titleMatch[1].replace(' - YouTube', '') : "";
 
-                // 2. Lấy Số tập (Regex tìm đoạn text chứa số video)
                 let count = "? tập";
-                const countRegex = /"numVideosText":\{"runs":\[\{"text":"(\d+)"/;
-                const matchCount = html.match(countRegex);
+                const matchCount = html.match(/"numVideosText":\{"runs":\[\{"text":"(\d+)"/);
                 if (matchCount) count = matchCount[1] + " tập";
 
-                // 3. LẤY ẢNH BÌA (Logic mới)
                 let img = "";
-                // Thử tìm og:image trước (thường là chất lượng tốt nhất có sẵn)
                 const imgMatch = html.match(/<meta property="og:image" content="(.*?)">/);
-                if(imgMatch) img = imgMatch[1];
-                // Nếu ảnh quá nhỏ (default của youtube), thử ép lấy maxres
-                if(img && img.includes('mqdefault')) {
-                    // Dự đoán link maxres
-                    const hq = img.replace('mqdefault.jpg', 'maxresdefault.jpg');
-                    // Lưu ý: Không check live được vì CORS, cứ dùng tạm hoặc dùng link gốc
-                    img = hq; 
-                }
+                if(imgMatch) img = imgMatch[1].replace('mqdefault.jpg', 'maxresdefault.jpg');
 
                 if (title) {
                     fillForm({ title, count, img });
                     btn.innerHTML = '<i class="fa-solid fa-check"></i> Xong';
-                    showToast('Đã lấy thông tin & Ảnh!', 'success');
-                } else {
-                    throw new Error("Không parse được");
-                }
+                    showToast('Đã lấy dữ liệu!', 'success');
+                } else throw new Error();
             } catch (e) {
-                console.error(e);
-                showToast('Lỗi khi cào dữ liệu', 'error');
+                showToast('Lỗi lấy dữ liệu', 'error');
                 btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Thử lại';
             }
         }
 
         function fillForm(data) {
-            // Điền tên gốc
             document.getElementById('inp-raw-title').value = data.title;
-            
-            // Parse tên & tác giả
             const parsed = parseTitle(data.title);
             document.getElementById('inp-name').value = parsed.name;
             document.getElementById('inp-author').value = parsed.author;
-            
-            // Điền số tập
             document.getElementById('inp-count').value = data.count;
-            
-            // Điền ảnh
             if(data.img) {
                 document.getElementById('inp-img').value = data.img;
                 document.getElementById('img-preview').src = data.img;
                 document.getElementById('img-preview-box').classList.add('has-img');
             }
-
-            // Auto điền thể loại
             autoCategorize(data.title);
             document.getElementById('inp-status').value = 'Hoàn';
         }
 
         function parseTitle(rawTitle) {
-            let clean = rawTitle
-                .replace(/^\[.*?\]\s*/g, '') // Xóa [Tag] ở đầu
-                .replace(/\[.*?\]/g, '')     // Xóa [Tag] ở giữa
-                .replace(/Full/gi, '')
-                .trim();
-            
-            // Tách bằng dấu gạch ngang
+            let clean = rawTitle.replace(/^\[.*?\]\s*/g, '').replace(/\[.*?\]/g, '').replace(/Full/gi, '').trim();
             let parts = clean.split(/[–|-]/).map(p => p.trim()).filter(p => p);
-            
-            return {
-                name: parts[0] || clean,
-                author: parts[1] && parts[1].length < 30 ? parts[1] : 'Đang cập nhật'
-            };
+            return { name: parts[0] || clean, author: parts[1] && parts[1].length < 30 ? parts[1] : 'Đang cập nhật' };
         }
 
         function autoCategorize(t) {
@@ -374,15 +438,14 @@
             if(t.includes('chủ thụ')) sel.value = 'Chủ Thụ';
             else if(t.includes('chủ công')) sel.value = 'Chủ Công';
             else if(t.includes('hỗ công')) sel.value = 'Hỗ Công';
-            else if(t.includes('vô cp')) sel.value = 'Vô CP';
             else if(t.includes('hệ thống')) sel.value = 'Hệ Thống';
         }
 
-        // === DATABASE OPERATIONS ===
+        // === CRUD OPERATIONS ===
         async function addStory() {
             const btn = document.querySelector('.btn-primary');
             const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ...';
 
             const payload = {
                 name: document.getElementById('inp-name').value,
@@ -391,29 +454,21 @@
                 status: document.getElementById('inp-status').value,
                 playlist_id: document.getElementById('inp-pid').value,
                 category: document.getElementById('inp-cat').value,
-                image_url: document.getElementById('inp-img').value // Lưu link ảnh vào DB
+                image_url: document.getElementById('inp-img').value
             };
 
-            if(!payload.name || !payload.playlist_id) {
-                btn.innerHTML = oldHtml;
-                return showToast('Thiếu Tên hoặc Playlist ID!', 'error');
-            }
+            if(!payload.name || !payload.playlist_id) { btn.innerHTML = oldHtml; return showToast('Thiếu thông tin!', 'error'); }
 
             const { error } = await db.from('playlists').insert([payload]);
-            
             if(!error) {
-                showToast('Đã thêm truyện thành công!', 'success');
-                // Reset form
-                document.querySelectorAll('input').forEach(i => i.value = '');
+                showToast('Thành công!', 'success');
+                document.querySelectorAll('#view-add input').forEach(i => i.value = '');
                 document.getElementById('img-preview-box').classList.remove('has-img');
-            } else {
-                showToast('Lỗi: ' + error.message, 'error');
-            }
+            } else showToast(error.message, 'error');
             btn.innerHTML = oldHtml;
         }
 
         async function fetchData() {
-            // Lấy thêm cột image_url
             const { data } = await db.from('playlists').select('*').order('id', {ascending:false});
             allData = data || [];
             renderTable(allData);
@@ -423,46 +478,64 @@
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
             list.forEach(item => {
-                // Nếu chưa có ảnh trong DB thì dùng ảnh mặc định Youtube
-                const imgDisplay = item.image_url || `https://img.youtube.com/vi/${item.playlist_id}/mqdefault.jpg`;
-                
-                const statusHtml = item.status === 'Hoàn' 
-                    ? '<span class="badge finished">Hoàn</span>' 
-                    : '<span class="badge ongoing">Đang ra</span>';
-
+                const img = item.image_url || `https://img.youtube.com/vi/${item.playlist_id}/mqdefault.jpg`;
+                const stt = item.status === 'Hoàn' ? 'finished' : 'ongoing';
                 tbody.innerHTML += `
                     <tr>
-                        <td class="thumb-cell"><img src="${imgDisplay}" loading="lazy"></td>
-                        <td>
-                            <div style="font-weight:700; color:#fff; font-size:14px">${item.name}</div>
-                            <div style="font-size:11px; color:#64748b; margin-top:4px">${item.category || 'Khác'}</div>
-                        </td>
-                        <td style="color:#cbd5e1">${item.author || '---'}</td>
-                        <td>${statusHtml}</td>
-                        <td style="font-weight:600; color:#94a3b8">${item.count || '?'}</td>
+                        <td class="thumb-cell"><img src="${img}" loading="lazy"></td>
+                        <td><div style="font-weight:700; color:#fff">${item.name}</div><div style="font-size:11px; color:#64748b">${item.category}</div></td>
+                        <td style="color:#cbd5e1">${item.author}</td>
+                        <td><span class="badge ${stt}">${item.status}</span></td>
+                        <td style="font-weight:600; color:#94a3b8">${item.count}</td>
                         <td style="text-align:right">
-                            <div class="btn-icon" onclick="deleteItem(${item.id})" title="Xóa"><i class="fa-solid fa-trash"></i></div>
+                            <div class="btn-icon" onclick="openEdit(${item.id})"><i class="fa-solid fa-pen"></i></div>
+                            <div class="btn-icon" onclick="del(${item.id})" style="color:#ef4444"><i class="fa-solid fa-trash"></i></div>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        async function deleteItem(id) {
-            if(confirm('Bạn chắc chắn muốn xóa truyện này?')) {
+        // --- EDIT LOGIC (New Feature) ---
+        function openEdit(id) {
+            const i = allData.find(x => x.id === id);
+            document.getElementById('edit-id').value = i.id;
+            document.getElementById('edit-name').value = i.name;
+            document.getElementById('edit-author').value = i.author;
+            document.getElementById('edit-count').value = i.count;
+            document.getElementById('edit-status').value = i.status;
+            document.getElementById('edit-cat').value = i.category;
+            document.getElementById('edit-img').value = i.image_url || '';
+            document.getElementById('edit-modal').classList.add('open');
+        }
+
+        function closeEdit() { document.getElementById('edit-modal').classList.remove('open'); }
+
+        async function saveEdit() {
+            const id = document.getElementById('edit-id').value;
+            const updates = {
+                name: document.getElementById('edit-name').value,
+                author: document.getElementById('edit-author').value,
+                count: document.getElementById('edit-count').value,
+                status: document.getElementById('edit-status').value,
+                category: document.getElementById('edit-cat').value,
+                image_url: document.getElementById('edit-img').value
+            };
+            const { error } = await db.from('playlists').update(updates).eq('id', id);
+            if(!error) { showToast('Đã cập nhật!', 'success'); closeEdit(); fetchData(); } 
+            else showToast('Lỗi!', 'error');
+        }
+
+        async function del(id) {
+            if(confirm('Xóa truyện này?')) {
                 await db.from('playlists').delete().eq('id', id);
-                showToast('Đã xóa!', 'success');
-                fetchData();
+                showToast('Đã xóa!', 'success'); fetchData();
             }
         }
 
         function filterList() {
             const v = document.getElementById('search-list').value.toLowerCase();
-            const filtered = allData.filter(i => 
-                i.name.toLowerCase().includes(v) || 
-                (i.author && i.author.toLowerCase().includes(v))
-            );
-            renderTable(filtered);
+            renderTable(allData.filter(i => i.name.toLowerCase().includes(v) || i.author.toLowerCase().includes(v)));
         }
 
         function showToast(msg, type) {
