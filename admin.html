@@ -3,549 +3,541 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hồi Âm Admin Pro Max</title>
+    <title>Hồi Âm Admin Ultimate</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --bg-dark: #030712;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
-            --text-main: #f8fafc;
+            --bg: #0f172a; /* Xanh đen sâu thẳm */
+            --glass: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #8b5cf6;
+            --accent: #06b6d4;
+            --text: #f1f5f9;
             --text-sub: #94a3b8;
             --sidebar-w: 260px;
         }
 
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-        
+        * { box-sizing: border-box; outline: none; }
         body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: var(--bg-dark);
-            color: var(--text-main); 
+            font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text); 
             margin: 0; height: 100vh; display: flex; overflow: hidden; font-size: 14px;
-            background-image: 
-                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 100% 100%, rgba(217, 70, 239, 0.15) 0%, transparent 40%);
-        }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; } 
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-
-        /* GLASS EFFECT */
-        .glass-panel {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background-image: radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.1), transparent 40%);
         }
 
-        /* SIDEBAR */
+        /* --- UI COMPONENTS --- */
+        .glass-box {
+            background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border); box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Sidebar */
         .sidebar { 
-            width: var(--sidebar-w); display: flex; flex-direction: column; padding: 24px; gap: 8px; flex-shrink: 0; z-index: 100;
-            border-right: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.8); transition: transform 0.3s ease;
+            width: var(--sidebar-w); display: flex; flex-direction: column; padding: 24px; gap: 8px; 
+            border-right: 1px solid var(--border); background: rgba(15, 23, 42, 0.9); z-index: 50;
         }
         .brand { 
-            font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 30px; 
-            display: flex; align-items: center; gap: 12px;
-            background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;
+            background: linear-gradient(to right, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .nav-link { 
-            padding: 12px 16px; border-radius: 12px; color: var(--text-sub); cursor: pointer; 
-            font-weight: 600; display: flex; align-items: center; gap: 12px; transition: 0.2s;
+        .nav-item { 
+            padding: 12px 16px; border-radius: 10px; color: var(--text-sub); cursor: pointer; font-weight: 600; 
+            display: flex; gap: 12px; transition: 0.2s; align-items: center;
         }
-        .nav-link:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .nav-link.active { 
-            background: rgba(139, 92, 246, 0.15); color: #fff; border: 1px solid rgba(139, 92, 246, 0.2);
-        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(139, 92, 246, 0.15); color: #fff; border: 1px solid rgba(139, 92, 246, 0.2); }
 
-        /* MAIN */
-        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
-        .header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
-        .page-title { font-size: 20px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 15px; }
-        
-        /* Mobile Menu Toggle */
-        .menu-toggle { display: none; font-size: 24px; cursor: pointer; }
+        /* Content */
+        .main { flex: 1; display: flex; flex-direction: column; position: relative; min-width: 0; }
+        .header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid var(--border); }
+        .title { font-size: 20px; font-weight: 700; }
 
-        .view-section { flex: 1; overflow-y: auto; padding: 0 30px 40px 30px; display: none; }
-        .view-section.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view { padding: 30px; overflow-y: auto; flex: 1; display: none; }
+        .view.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from {opacity:0; transform:translateY(10px)} to {opacity:1; transform:translateY(0)} }
 
-        /* DASHBOARD STATS */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden; }
-        .stat-card::after { content: ''; position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%; }
-        .stat-val { font-size: 32px; font-weight: 800; color: #fff; }
-        .stat-label { font-size: 13px; color: var(--text-sub); text-transform: uppercase; font-weight: 700; }
-        .stat-icon { position: absolute; right: 20px; top: 20px; font-size: 24px; opacity: 0.2; }
+        /* Stats Cards */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { padding: 20px; border-radius: 16px; position: relative; overflow: hidden; }
+        .stat-num { font-size: 32px; font-weight: 800; margin: 5px 0; }
+        .stat-label { color: var(--text-sub); font-size: 12px; text-transform: uppercase; font-weight: 700; }
+        .stat-icon { position: absolute; right: 20px; top: 20px; font-size: 40px; opacity: 0.1; }
 
-        /* FORM */
-        .form-layout { display: flex; gap: 30px; max-width: 1100px; margin: 0 auto; }
-        .form-left { flex: 1; }
-        .form-right { width: 320px; flex-shrink: 0; }
-
-        .form-card { border-radius: 20px; padding: 30px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 20px; }
-        .form-row { display: flex; gap: 20px; margin-bottom: 20px; }
-        .col { flex: 1; }
-        
-        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* Form Elements */
+        .form-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; max-width: 1200px; margin: 0 auto; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-sub); }
         input, select { 
-            width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); 
-            color: #fff; padding: 12px 16px; border-radius: 10px; font-size: 14px; transition: 0.2s;
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; 
+            padding: 12px; border-radius: 8px; font-size: 14px; transition: 0.2s;
         }
-        input:focus, select:focus { border-color: #a855f7; box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1); }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2); }
 
-        /* IMAGE PREVIEW */
-        .preview-box {
-            width: 100%; aspect-ratio: 16/9; background: rgba(0,0,0,0.3); border-radius: 16px;
-            border: 2px dashed var(--glass-border); display: flex; align-items: center; justify-content: center;
-            overflow: hidden; margin-bottom: 20px; position: relative;
+        /* Image Preview Area */
+        .img-preview {
+            width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; border: 1px dashed var(--border);
+            display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;
         }
-        .preview-box img { width: 100%; height: 100%; object-fit: cover; display: none; }
-        .preview-box.has-img img { display: block; }
-        .preview-box.has-img .placeholder { display: none; }
-        .placeholder { color: var(--text-sub); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .img-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .img-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+            opacity: 0; transition: 0.2s; cursor: pointer;
+        }
+        .img-preview:hover .img-overlay { opacity: 1; }
 
-        /* BUTTONS */
-        .btn { border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
-        .btn-primary { background: var(--primary-gradient); color: #fff; width: 100%; justify-content: center; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4); }
-        .btn-icon { width: 32px; height: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(255,255,255,0.05); color: #cbd5e1; transition: 0.2s; }
-        .btn-icon:hover { background: #fff; color: #000; }
-        .btn-parse { position: absolute; right: 6px; top: 5px; bottom: 5px; background: rgba(168, 85, 247, 0.2); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); padding: 0 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
-        .btn-parse:hover { background: #a855f7; color: #fff; }
-
-        /* TABLE */
-        .table-container { border-radius: 16px; overflow: hidden; }
+        /* Table */
+        .table-wrap { border-radius: 16px; overflow: hidden; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: rgba(15, 23, 42, 0.4); padding: 16px; text-align: left; font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
-        td { padding: 16px; border-bottom: 1px solid var(--glass-border); color: #f1f5f9; vertical-align: middle; }
+        th { background: rgba(255,255,255,0.03); text-align: left; padding: 15px; font-size: 12px; color: var(--text-sub); }
+        td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover td { background: rgba(255,255,255,0.02); }
-        
-        .thumb-cell img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #333; }
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .badge.finished { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .badge.ongoing { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .thumb-small { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; background: #333; }
 
-        /* MODAL (New Feature) */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 200; display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
-        .modal.open { display: flex; opacity: 1; }
-        .modal-content { width: 500px; max-width: 90%; background: #1e293b; border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; transform: scale(0.9); transition: 0.3s; }
-        .modal.open .modal-content { transform: scale(1); }
+        /* Buttons */
+        .btn { border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #8b5cf6, #d946ef); color: #fff; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4); }
+        .btn-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); color: var(--text-sub); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-icon:hover { background: #fff; color: #000; }
+        .btn-sync:hover { background: var(--accent); color: #fff; }
+        .btn-del:hover { background: #ef4444; color: #fff; }
 
-        /* TOAST */
-        #toast { position: fixed; bottom: 30px; right: 30px; background: #0f172a; border: 1px solid var(--glass-border); padding: 16px 24px; border-radius: 12px; color: #fff; font-weight: 600; transform: translateY(100px); opacity: 0; transition: 0.3s; z-index: 3000; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #toast.show { transform: translateY(0); opacity: 1; }
+        /* Modal */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal.open { display: flex; animation: fadeIn 0.2s; }
+        .modal-box { width: 500px; max-width: 90%; background: #1e293b; padding: 30px; border-radius: 20px; border: 1px solid var(--border); }
 
-        @media (max-width: 900px) { 
-            .form-layout { flex-direction: column; } .form-right { width: 100%; } 
-            .sidebar { position: fixed; left: -260px; height: 100%; bottom: 0; }
-            .sidebar.active { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-            .header { padding: 0 20px; } 
-            .menu-toggle { display: block; }
-            .page-title { font-size: 18px; }
+        /* Toast */
+        #toast { position: fixed; bottom: 30px; right: 30px; z-index: 200; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast-msg { background: #1e293b; border: 1px solid var(--border); padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s; pointer-events: auto; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -100%; height: 100%; transition: 0.3s; }
+            .sidebar.show { left: 0; }
+            .form-grid, .stats-row { grid-template-columns: 1fr; }
+            .header { padding: 0 20px; }
         }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" style="position: fixed; inset: 0; z-index: 999; display: flex; align-items: center; justify-content: center; background: #030712;">
-        <div class="glass-panel" style="padding: 40px; border-radius: 24px; width: 380px; text-align: center;">
-            <div style="font-size: 40px; margin-bottom: 10px;">💿</div>
-            <h2 style="margin: 0 0 20px 0; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ADMIN ACCESS</h2>
-            <input type="password" id="pass" placeholder="Mật khẩu..." style="margin-bottom: 20px; text-align: center;">
-            <button class="btn btn-primary" onclick="login()">Truy cập</button>
+    <div id="login-ui" style="position:fixed; inset:0; z-index:999; background:#020617; display:flex; align-items:center; justify-content:center;">
+        <div class="glass-box" style="padding:40px; border-radius:24px; width:350px; text-align:center;">
+            <div style="font-size:40px; margin-bottom:10px">💿</div>
+            <h2 style="margin:0 0 20px">HỒI ÂM ADMIN</h2>
+            <input type="password" id="login-pass" placeholder="Mật khẩu..." style="text-align:center; margin-bottom:20px">
+            <button class="btn btn-primary" onclick="auth()">TRUY CẬP</button>
         </div>
     </div>
 
-    <div id="edit-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="margin-top:0; color:#fff">Sửa Thông Tin</h3>
-            <input type="hidden" id="edit-id">
-            <div class="form-group">
-                <label>Tên Truyện</label>
-                <input type="text" id="edit-name">
-            </div>
-            <div class="form-row">
-                <div class="col"><label>Tác Giả</label><input type="text" id="edit-author"></div>
-                <div class="col"><label>Số Tập</label><input type="text" id="edit-count"></div>
-            </div>
-            <div class="form-row">
-                <div class="col"><label>Thể Loại</label><select id="edit-cat"><option value="Chủ Thụ">Chủ Thụ</option><option value="Chủ Công">Chủ Công</option><option value="Hỗ Công">Hỗ Công</option><option value="Vô CP">Vô CP</option><option value="Hệ Thống">Hệ Thống</option><option value="Khác">Khác</option></select></div>
-                <div class="col"><label>Trạng Thái</label><select id="edit-status"><option value="Hoàn">Hoàn</option><option value="Đang ra">Đang ra</option></select></div>
-            </div>
-            <div class="form-group">
-                <label>Link Ảnh</label>
-                <input type="text" id="edit-img">
-            </div>
-            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px">
-                <button class="btn" style="background:#334155; color:#fff" onclick="closeEdit()">Hủy</button>
-                <button class="btn btn-primary" style="width:auto" onclick="saveEdit()">Lưu Thay Đổi</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-ui" style="display:none; width:100%; height:100%;">
-        <div class="sidebar glass-panel" id="sidebar">
-            <div class="brand">
-                <i class="fa-solid fa-compact-disc"></i> HỒI ÂM CMS
-                <i class="fa-solid fa-xmark menu-toggle" style="margin-left:auto; font-size:18px" onclick="toggleMenu()"></i>
-            </div>
-            <div class="nav-link active" onclick="switchTab('dashboard', this); loadStats()"><i class="fa-solid fa-chart-pie"></i> Tổng Quan</div>
-            <div class="nav-link" onclick="switchTab('list', this); fetchData()"><i class="fa-solid fa-list"></i> Kho Truyện</div>
-            <div class="nav-link" onclick="switchTab('add', this)"><i class="fa-solid fa-plus"></i> Thêm Mới</div>
+    <div id="admin-ui" style="display:none; width:100%; height:100%">
+        <div class="sidebar" id="sidebar">
+            <div class="brand"><i class="fa-solid fa-compact-disc"></i> HỒI ÂM CMS <i class="fa-solid fa-xmark" style="margin-left:auto; cursor:pointer; font-size:16px" onclick="toggleMenu()"></i></div>
+            <div class="nav-item active" onclick="nav('dashboard', this); loadStats()"><i class="fa-solid fa-chart-pie"></i> Tổng quan</div>
+            <div class="nav-item" onclick="nav('list', this); fetchList()"><i class="fa-solid fa-layer-group"></i> Kho Truyện</div>
+            <div class="nav-item" onclick="nav('add', this)"><i class="fa-solid fa-circle-plus"></i> Thêm Mới</div>
             <div style="flex:1"></div>
-            <div class="nav-link" onclick="location.reload()" style="color:#ef4444"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</div>
+            <div class="nav-item" onclick="location.reload()" style="color:#ef4444"><i class="fa-solid fa-power-off"></i> Đăng xuất</div>
         </div>
 
-        <div class="main-content">
+        <div class="main">
             <div class="header">
-                <div class="page-title">
-                    <i class="fa-solid fa-bars menu-toggle" onclick="toggleMenu()"></i>
-                    <span id="page-title">Tổng Quan</span>
-                </div>
-                <div style="font-size: 12px; color: var(--text-sub);">Database: <span style="color:#10b981">● Online</span></div>
+                <div class="title"><i class="fa-solid fa-bars" style="margin-right:15px; cursor:pointer" onclick="toggleMenu()"></i> <span id="page-title">Tổng quan</span></div>
+                <div style="font-size:12px; font-weight:600; color:#10b981"><i class="fa-solid fa-wifi"></i> Online</div>
             </div>
 
-            <div id="view-dashboard" class="view-section active">
-                <div class="stats-grid">
-                    <div class="glass-panel stat-card">
-                        <div class="stat-label">Tổng số truyện</div>
-                        <div class="stat-val" id="stat-total">0</div>
+            <div id="view-dashboard" class="view active">
+                <div class="stats-row">
+                    <div class="glass-box stat-card">
+                        <div class="stat-label">Tổng truyện</div>
+                        <div class="stat-num" id="s-total">0</div>
                         <i class="fa-solid fa-book stat-icon"></i>
                     </div>
-                    <div class="glass-panel stat-card">
+                    <div class="glass-box stat-card">
                         <div class="stat-label">Tổng số tập</div>
-                        <div class="stat-val" id="stat-episodes">0</div>
-                        <i class="fa-solid fa-layer-group stat-icon"></i>
+                        <div class="stat-num" id="s-eps" style="color:#06b6d4">0</div>
+                        <i class="fa-solid fa-video stat-icon"></i>
                     </div>
-                    <div class="glass-panel stat-card">
-                        <div class="stat-label">Thể loại hot</div>
-                        <div class="stat-val" id="stat-cat" style="font-size:24px">...</div>
+                    <div class="glass-box stat-card">
+                        <div class="stat-label">Thể loại Hot</div>
+                        <div class="stat-num" id="s-cat" style="font-size:24px; margin-top:10px">...</div>
                         <i class="fa-solid fa-fire stat-icon"></i>
                     </div>
                 </div>
-                <div class="glass-panel" style="padding:20px; border-radius:16px">
-                    <h3 style="margin-top:0; color:var(--text-sub)">Truyện mới cập nhật</h3>
-                    <div id="recent-list"></div>
+                <h3 style="color:var(--text-sub)">Vừa cập nhật</h3>
+                <div class="glass-box table-wrap">
+                    <table>
+                        <tbody id="recent-table"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <div id="view-add" class="view-section">
-                <div class="form-layout">
-                    <div class="form-left glass-panel form-card">
-                        <div class="form-group">
-                            <label><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Link Youtube Playlist</label>
-                            <div style="position: relative;">
-                                <input type="text" id="inp-url" placeholder="Paste link vào đây..." oninput="debounceFetch()">
-                                <button class="btn-parse" onclick="autoFetch()"><i class="fa-solid fa-bolt"></i> GET INFO</button>
+            <div id="view-add" class="view">
+                <div class="form-grid">
+                    <div>
+                        <div class="glass-box" style="padding:25px; border-radius:16px">
+                            <div class="input-group">
+                                <label><i class="fa-brands fa-youtube" style="color:#ef4444"></i> Link Playlist Youtube</label>
+                                <div style="display:flex; gap:10px">
+                                    <input type="text" id="add-url" placeholder="Dán link vào đây..." oninput="debounceParse()">
+                                    <button class="btn" style="background:rgba(255,255,255,0.1)" onclick="parseUrl()"><i class="fa-solid fa-bolt"></i></button>
+                                </div>
+                            </div>
+                            <hr style="border:0; border-top:1px dashed var(--border); margin:20px 0">
+                            <div class="input-group">
+                                <label>Tên Truyện</label>
+                                <input type="text" id="add-name">
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+                                <div class="input-group"><label>Tác Giả</label><input type="text" id="add-author"></div>
+                                <div class="input-group"><label>Số Tập</label><input type="text" id="add-count"></div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+                                <div class="input-group">
+                                    <label>Thể Loại</label>
+                                    <select id="add-cat">
+                                        <option value="Chủ Thụ">Chủ Thụ</option>
+                                        <option value="Chủ Công">Chủ Công</option>
+                                        <option value="Hỗ Công">Hỗ Công</option>
+                                        <option value="Vô CP">Vô CP</option>
+                                        <option value="Hệ Thống">Hệ Thống</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Trạng Thái</label>
+                                    <select id="add-status"><option value="Hoàn">Hoàn thành</option><option value="Đang ra">Đang ra</option></select>
+                                </div>
                             </div>
                         </div>
-                        <div style="margin: 20px 0; border-top: 1px dashed var(--glass-border);"></div>
-                        <div class="form-group">
-                            <label>Tên Gốc (Youtube)</label>
-                            <input type="text" id="inp-raw-title" readonly style="opacity: 0.7; font-style: italic;">
-                        </div>
-                        <div class="form-row">
-                            <div class="col" style="flex: 2"><label>Tên Truyện</label><input type="text" id="inp-name"></div>
-                            <div class="col"><label>Tác Giả</label><input type="text" id="inp-author"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="col"><label>Số Tập</label><input type="text" id="inp-count"></div>
-                            <div class="col"><label>Trạng Thái</label><select id="inp-status"><option value="Hoàn">Hoàn thành</option><option value="Đang ra">Đang cập nhật</option></select></div>
-                            <div class="col"><label>Thể Loại</label><select id="inp-cat"><option value="Chủ Thụ">Chủ Thụ</option><option value="Chủ Công">Chủ Công</option><option value="Hỗ Công">Hỗ Công</option><option value="Vô CP">Vô CP</option><option value="Hệ Thống">Hệ Thống</option><option value="Khác">Khác</option></select></div>
-                        </div>
                     </div>
-                    <div class="form-right glass-panel form-card">
-                        <label>Ảnh Bìa</label>
-                        <div class="preview-box" id="img-preview-box">
-                            <div class="placeholder"><i class="fa-regular fa-image" style="font-size: 30px;"></i><span>Trống</span></div>
-                            <img id="img-preview" src="" alt="">
+                    <div>
+                        <div class="glass-box" style="padding:25px; border-radius:16px">
+                            <label>Ảnh Bìa (Tự động/Tùy chọn)</label>
+                            <div class="img-preview">
+                                <img id="add-preview" src="https://via.placeholder.com/300x170/000000/ffffff?text=NO+IMAGE">
+                            </div>
+                            <div class="input-group" style="margin-top:15px">
+                                <label>Link Ảnh (Nếu muốn đổi)</label>
+                                <input type="text" id="add-img" oninput="document.getElementById('add-preview').src=this.value">
+                            </div>
+                            <div class="input-group">
+                                <label>Playlist ID (Auto)</label>
+                                <input type="text" id="add-pid" readonly style="background:rgba(0,0,0,0.5); text-align:center; font-family:monospace">
+                            </div>
+                            <button class="btn btn-primary" style="width:100%; justify-content:center" onclick="saveStory()"><i class="fa-solid fa-floppy-disk"></i> LƯU VÀO KHO</button>
                         </div>
-                        <div class="form-group"><label>Link Ảnh</label><input type="text" id="inp-img" style="font-size: 11px;"></div>
-                        <div class="form-group"><label>Playlist ID</label><input type="text" id="inp-pid" readonly style="font-family: monospace; text-align: center; background: rgba(0,0,0,0.3);"></div>
-                        <button class="btn btn-primary" onclick="addStory()">LƯU TRUYỆN <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
 
-            <div id="view-list" class="view-section">
-                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                    <div style="position: relative; flex: 1;">
-                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 13px; color: var(--text-sub);"></i>
-                        <input type="text" id="search-list" placeholder="Tìm kiếm..." style="padding-left: 45px;" onkeyup="filterList()">
+            <div id="view-list" class="view">
+                <div style="display:flex; gap:15px; margin-bottom:20px">
+                    <div style="position:relative; flex:1">
+                        <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:15px; top:13px; color:var(--text-sub)"></i>
+                        <input type="text" id="search" placeholder="Tìm kiếm truyện, tác giả..." style="padding-left:40px" onkeyup="renderList()">
                     </div>
-                    <button class="btn" style="background: rgba(255,255,255,0.1); color: #fff; width: auto;" onclick="fetchData()"><i class="fa-solid fa-rotate"></i></button>
+                    <button class="btn" style="background:rgba(255,255,255,0.1)" onclick="fetchList()"><i class="fa-solid fa-rotate"></i></button>
                 </div>
-                <div class="glass-panel table-container">
+                <div class="glass-box table-wrap">
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 60px;">Ảnh</th>
+                                <th width="60">Ảnh</th>
                                 <th>Tên Truyện</th>
-                                <th>Tác Giả</th>
-                                <th>Trạng Thái</th>
-                                <th>Số Tập</th>
-                                <th style="text-align: right;">Action</th>
+                                <th>Thông tin</th>
+                                <th>Tình trạng</th>
+                                <th style="text-align:right">Hành động</th>
                             </tr>
                         </thead>
-                        <tbody id="table-body"></tbody>
+                        <tbody id="list-body"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="modal-edit" class="modal">
+        <div class="modal-box">
+            <h3 style="margin-top:0">Sửa Truyện</h3>
+            <input type="hidden" id="edit-id">
+            <div class="input-group"><label>Tên Truyện</label><input type="text" id="edit-name"></div>
+            <div style="display:flex; gap:15px">
+                <div class="input-group" style="flex:1"><label>Tác Giả</label><input type="text" id="edit-author"></div>
+                <div class="input-group" style="flex:1"><label>Số Tập</label><input type="text" id="edit-count"></div>
+            </div>
+            <div class="input-group"><label>Link Ảnh</label><input type="text" id="edit-img"></div>
+            <div class="input-group">
+                <label>Trạng thái</label>
+                <select id="edit-status"><option value="Hoàn">Hoàn</option><option value="Đang ra">Đang ra</option></select>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px">
+                <button class="btn" style="background:rgba(255,255,255,0.1)" onclick="closeModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="updateStory()">Cập Nhật</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast"></div>
 
-    <script>
-        const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
-        const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT';
-        const db = supabase.createClient(DB_URL, DB_KEY);
+<script>
+    // --- CẤU HÌNH ---
+    const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
+    const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT'; 
+    const db = supabase.createClient(DB_URL, DB_KEY);
+    let allData = [];
+    let timeout;
 
-        let allData = [];
-        let fetchTimeout;
+    // --- CORE FUNC ---
+    function auth() {
+        if(document.getElementById('login-pass').value === 'hoiam20102003') {
+            document.getElementById('login-ui').style.display = 'none';
+            document.getElementById('admin-ui').style.display = 'flex';
+            loadStats();
+        } else toast('Sai mật khẩu!', 'error');
+    }
 
-        // AUTH & UI
-        function login() {
-            if(document.getElementById('pass').value === 'hoiam20102003') {
-                document.getElementById('login-screen').style.display='none';
-                document.getElementById('admin-ui').style.display='flex';
-                loadStats(); // Auto load stats
-            } else showToast('Sai mật khẩu!', 'error');
-        }
+    function nav(tab, el) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-'+tab).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('page-title').innerText = el.innerText;
+        if(window.innerWidth < 768) toggleMenu();
+    }
 
-        function switchTab(tab, el) {
-            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-'+tab).classList.add('active');
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
-            
-            const titles = { 'dashboard': 'Tổng Quan', 'add': 'Thêm Truyện', 'list': 'Kho Truyện' };
-            document.getElementById('page-title').innerText = titles[tab];
-            
-            if(window.innerWidth < 900) document.getElementById('sidebar').classList.remove('active');
-        }
+    function toggleMenu() {
+        document.getElementById('sidebar').classList.toggle('show');
+    }
 
-        function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
+    function toast(msg, type='success') {
+        const d = document.createElement('div');
+        d.className = 'toast-msg';
+        d.style.borderColor = type==='error' ? '#ef4444' : '#10b981';
+        d.innerHTML = `<i class="fa-solid ${type==='error'?'fa-circle-exclamation':'fa-circle-check'}" style="color:${type==='error'?'#ef4444':'#10b981'}"></i> ${msg}`;
+        document.getElementById('toast').appendChild(d);
+        setTimeout(() => d.remove(), 3000);
+    }
 
-        // --- DASHBOARD LOGIC ---
-        async function loadStats() {
-            const { data } = await db.from('playlists').select('*');
-            allData = data || [];
+    // --- LOGIC SCRAPER (CÀO DATA) ---
+    function debounceParse() { clearTimeout(timeout); timeout = setTimeout(parseUrl, 800); }
+
+    async function parseUrl() {
+        const url = document.getElementById('add-url').value;
+        if(!url.includes('list=')) return;
+        
+        let pid = "";
+        try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
+        document.getElementById('add-pid').value = pid;
+
+        toast('Đang phân tích link...', 'info');
+        
+        try {
+            const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
+            const html = await res.text();
+
+            // 1. Lấy Tên Gốc
+            const titleMatch = html.match(/<meta property="og:title" content="(.*?)">/);
+            const rawTitle = titleMatch ? titleMatch[1].replace(' - YouTube', '') : "Không tên";
+
+            // 2. Xử lý tên (Clean text)
+            let cleanName = rawTitle.replace(/^\[.*?\]\s*/g, '').replace(/\[.*?\]/g, '').replace(/Full/gi, '').trim();
+            let parts = cleanName.split(/[–|-]/).map(p => p.trim()).filter(p => p);
             
-            document.getElementById('stat-total').innerText = allData.length;
-            
-            // Tính tổng số tập
-            let eps = 0;
-            const cats = {};
-            allData.forEach(i => {
-                const num = parseInt(i.count) || 0;
-                eps += num;
-                cats[i.category] = (cats[i.category] || 0) + 1;
-            });
-            document.getElementById('stat-episodes').innerText = eps.toLocaleString();
-            
-            // Tìm thể loại hot nhất
-            let maxCat = '-', maxVal = 0;
-            for(const [k, v] of Object.entries(cats)) {
-                if(v > maxVal) { maxVal = v; maxCat = k; }
+            let name = parts[0];
+            let author = (parts[1] && parts[1].length < 30) ? parts[1] : "Đang cập nhật";
+
+            // 3. Lấy số tập
+            let count = "? tập";
+            const countMatch = html.match(/"numVideosText":\{"runs":\[\{"text":"(\d+)"/);
+            if(countMatch) count = countMatch[1] + " tập";
+
+            // 4. Lấy ảnh (Ưu tiên ảnh to)
+            let img = "";
+            const imgMatch = html.match(/<meta property="og:image" content="(.*?)">/);
+            if(imgMatch) {
+                img = imgMatch[1];
+                if(img.includes('mqdefault')) img = img.replace('mqdefault.jpg', 'maxresdefault.jpg');
             }
-            document.getElementById('stat-cat').innerText = maxCat;
 
-            // Render 5 truyện mới nhất
-            const recent = [...allData].sort((a,b) => b.id - a.id).slice(0, 5);
-            const rDiv = document.getElementById('recent-list');
-            rDiv.innerHTML = recent.map(i => `
-                <div style="display:flex; gap:10px; align-items:center; padding:10px; border-bottom:1px solid var(--glass-border)">
-                    <img src="${i.image_url||'#'}" style="width:40px; height:40px; border-radius:6px; object-fit:cover; background:#333">
-                    <div><div style="font-weight:700">${i.name}</div><div style="font-size:11px; color:#888">${i.created_at.substr(0,10)}</div></div>
-                </div>
-            `).join('');
-        }
-
-        // --- AUTO FETCH & FORM LOGIC ---
-        function debounceFetch() { clearTimeout(fetchTimeout); fetchTimeout = setTimeout(autoFetch, 600); }
-
-        async function autoFetch() {
-            const url = document.getElementById('inp-url').value;
-            if(!url.includes('list=')) return;
-            let pid = "";
-            try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
+            // 5. Auto điền form
+            document.getElementById('add-name').value = name;
+            document.getElementById('add-author').value = author;
+            document.getElementById('add-count').value = count;
+            document.getElementById('add-img').value = img;
+            document.getElementById('add-preview').src = img;
             
-            if(pid) {
-                document.getElementById('inp-pid').value = pid;
-                const btn = document.querySelector('.btn-parse');
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
-                await deepScrapeYoutube(pid, btn);
+            // Auto thể loại
+            const lowerName = name.toLowerCase();
+            const cat = document.getElementById('add-cat');
+            if(lowerName.includes('chủ thụ')) cat.value='Chủ Thụ';
+            else if(lowerName.includes('chủ công')) cat.value='Chủ Công';
+            else if(lowerName.includes('hệ thống')) cat.value='Hệ Thống';
+
+            toast('Đã lấy dữ liệu!', 'success');
+
+        } catch(e) { toast('Lỗi mạng/Proxy chặn', 'error'); }
+    }
+
+    // --- DATABASE ---
+    async function saveStory() {
+        const data = {
+            name: document.getElementById('add-name').value,
+            author: document.getElementById('add-author').value,
+            count: document.getElementById('add-count').value,
+            playlist_id: document.getElementById('add-pid').value,
+            image_url: document.getElementById('add-img').value,
+            category: document.getElementById('add-cat').value,
+            status: document.getElementById('add-status').value
+        };
+
+        if(!data.name || !data.playlist_id) return toast('Thiếu tên hoặc ID!', 'error');
+
+        const { error } = await db.from('playlists').insert([data]);
+        if(!error) {
+            toast('Lưu thành công!');
+            document.querySelectorAll('#view-add input').forEach(i => i.value='');
+            document.getElementById('add-preview').src = 'https://via.placeholder.com/300x170';
+        } else toast(error.message, 'error');
+    }
+
+    async function fetchList() {
+        const { data } = await db.from('playlists').select('*').order('id', {ascending:false});
+        allData = data || [];
+        renderList();
+    }
+
+    function renderList() {
+        const k = document.getElementById('search').value.toLowerCase();
+        const list = allData.filter(i => i.name.toLowerCase().includes(k) || (i.author && i.author.toLowerCase().includes(k)));
+        const tbody = document.getElementById('list-body');
+        tbody.innerHTML = '';
+
+        list.forEach(i => {
+            const img = i.image_url || `https://img.youtube.com/vi/${i.playlist_id}/mqdefault.jpg`;
+            const sttColor = i.status==='Hoàn' ? '#10b981' : '#f59e0b';
+            tbody.innerHTML += `
+                <tr>
+                    <td><img src="${img}" class="thumb-small" onerror="this.src='https://via.placeholder.com/50'"></td>
+                    <td><div style="font-weight:700">${i.name}</div><div style="font-size:11px; color:var(--text-sub)">${i.category}</div></td>
+                    <td><div style="font-size:13px"><i class="fa-solid fa-user-pen"></i> ${i.author}</div><div style="font-size:12px; color:var(--text-sub)">${i.count}</div></td>
+                    <td><span style="color:${sttColor}; font-weight:700; font-size:12px">● ${i.status}</span></td>
+                    <td style="text-align:right">
+                        <div class="btn-icon btn-sync" title="Đồng bộ lại từ Youtube" onclick="syncStory(${i.id}, '${i.playlist_id}', this)"><i class="fa-solid fa-rotate"></i></div>
+                        <div class="btn-icon" title="Sửa" onclick="openEdit(${i.id})"><i class="fa-solid fa-pen"></i></div>
+                        <div class="btn-icon btn-del" title="Xóa" onclick="delStory(${i.id})"><i class="fa-solid fa-trash"></i></div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // --- AUTO SYNC (TÍNH NĂNG MỚI) ---
+    async function syncStory(id, pid, btn) {
+        const icon = btn.querySelector('i');
+        icon.className = 'fa-solid fa-spinner fa-spin'; // Hiệu ứng xoay
+        
+        try {
+            // Cào lại Youtube
+            const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
+            const html = await res.text();
+            
+            // Lấy số tập mới
+            const matchCount = html.match(/"numVideosText":\{"runs":\[\{"text":"(\d+)"/);
+            
+            if(matchCount) {
+                const newCount = matchCount[1] + " tập";
+                // Update Database
+                await db.from('playlists').update({ count: newCount }).eq('id', id);
+                toast('Đã cập nhật: ' + newCount);
+                // Update UI tại chỗ (không cần reload)
+                const row = btn.closest('tr');
+                row.cells[2].children[1].innerText = newCount;
+                
+                // Update trong mảng bộ nhớ
+                const item = allData.find(x => x.id === id);
+                if(item) item.count = newCount;
+            } else {
+                toast('Không tìm thấy dữ liệu mới', 'error');
             }
+        } catch(e) {
+            toast('Lỗi kết nối Youtube', 'error');
         }
+        icon.className = 'fa-solid fa-rotate';
+    }
 
-        async function deepScrapeYoutube(pid, btn) {
-            try {
-                const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
-                const html = await res.text();
+    // --- EDIT & DELETE ---
+    function openEdit(id) {
+        const i = allData.find(x => x.id === id);
+        if(!i) return;
+        document.getElementById('edit-id').value = i.id;
+        document.getElementById('edit-name').value = i.name;
+        document.getElementById('edit-author').value = i.author;
+        document.getElementById('edit-count').value = i.count;
+        document.getElementById('edit-img').value = i.image_url;
+        document.getElementById('edit-status').value = i.status;
+        document.getElementById('modal-edit').classList.add('open');
+    }
+    function closeModal() { document.getElementById('modal-edit').classList.remove('open'); }
 
-                let titleMatch = html.match(/<meta property="og:title" content="(.*?)">/);
-                let title = titleMatch ? titleMatch[1].replace(' - YouTube', '') : "";
+    async function updateStory() {
+        const id = document.getElementById('edit-id').value;
+        const updates = {
+            name: document.getElementById('edit-name').value,
+            author: document.getElementById('edit-author').value,
+            count: document.getElementById('edit-count').value,
+            image_url: document.getElementById('edit-img').value,
+            status: document.getElementById('edit-status').value
+        };
+        const { error } = await db.from('playlists').update(updates).eq('id', id);
+        if(!error) {
+            toast('Đã cập nhật!');
+            closeModal();
+            fetchList(); // Refresh list
+        } else toast('Lỗi cập nhật', 'error');
+    }
 
-                let count = "? tập";
-                const matchCount = html.match(/"numVideosText":\{"runs":\[\{"text":"(\d+)"/);
-                if (matchCount) count = matchCount[1] + " tập";
-
-                let img = "";
-                const imgMatch = html.match(/<meta property="og:image" content="(.*?)">/);
-                if(imgMatch) img = imgMatch[1].replace('mqdefault.jpg', 'maxresdefault.jpg');
-
-                if (title) {
-                    fillForm({ title, count, img });
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Xong';
-                    showToast('Đã lấy dữ liệu!', 'success');
-                } else throw new Error();
-            } catch (e) {
-                showToast('Lỗi lấy dữ liệu', 'error');
-                btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Thử lại';
-            }
+    async function delStory(id) {
+        if(confirm('Chắc chắn xóa?')) {
+            await db.from('playlists').delete().eq('id', id);
+            toast('Đã xóa');
+            fetchList();
         }
+    }
 
-        function fillForm(data) {
-            document.getElementById('inp-raw-title').value = data.title;
-            const parsed = parseTitle(data.title);
-            document.getElementById('inp-name').value = parsed.name;
-            document.getElementById('inp-author').value = parsed.author;
-            document.getElementById('inp-count').value = data.count;
-            if(data.img) {
-                document.getElementById('inp-img').value = data.img;
-                document.getElementById('img-preview').src = data.img;
-                document.getElementById('img-preview-box').classList.add('has-img');
-            }
-            autoCategorize(data.title);
-            document.getElementById('inp-status').value = 'Hoàn';
-        }
+    // --- DASHBOARD ---
+    async function loadStats() {
+        const { data } = await db.from('playlists').select('*').order('created_at', {ascending:false});
+        allData = data || [];
+        document.getElementById('s-total').innerText = allData.length;
+        
+        let totalEp = 0;
+        let cats = {};
+        allData.forEach(i => {
+            totalEp += parseInt(i.count) || 0;
+            cats[i.category] = (cats[i.category] || 0) + 1;
+        });
+        document.getElementById('s-eps').innerText = totalEp.toLocaleString();
+        
+        // Max category
+        let maxC = '-', maxV = 0;
+        for(let [k,v] of Object.entries(cats)) if(v > maxV) { maxV = v; maxC = k; }
+        document.getElementById('s-cat').innerText = maxC;
 
-        function parseTitle(rawTitle) {
-            let clean = rawTitle.replace(/^\[.*?\]\s*/g, '').replace(/\[.*?\]/g, '').replace(/Full/gi, '').trim();
-            let parts = clean.split(/[–|-]/).map(p => p.trim()).filter(p => p);
-            return { name: parts[0] || clean, author: parts[1] && parts[1].length < 30 ? parts[1] : 'Đang cập nhật' };
-        }
+        // Recent table
+        const recent = allData.slice(0, 5);
+        document.getElementById('recent-table').innerHTML = recent.map(i => `
+            <tr>
+                <td><img src="${i.image_url}" class="thumb-small" onerror="this.src='https://via.placeholder.com/50'"></td>
+                <td><div style="font-weight:700">${i.name}</div></td>
+                <td style="color:var(--text-sub)">${i.created_at.substr(0,10)}</td>
+            </tr>
+        `).join('');
+    }
 
-        function autoCategorize(t) {
-            t = t.toLowerCase();
-            const sel = document.getElementById('inp-cat');
-            if(t.includes('chủ thụ')) sel.value = 'Chủ Thụ';
-            else if(t.includes('chủ công')) sel.value = 'Chủ Công';
-            else if(t.includes('hỗ công')) sel.value = 'Hỗ Công';
-            else if(t.includes('hệ thống')) sel.value = 'Hệ Thống';
-        }
-
-        // === CRUD OPERATIONS ===
-        async function addStory() {
-            const btn = document.querySelector('.btn-primary');
-            const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ...';
-
-            const payload = {
-                name: document.getElementById('inp-name').value,
-                author: document.getElementById('inp-author').value,
-                count: document.getElementById('inp-count').value,
-                status: document.getElementById('inp-status').value,
-                playlist_id: document.getElementById('inp-pid').value,
-                category: document.getElementById('inp-cat').value,
-                image_url: document.getElementById('inp-img').value
-            };
-
-            if(!payload.name || !payload.playlist_id) { btn.innerHTML = oldHtml; return showToast('Thiếu thông tin!', 'error'); }
-
-            const { error } = await db.from('playlists').insert([payload]);
-            if(!error) {
-                showToast('Thành công!', 'success');
-                document.querySelectorAll('#view-add input').forEach(i => i.value = '');
-                document.getElementById('img-preview-box').classList.remove('has-img');
-            } else showToast(error.message, 'error');
-            btn.innerHTML = oldHtml;
-        }
-
-        async function fetchData() {
-            const { data } = await db.from('playlists').select('*').order('id', {ascending:false});
-            allData = data || [];
-            renderTable(allData);
-        }
-
-        function renderTable(list) {
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-            list.forEach(item => {
-                const img = item.image_url || `https://img.youtube.com/vi/${item.playlist_id}/mqdefault.jpg`;
-                const stt = item.status === 'Hoàn' ? 'finished' : 'ongoing';
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="thumb-cell"><img src="${img}" loading="lazy"></td>
-                        <td><div style="font-weight:700; color:#fff">${item.name}</div><div style="font-size:11px; color:#64748b">${item.category}</div></td>
-                        <td style="color:#cbd5e1">${item.author}</td>
-                        <td><span class="badge ${stt}">${item.status}</span></td>
-                        <td style="font-weight:600; color:#94a3b8">${item.count}</td>
-                        <td style="text-align:right">
-                            <div class="btn-icon" onclick="openEdit(${item.id})"><i class="fa-solid fa-pen"></i></div>
-                            <div class="btn-icon" onclick="del(${item.id})" style="color:#ef4444"><i class="fa-solid fa-trash"></i></div>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // --- EDIT LOGIC (New Feature) ---
-        function openEdit(id) {
-            const i = allData.find(x => x.id === id);
-            document.getElementById('edit-id').value = i.id;
-            document.getElementById('edit-name').value = i.name;
-            document.getElementById('edit-author').value = i.author;
-            document.getElementById('edit-count').value = i.count;
-            document.getElementById('edit-status').value = i.status;
-            document.getElementById('edit-cat').value = i.category;
-            document.getElementById('edit-img').value = i.image_url || '';
-            document.getElementById('edit-modal').classList.add('open');
-        }
-
-        function closeEdit() { document.getElementById('edit-modal').classList.remove('open'); }
-
-        async function saveEdit() {
-            const id = document.getElementById('edit-id').value;
-            const updates = {
-                name: document.getElementById('edit-name').value,
-                author: document.getElementById('edit-author').value,
-                count: document.getElementById('edit-count').value,
-                status: document.getElementById('edit-status').value,
-                category: document.getElementById('edit-cat').value,
-                image_url: document.getElementById('edit-img').value
-            };
-            const { error } = await db.from('playlists').update(updates).eq('id', id);
-            if(!error) { showToast('Đã cập nhật!', 'success'); closeEdit(); fetchData(); } 
-            else showToast('Lỗi!', 'error');
-        }
-
-        async function del(id) {
-            if(confirm('Xóa truyện này?')) {
-                await db.from('playlists').delete().eq('id', id);
-                showToast('Đã xóa!', 'success'); fetchData();
-            }
-        }
-
-        function filterList() {
-            const v = document.getElementById('search-list').value.toLowerCase();
-            renderTable(allData.filter(i => i.name.toLowerCase().includes(v) || i.author.toLowerCase().includes(v)));
-        }
-
-        function showToast(msg, type) {
-            const t = document.getElementById('toast');
-            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check" style="color:#10b981"></i>' : '<i class="fa-solid fa-circle-exclamation" style="color:#ef4444"></i>';
-            t.innerHTML = `${icon} ${msg}`;
-            t.style.border = type === 'success' ? '1px solid #10b981' : '1px solid #ef4444';
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
-        }
-    </script>
+</script>
 </body>
 </html>
