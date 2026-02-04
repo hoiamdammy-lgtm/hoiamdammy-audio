@@ -377,334 +377,333 @@
     <div id="toast-hub"></div>
 
     <script>
-        // --- CONFIG ---
-        const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
-        const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT'; 
-        const db = supabase.createClient(DB_URL, DB_KEY);
-        let allData = [];
-        let selectedIds = new Set();
-        let timeout;
+    // --- 1. CẤU HÌNH ---
+    const DB_URL = 'https://lpeijpxqelyljkdjyfil.supabase.co';
+    const DB_KEY = 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT'; 
+    const db = supabase.createClient(DB_URL, DB_KEY);
+    let allData = [];
+    let selectedIds = new Set();
+    let timeout;
 
-        // --- AUTH ---
-        function auth() {
-            if(document.getElementById('login-pass').value === 'hoiam20102003') {
-                document.getElementById('auth-ui').style.display = 'none';
-                document.getElementById('app-ui').style.display = 'flex';
-                loadStats();
-            } else toast('Sai mật khẩu!', 'error');
-        }
+    // --- 2. AUTH ---
+    function auth() {
+        if(document.getElementById('login-pass').value === 'hoiam20102003') {
+            document.getElementById('auth-ui').style.display='none';
+            document.getElementById('app-ui').style.display='flex';
+            loadStats();
+        } else toast('Sai mật khẩu!', 'error');
+    }
 
-        // --- NAVIGATION ---
-        function nav(id, el) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-'+id).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('page-title').innerText = el.innerText.trim();
-            if(window.innerWidth < 1000) toggleMenu();
-        }
-        function toggleMenu() { 
-            const sb = document.getElementById('sidebar');
-            sb.style.left = sb.style.left === '0px' ? '-100%' : '0px';
-        }
+    // --- 3. NAVIGATION ---
+    function nav(id, el) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-'+id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('page-title').innerText = el.innerText.trim();
+        if(window.innerWidth < 1000) toggleMenu();
+    }
+    function toggleMenu() { 
+        const sb = document.getElementById('sidebar');
+        sb.style.left = sb.style.left === '0px' ? '-100%' : '0px';
+    }
 
-        // --- DEEP PARSE ENGINE v3.5 (Core Logic) ---
-        function debounceParse() { clearTimeout(timeout); timeout = setTimeout(() => parseUrl('add'), 800); }
-
-        async function parseUrl(mode = 'add', syncId = null) {
-            let pid = syncId;
-            if (mode === 'add') {
-                const url = document.getElementById('add-url').value;
-                if(!url.includes('list=')) return;
-                try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
-                document.getElementById('add-pid').value = pid;
-                toast('Đang phân tích...', 'info');
-            }
-
-            try {
-                const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
-                const html = await res.text();
-
-                // 1. JSON Extraction (Reliable)
-                let ytData = null;
-                const startJson = html.indexOf('var ytInitialData =');
-                if(startJson > -1) {
-                    const endJson = html.indexOf(';</script>', startJson);
-                    const jsonStr = html.substring(startJson + 19, endJson);
-                    try { ytData = JSON.parse(jsonStr); } catch(e){}
-                }
-
-                // 2. Data Mining
-                let title = "", count = "? tập", img = "";
-
-                // Title
-                if(ytData) title = ytData.metadata?.playlistMetadataRenderer?.title || ytData.header?.playlistHeaderRenderer?.title?.simpleText;
-                if(!title) { const m = html.match(/<meta property="og:title" content="(.*?)">/); if(m) title = m[1].replace(' - YouTube', ''); }
-
-                // Count (Tránh dấu ?)
-                if(ytData) {
-                    const stats = ytData.sidebar?.playlistSidebarRenderer?.items?.[0]?.playlistSidebarPrimaryInfoRenderer?.stats;
-                    if(stats) count = stats[0].runs[0].text;
-                    else {
-                        const h = ytData.header?.playlistHeaderRenderer?.numVideosText?.runs?.[0]?.text;
-                        if(h) count = h;
-                    }
-                }
-                count = count.replace(/[^0-9]/g, '') + " tập";
-
-                // Image (Smart Selection)
-                const imgMatch = html.match(/<meta property="og:image" content="(.*?)">/);
-                if(imgMatch) {
-                    img = imgMatch[1];
-                    if(img.includes('mqdefault')) img = img.replace('mqdefault.jpg', 'maxresdefault.jpg');
-                } else {
-                    img = `https://img.youtube.com/vi/${pid}/mqdefault.jpg`; // Fallback
-                }
-
-                // Clean Data
-                let cleanName = (title || "").replace(/^\[.*?\]\s*/g, '').replace(/\[.*?\]/g, '').replace(/Full/gi, '').replace(/\(Hoàn\)/gi, '').trim();
-                let parts = cleanName.split(/[–|-]/).map(p => p.trim()).filter(p => p);
-                
-                const result = {
-                    name: parts[0] || cleanName,
-                    author: (parts[1] && parts[1].length < 40) ? parts[1] : "Đang cập nhật",
-                    count: count,
-                    img: img,
-                    category: autoCat(parts[0] || ""),
-                    slug: genSlug(parts[0] || cleanName)
-                };
-
-                if(mode === 'add') {
-                    fillAddForm(result);
-                    toast('Đã lấy dữ liệu!', 'success');
-                } else {
-                    return result; // Return for Sync
-                }
-
-            } catch(e) {
-                console.error(e);
-                if(mode==='add') toast('Lỗi mạng/Proxy', 'error');
-                return null;
-            }
-        }
-
-        function autoCat(name) {
-            let n = name.toLowerCase();
-            if(n.includes('chủ thụ')) return 'Chủ Thụ';
-            if(n.includes('chủ công')) return 'Chủ Công';
-            if(n.includes('hệ thống')) return 'Hệ Thống';
-            return 'Khác';
-        }
-
-        function genSlug(str) {
-            return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d").replace(/([^0-9a-z-\s])/g, "").replace(/(\s+)/g, "-").replace(/-+/g, "-");
-        }
-
-        function fillAddForm(d) {
-            document.getElementById('add-name').value = d.name;
-            document.getElementById('add-author').value = d.author;
-            document.getElementById('add-count').value = d.count;
-            document.getElementById('add-img').value = d.img;
-            document.getElementById('add-cat').value = d.category;
-            document.getElementById('add-slug').value = d.slug;
-            updatePreview();
-        }
-
-        function updatePreview() {
-            document.getElementById('prev-title').innerText = document.getElementById('add-name').value;
-            document.getElementById('prev-author').innerText = document.getElementById('add-author').value;
-            document.getElementById('prev-count').innerText = document.getElementById('add-count').value;
-            document.getElementById('prev-cat').innerText = document.getElementById('add-cat').value;
-            const img = document.getElementById('add-img').value;
-            if(img) document.getElementById('prev-img').src = img;
-        }
-
-        // --- DATABASE CRUD ---
-        async function saveStory() {
-            const btn = document.querySelector('#view-add .btn-primary');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
-            
-            const d = {
-                name: document.getElementById('add-name').value,
-                author: document.getElementById('add-author').value,
-                count: document.getElementById('add-count').value,
-                playlist_id: document.getElementById('add-pid').value,
-                image_url: document.getElementById('add-img').value,
-                category: document.getElementById('add-cat').value,
-                status: document.getElementById('add-status').value,
-                slug: document.getElementById('add-slug').value
-            };
-
-            if(!d.name || !d.playlist_id) { btn.innerHTML = 'LƯU VÀO KHO'; return toast('Thiếu thông tin!', 'error'); }
-
-            const { error } = await db.from('playlists').insert([d]);
-            if(!error) {
-                toast('Thêm mới thành công!');
-                document.querySelectorAll('#view-add input').forEach(i => i.value='');
-                document.getElementById('prev-img').src = 'https://via.placeholder.com/300x169';
-            } else toast(error.message, 'error');
-            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> LƯU VÀO KHO';
-        }
-
-        async function fetchData() {
-            toast('Đang tải...', 'info');
-            const { data } = await db.from('playlists').select('*').order('id', {ascending:false});
-            allData = data || [];
-            renderList();
-            toast('Đã cập nhật!');
-        }
-
-        function renderList() {
-            const key = document.getElementById('search-box').value.toLowerCase();
-            const cat = document.getElementById('filter-cat').value;
-            
-            const list = allData.filter(i => {
-                const matchK = i.name.toLowerCase().includes(key) || (i.author||'').toLowerCase().includes(key);
-                const matchC = cat ? i.category === cat : true;
-                return matchK && matchC;
-            });
-
-            document.getElementById('row-count').innerText = list.length;
-            const tbody = document.getElementById('list-body');
-            tbody.innerHTML = '';
-            selectedIds.clear(); updateBulkBtn();
-
-            list.forEach(i => {
-                let img = i.image_url || `https://img.youtube.com/vi/${i.playlist_id}/mqdefault.jpg`;
-                const sttColor = i.status==='Hoàn' ? 'var(--success)' : 'var(--warning)';
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><input type="checkbox" class="chk" value="${i.id}" onchange="selRow(this)"></td>
-                        <td><div class="cell-info"><img src="${img}" class="thumb-small" onerror="this.src='https://via.placeholder.com/50'"></div></td>
-                        <td>
-                            <div style="font-weight:700; color:#fff">${i.name}</div>
-                            <div style="font-size:11px; color:var(--text-sub)">${i.slug || 'no-slug'}</div>
-                        </td>
-                        <td>${i.author || '---'}</td>
-                        <td style="font-weight:700; color:var(--accent)">${i.count}</td>
-                        <td><span style="color:${sttColor}; font-weight:700; font-size:11px">● ${i.status}</span></td>
-                        <td style="text-align:right">
-                            <div class="btn-icon btn-sync" onclick="fullSync(${i.id}, '${i.playlist_id}', this)" title="Full Sync"><i class="fa-solid fa-rotate"></i></div>
-                            <div class="btn-icon" onclick="openEdit(${i.id})" title="Sửa"><i class="fa-solid fa-pen"></i></div>
-                            <div class="btn-icon btn-del" onclick="del(${i.id})" title="Xóa"><i class="fa-solid fa-trash"></i></div>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // --- BULK ACTION ---
-        function toggleAll(el) {
-            document.querySelectorAll('#list-body .chk').forEach(c => { c.checked = el.checked; selRow(c); });
-        }
-        function selRow(el) {
-            el.checked ? selectedIds.add(el.value) : selectedIds.delete(el.value);
-            updateBulkBtn();
-        }
-        function updateBulkBtn() {
-            const btn = document.getElementById('btn-bulk');
-            if(selectedIds.size > 0) {
-                btn.style.display = 'inline-flex';
-                document.getElementById('sel-cnt').innerText = selectedIds.size;
-            } else btn.style.display = 'none';
-        }
-        async function bulkDelete() {
-            if(!confirm(`Xóa ${selectedIds.size} truyện đã chọn?`)) return;
-            const { error } = await db.from('playlists').delete().in('id', Array.from(selectedIds));
-            if(!error) { toast('Đã xóa xong'); fetchData(); } else toast('Lỗi xóa', 'error');
-        }
-
-        // --- FULL SYNC ---
-        async function fullSync(id, pid, btn) {
-            const icon = btn.querySelector('i');
-            icon.className = 'fa-solid fa-spinner fa-spin';
-            
-            const newData = await parseUrl('sync', pid);
-            if(newData) {
-                const old = allData.find(x => x.id === id);
-                let up = {};
-                
-                if(newData.count !== old.count) { up.count = newData.count; up.status = 'Đang ra'; }
-                if(!old.image_url || old.image_url.includes('mqdefault')) up.image_url = newData.img;
-                
-                if(Object.keys(up).length > 0) {
-                    await db.from('playlists').update(up).eq('id', id);
-                    toast('Đã cập nhật dữ liệu mới');
-                    fetchData();
-                } else toast('Dữ liệu đã mới nhất', 'success');
-            }
-            icon.className = 'fa-solid fa-rotate';
-        }
-
-        // --- EDIT ---
-        function openEdit(id) {
-            const i = allData.find(x => x.id === id);
-            document.getElementById('edit-id').value = i.id;
-            document.getElementById('edit-name').value = i.name;
-            document.getElementById('edit-author').value = i.author;
-            document.getElementById('edit-count').value = i.count;
-            document.getElementById('edit-img').value = i.image_url;
-            document.getElementById('edit-status').value = i.status;
-            document.getElementById('edit-cat').value = i.category;
-            document.getElementById('modal-edit').classList.add('open');
-        }
-        function closeModal() { document.getElementById('modal-edit').classList.remove('open'); }
-        async function updateStory() {
-            const id = document.getElementById('edit-id').value;
-            const up = {
-                name: document.getElementById('edit-name').value,
-                author: document.getElementById('edit-author').value,
-                count: document.getElementById('edit-count').value,
-                image_url: document.getElementById('edit-img').value,
-                category: document.getElementById('edit-cat').value,
-                status: document.getElementById('edit-status').value
-            };
-            const { error } = await db.from('playlists').update(up).eq('id', id);
-            if(!error) { toast('Cập nhật xong'); closeModal(); fetchData(); } else toast('Lỗi', 'error');
-        }
-
-        async function del(id) {
-            if(confirm('Xóa truyện này?')) {
-                await db.from('playlists').delete().eq('id', id);
-                toast('Đã xóa'); fetchData();
-            }
-        }
-
-        // --- UTILS ---
-        function toast(msg, type='success') {
-            const d = document.createElement('div');
-            d.className = `toast ${type}`;
-            d.innerHTML = `<i class="fa-solid ${type==='error'?'fa-triangle-exclamation':'fa-circle-check'}"></i> ${msg}`;
-            document.getElementById('toast-hub').appendChild(d);
-            setTimeout(()=>d.remove(), 3000);
-        }
-
-        async function loadStats() {
-            const { data } = await db.from('playlists').select('*');
-            if(data) {
-                document.getElementById('st-total').innerText = data.length;
-                document.getElementById('st-done').innerText = data.filter(x=>x.status==='Hoàn').length;
-                document.getElementById('st-run').innerText = data.filter(x=>x.status==='Đang ra').length;
-                let ep = 0; data.forEach(x=>ep += parseInt(x.count)||0);
-                document.getElementById('st-eps').innerText = ep.toLocaleString();
-                
-                const rec = data.sort((a,b)=>b.id-a.id).slice(0,5);
-                document.getElementById('recent-body').innerHTML = rec.map(i => `
-                    <tr>
-                        <td width="50"><img src="${i.image_url}" class="thumb-small"></td>
-                        <td><div style="font-weight:700">${i.name}</div><div style="font-size:11px; color:#888">${i.created_at.substr(0,10)}</div></td>
-                    </tr>
-                `).join('');
-            }
-        }
+    // --- 4. DATA LOGIC (QUAN TRỌNG: ĐÃ FIX LỖI BACKTICK) ---
+    async function fetchData() {
+        toast('Đang tải...', 'info');
+        const { data, error } = await db.from('playlists').select('*').order('id', {ascending:false});
+        if (error) return toast('Lỗi kết nối Server', 'error');
         
-        function backupData() {
-            const a = document.createElement('a');
-            a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData));
-            a.download = "backup_" + new Date().toISOString().slice(0,10) + ".json";
-            a.click();
+        allData = data || [];
+        renderList();
+        toast('Đã cập nhật!');
+    }
+
+    function renderList() {
+        const key = document.getElementById('search-box').value.toLowerCase();
+        const cat = document.getElementById('filter-cat').value;
+        
+        const list = allData.filter(i => {
+            const matchK = (i.name||'').toLowerCase().includes(key) || (i.author||'').toLowerCase().includes(key);
+            const matchC = cat ? i.category === cat : true;
+            return matchK && matchC;
+        });
+
+        document.getElementById('row-count').innerText = list.length;
+        const tbody = document.getElementById('list-body');
+        tbody.innerHTML = '';
+        selectedIds.clear(); updateBulkBtn();
+
+        // LƯU Ý: Dấu bao quanh HTML bên dưới là dấu ` (Backtick), KHÔNG PHẢI dấu ' (Nháy đơn)
+        list.forEach(i => {
+            let img = i.image_url || `https://img.youtube.com/vi/${i.playlist_id}/mqdefault.jpg`;
+            const sttColor = i.status==='Hoàn' ? 'var(--success)' : 'var(--warning)';
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td><input type="checkbox" class="chk" value="${i.id}" onchange="selRow(this)"></td>
+                    <td>
+                        <div class="cell-info">
+                            <img src="${img}" class="thumb-small" onerror="this.src='https://via.placeholder.com/50?text=Err'">
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight:700; color:#fff">${i.name}</div>
+                        <div style="font-size:11px; color:var(--text-sub)">${i.slug || 'no-slug'}</div>
+                    </td>
+                    <td>${i.author || '---'}</td>
+                    <td style="font-weight:700; color:var(--accent)">${i.count}</td>
+                    <td><span style="color:${sttColor}; font-weight:700; font-size:11px">● ${i.status}</span></td>
+                    <td style="text-align:right">
+                        <div class="btn-icon btn-sync" onclick="fullSync(${i.id}, '${i.playlist_id}', this)" title="Full Sync"><i class="fa-solid fa-rotate"></i></div>
+                        <div class="btn-icon" onclick="openEdit(${i.id})" title="Sửa"><i class="fa-solid fa-pen"></i></div>
+                        <div class="btn-icon btn-del" onclick="del(${i.id})" title="Xóa"><i class="fa-solid fa-trash"></i></div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // --- 5. DEEP PARSE ENGINE ---
+    function debounceParse() { clearTimeout(timeout); timeout = setTimeout(() => parseUrl('add'), 800); }
+
+    async function parseUrl(mode = 'add', syncId = null) {
+        let pid = syncId;
+        if (mode === 'add') {
+            const url = document.getElementById('add-url').value;
+            if(!url.includes('list=')) return;
+            try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
+            document.getElementById('add-pid').value = pid;
+            toast('Đang phân tích...', 'info');
         }
-    </script>
+
+        try {
+            const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
+            const html = await res.text();
+
+            let ytData = null;
+            const startJson = html.indexOf('var ytInitialData =');
+            if(startJson > -1) {
+                const endJson = html.indexOf(';</script>', startJson);
+                const jsonStr = html.substring(startJson + 19, endJson);
+                try { ytData = JSON.parse(jsonStr); } catch(e){}
+            }
+
+            let title = "", count = "? tập", img = "";
+
+            if(ytData) title = ytData.metadata?.playlistMetadataRenderer?.title || ytData.header?.playlistHeaderRenderer?.title?.simpleText;
+            if(!title) { const m = html.match(/<meta property="og:title" content="(.*?)">/); if(m) title = m[1].replace(' - YouTube', ''); }
+
+            if(ytData) {
+                const stats = ytData.sidebar?.playlistSidebarRenderer?.items?.[0]?.playlistSidebarPrimaryInfoRenderer?.stats;
+                if(stats) count = stats[0].runs[0].text;
+                else {
+                    const h = ytData.header?.playlistHeaderRenderer?.numVideosText?.runs?.[0]?.text;
+                    if(h) count = h;
+                }
+            }
+            count = count.replace(/[^0-9]/g, '') + " tập";
+
+            const imgMatch = html.match(/<meta property="og:image" content="(.*?)">/);
+            if(imgMatch) {
+                img = imgMatch[1];
+                if(img.includes('mqdefault')) img = img.replace('mqdefault.jpg', 'maxresdefault.jpg');
+            } else {
+                img = `https://img.youtube.com/vi/${pid}/mqdefault.jpg`;
+            }
+
+            let cleanName = (title || "").replace(/^\[.*?\]\s*/g, '').replace(/\[.*?\]/g, '').replace(/Full/gi, '').replace(/\(Hoàn\)/gi, '').trim();
+            let parts = cleanName.split(/[–|-]/).map(p => p.trim()).filter(p => p);
+            
+            const result = {
+                name: parts[0] || cleanName,
+                author: (parts[1] && parts[1].length < 40) ? parts[1] : "Đang cập nhật",
+                count: count,
+                img: img,
+                category: autoCat(parts[0] || ""),
+                slug: genSlug(parts[0] || cleanName)
+            };
+
+            if(mode === 'add') {
+                fillAddForm(result);
+                toast('Đã lấy dữ liệu!', 'success');
+            } else {
+                return result;
+            }
+
+        } catch(e) {
+            console.error(e);
+            if(mode==='add') toast('Lỗi mạng/Proxy', 'error');
+            return null;
+        }
+    }
+
+    function autoCat(name) {
+        let n = name.toLowerCase();
+        if(n.includes('chủ thụ')) return 'Chủ Thụ';
+        if(n.includes('chủ công')) return 'Chủ Công';
+        if(n.includes('hệ thống')) return 'Hệ Thống';
+        return 'Khác';
+    }
+
+    function genSlug(str) {
+        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d").replace(/([^0-9a-z-\s])/g, "").replace(/(\s+)/g, "-").replace(/-+/g, "-");
+    }
+
+    function fillAddForm(d) {
+        document.getElementById('add-name').value = d.name;
+        document.getElementById('add-author').value = d.author;
+        document.getElementById('add-count').value = d.count;
+        document.getElementById('add-img').value = d.img;
+        document.getElementById('add-cat').value = d.category;
+        document.getElementById('add-slug').value = d.slug;
+        updatePreview();
+    }
+
+    function updatePreview() {
+        document.getElementById('prev-title').innerText = document.getElementById('add-name').value;
+        document.getElementById('prev-author').innerText = document.getElementById('add-author').value;
+        document.getElementById('prev-count').innerText = document.getElementById('add-count').value;
+        document.getElementById('prev-cat').innerText = document.getElementById('add-cat').value;
+        const img = document.getElementById('add-img').value;
+        if(img) document.getElementById('prev-img').src = img;
+    }
+
+    // --- 6. ACTIONS ---
+    async function saveStory() {
+        const btn = document.querySelector('#view-add .btn-primary');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+        
+        const d = {
+            name: document.getElementById('add-name').value,
+            author: document.getElementById('add-author').value,
+            count: document.getElementById('add-count').value,
+            playlist_id: document.getElementById('add-pid').value,
+            image_url: document.getElementById('add-img').value,
+            category: document.getElementById('add-cat').value,
+            status: document.getElementById('add-status').value,
+            slug: document.getElementById('add-slug').value
+        };
+
+        if(!d.name || !d.playlist_id) { btn.innerHTML = 'LƯU VÀO KHO'; return toast('Thiếu thông tin!', 'error'); }
+
+        const { error } = await db.from('playlists').insert([d]);
+        if(!error) {
+            toast('Thêm mới thành công!');
+            document.querySelectorAll('#view-add input').forEach(i => i.value='');
+            document.getElementById('prev-img').src = 'https://via.placeholder.com/300x169';
+        } else toast(error.message, 'error');
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> LƯU VÀO KHO';
+    }
+
+    // FULL SYNC
+    async function fullSync(id, pid, btn) {
+        const icon = btn.querySelector('i');
+        icon.className = 'fa-solid fa-spinner fa-spin';
+        
+        const newData = await parseUrl('sync', pid);
+        if(newData) {
+            const old = allData.find(x => x.id === id);
+            let up = {};
+            
+            // Logic Cập nhật thông minh
+            if(newData.count !== old.count) { up.count = newData.count; up.status = 'Đang ra'; }
+            if(!old.image_url || old.image_url.includes('mqdefault')) up.image_url = newData.img;
+            
+            if(Object.keys(up).length > 0) {
+                await db.from('playlists').update(up).eq('id', id);
+                toast('Đã cập nhật dữ liệu mới');
+                fetchData();
+            } else toast('Dữ liệu đã mới nhất', 'success');
+        }
+        icon.className = 'fa-solid fa-rotate';
+    }
+
+    // BULK DELETE
+    function toggleAll(el) { document.querySelectorAll('#list-body .chk').forEach(c => { c.checked = el.checked; selRow(c); }); }
+    function selRow(el) { el.checked ? selectedIds.add(el.value) : selectedIds.delete(el.value); updateBulkBtn(); }
+    function updateBulkBtn() {
+        const btn = document.getElementById('btn-bulk');
+        if(selectedIds.size > 0) {
+            btn.style.display = 'inline-flex';
+            document.getElementById('sel-cnt').innerText = selectedIds.size;
+        } else btn.style.display = 'none';
+    }
+    async function bulkDelete() {
+        if(!confirm(`Xóa ${selectedIds.size} truyện đã chọn?`)) return;
+        const { error } = await db.from('playlists').delete().in('id', Array.from(selectedIds));
+        if(!error) { toast('Đã xóa xong'); fetchData(); } else toast('Lỗi xóa', 'error');
+    }
+
+    // EDIT & DEL
+    function openEdit(id) {
+        const i = allData.find(x => x.id === id);
+        document.getElementById('edit-id').value = i.id;
+        document.getElementById('edit-name').value = i.name;
+        document.getElementById('edit-author').value = i.author;
+        document.getElementById('edit-count').value = i.count;
+        document.getElementById('edit-img').value = i.image_url;
+        document.getElementById('edit-status').value = i.status;
+        document.getElementById('edit-cat').value = i.category;
+        document.getElementById('modal-edit').classList.add('open');
+    }
+    function closeModal() { document.getElementById('modal-edit').classList.remove('open'); }
+    async function updateStory() {
+        const id = document.getElementById('edit-id').value;
+        const up = {
+            name: document.getElementById('edit-name').value,
+            author: document.getElementById('edit-author').value,
+            count: document.getElementById('edit-count').value,
+            image_url: document.getElementById('edit-img').value,
+            category: document.getElementById('edit-cat').value,
+            status: document.getElementById('edit-status').value
+        };
+        const { error } = await db.from('playlists').update(up).eq('id', id);
+        if(!error) { toast('Cập nhật xong'); closeModal(); fetchData(); } else toast('Lỗi', 'error');
+    }
+    async function del(id) {
+        if(confirm('Xóa truyện này?')) {
+            await db.from('playlists').delete().eq('id', id);
+            toast('Đã xóa'); fetchData();
+        }
+    }
+
+    // STATS
+    async function loadStats() {
+        const { data } = await db.from('playlists').select('*');
+        allData = data || [];
+        document.getElementById('st-total').innerText = allData.length;
+        document.getElementById('st-done').innerText = allData.filter(x=>x.status==='Hoàn').length;
+        document.getElementById('st-run').innerText = allData.filter(x=>x.status==='Đang ra').length;
+        let ep = 0; allData.forEach(x=>ep += parseInt(x.count)||0);
+        document.getElementById('st-eps').innerText = ep.toLocaleString();
+
+        const rec = allData.sort((a,b)=>b.id-a.id).slice(0,5);
+        // Dùng dấu Backtick cho HTML này luôn
+        document.getElementById('recent-body').innerHTML = rec.map(i => `
+            <tr>
+                <td width="50"><img src="${i.image_url}" class="thumb-small" onerror="this.src='https://via.placeholder.com/50'"></td>
+                <td><div style="font-weight:700">${i.name}</div><div style="font-size:11px; opacity:0.7">${i.created_at.substr(0,10)}</div></td>
+            </tr>
+        `).join('');
+    }
+
+    // BACKUP
+    function backupData() {
+        const a = document.createElement('a');
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData));
+        a.download = "backup_" + new Date().toISOString().slice(0,10) + ".json";
+        a.click();
+    }
+
+    // Utils
+    function toast(msg, type='success') {
+        const d = document.createElement('div');
+        d.className = `toast ${type}`;
+        d.innerHTML = `<i class="fa-solid ${type==='error'?'fa-triangle-exclamation':'fa-circle-check'}"></i> ${msg}`;
+        document.getElementById('toast-hub').appendChild(d);
+        setTimeout(()=>d.remove(), 3000);
+    }
+</script>
 </body>
 </html>
