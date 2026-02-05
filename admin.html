@@ -47,7 +47,6 @@
         /* Animations */
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes spin-slow { to { transform: rotate(360deg); } }
         
         .animate-enter { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .toast-enter { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -56,11 +55,7 @@
         .custom-checkbox input:checked + div { @apply bg-primary-500 border-primary-500; }
         .custom-checkbox input:checked + div svg { @apply block; }
 
-        /* Loading Skeleton */
-        .skeleton { @apply animate-pulse bg-slate-700/50 rounded; }
-        .light .skeleton { @apply bg-slate-200; }
-
-        /* Chart CSS (Pure CSS Bar Chart) */
+        /* Chart CSS */
         .chart-bar { @apply transition-all duration-1000 ease-out hover:brightness-110 relative group; }
         .chart-tooltip { @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-xs rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10 border border-white/10; }
     </style>
@@ -84,7 +79,7 @@
                     TRUY CẬP HỆ THỐNG
                 </button>
             </form>
-            <div class="mt-6 text-center text-xs text-slate-600">v3.5.0 Ultimate Build</div>
+            <div class="mt-6 text-center text-xs text-slate-600">v3.5.1 Stable Fix</div>
         </div>
     </div>
 
@@ -175,14 +170,12 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 glass-panel rounded-2xl p-6">
                             <h3 class="font-bold text-lg mb-6 flex items-center gap-2"><i class="fa-solid fa-chart-simple text-primary-500"></i> Phân Bố Thể Loại</h3>
-                            <div class="h-64 flex items-end justify-between gap-2" id="category-chart">
-                                </div>
+                            <div class="h-64 flex items-end justify-between gap-2" id="category-chart"></div>
                         </div>
 
                         <div class="glass-panel rounded-2xl p-6">
                             <h3 class="font-bold text-lg mb-4">Mới Cập Nhật</h3>
-                            <div class="space-y-4" id="recent-list">
-                                </div>
+                            <div class="space-y-4" id="recent-list"></div>
                         </div>
                     </div>
                 </div>
@@ -238,8 +231,7 @@
                                         <th class="p-4 text-right">Hành động</th>
                                     </tr>
                                 </thead>
-                                <tbody id="table-body" class="divide-y divide-white/5 text-sm">
-                                    </tbody>
+                                <tbody id="table-body" class="divide-y divide-white/5 text-sm"></tbody>
                             </table>
                         </div>
                         <div class="p-4 border-t border-white/5 flex items-center justify-between bg-slate-800/30">
@@ -318,7 +310,7 @@
                                 <h3 class="font-bold text-sm mb-4 text-center">XEM TRƯỚC</h3>
                                 <div class="bg-slate-950 rounded-xl overflow-hidden shadow-xl border border-white/10">
                                     <div class="aspect-video relative bg-black">
-                                        <img id="prev-img" src="https://via.placeholder.com/400x225?text=Preview" class="w-full h-full object-cover opacity-80">
+                                        <img id="prev-img" src="https://placehold.co/400x225/1e293b/FFF?text=Preview" class="w-full h-full object-cover opacity-80">
                                         <div class="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
                                         <div class="absolute bottom-0 left-0 p-4 w-full">
                                             <div id="prev-title" class="font-bold text-white text-lg truncate">Tên Truyện...</div>
@@ -352,11 +344,6 @@
                                     <p class="text-xs text-slate-500 mb-3">Tự động tạo lại slug cho các truyện bị lỗi "no-slug".</p>
                                     <button onclick="maintenance.fixSlugs()" class="w-full bg-slate-700 hover:bg-slate-600 py-2 rounded text-xs font-bold transition">Chạy Fix Slug</button>
                                 </div>
-                                <div class="p-4 bg-slate-800/50 rounded-xl border border-white/5">
-                                    <h4 class="font-bold text-sm mb-2">Đồng bộ tất cả</h4>
-                                    <p class="text-xs text-slate-500 mb-3">Quét lại số tập cho toàn bộ truyện (Tốn thời gian).</p>
-                                    <button onclick="alert('Tính năng này đang bảo trì để tránh spam Youtube!')" class="w-full bg-slate-700 hover:bg-slate-600 py-2 rounded text-xs font-bold transition opacity-50">Chạy Đồng Bộ</button>
-                                </div>
                             </div>
                         </div>
 
@@ -373,7 +360,6 @@
                                         <input type="password" id="conf-key" class="flex-1 bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm font-mono text-slate-300" value="sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT">
                                         <button onclick="document.getElementById('conf-key').type='text'" class="px-3 bg-slate-700 rounded hover:bg-slate-600"><i class="fa-solid fa-eye"></i></button>
                                     </div>
-                                    <p class="text-[10px] text-red-400 mt-1"><i class="fa-solid fa-triangle-exclamation"></i> Không chia sẻ Key này cho người lạ.</p>
                                 </div>
                             </div>
                         </div>
@@ -422,12 +408,9 @@
         <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl p-6 shadow-2xl relative animate-enter flex flex-col max-h-[90vh]">
             <button onclick="modals.close('batch-import')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             <h3 class="text-xl font-bold mb-2 text-white"><i class="fa-solid fa-layer-group text-primary-500"></i> Import Hàng Loạt</h3>
-            <p class="text-sm text-slate-400 mb-4">Dán danh sách link Youtube Playlist (mỗi dòng 1 link). Hệ thống sẽ tự động quét.</p>
-            
+            <p class="text-sm text-slate-400 mb-4">Dán danh sách link Youtube Playlist (mỗi dòng 1 link).</p>
             <textarea id="batch-input" class="w-full h-40 bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs font-mono text-slate-300 outline-none focus:border-primary-500 resize-none mb-4" placeholder="https://youtube.com/playlist?list=...\nhttps://youtube.com/playlist?list=..."></textarea>
-            
             <div id="batch-logs" class="flex-1 bg-black/50 rounded-lg border border-white/5 p-3 overflow-y-auto text-xs font-mono space-y-1 mb-4 h-40 hidden"></div>
-
             <div class="flex justify-between items-center">
                 <span class="text-xs text-slate-500" id="batch-status">Sẵn sàng</span>
                 <button onclick="batchProcessor.start()" id="btn-batch-start" class="px-6 py-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white font-bold shadow-lg">Bắt đầu Import</button>
@@ -438,35 +421,18 @@
     <div id="toast-hub" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
     <script>
-        /**
-         * HỒI ÂM ADMIN PRO - CORE SCRIPT
-         * Architecture: 
-         * 1. Store: Quản lý trạng thái (State Management)
-         * 2. DB: Wrapper cho Supabase
-         * 3. UI: Xử lý giao diện, modal, toast
-         * 4. Services: Logic nghiệp vụ (Youtube, Batch, Maintenance)
-         */
-
         // --- 1. CONFIG & STORE ---
         const CONFIG = {
             SB_URL: 'https://lpeijpxqelyljkdjyfil.supabase.co',
-            // Lưu ý: Trong thực tế nên dùng RLS và Auth của Supabase, không để key ở client thế này nếu public.
-            // Đây là key public theo yêu cầu của user.
             SB_KEY: 'sb_publishable_n95DoJPIr7_KgktuE5ilZg_7a0ICkcT',
             PROXY_URL: 'https://api.codetabs.com/v1/proxy?quest='
         };
 
         const store = {
-            data: [],
-            total: 0,
-            page: 1,
-            limit: 20,
-            filter: { cat: '', status: '', search: '' },
-            selectedIds: new Set(), // Cho bulk actions
+            data: [], total: 0, page: 1, limit: 20,
+            selectedIds: new Set(),
             db: null,
-            init: function() {
-                this.db = supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY);
-            }
+            init: function() { this.db = supabase.createClient(CONFIG.SB_URL, CONFIG.SB_KEY); }
         };
 
         // --- 2. UI UTILS ---
@@ -479,11 +445,8 @@
                 const hub = document.getElementById('toast-hub');
                 const el = document.createElement('div');
                 const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600', warning: 'bg-orange-500' };
-                const icons = { success: 'check-circle', error: 'triangle-exclamation', info: 'info-circle', warning: 'bolt' };
-                
                 el.className = `toast-enter pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg text-white shadow-2xl shadow-black/50 min-w-[300px] border border-white/10 ${colors[type]}`;
-                el.innerHTML = `<i class="fa-solid fa-${icons[type]}"></i> <span class="text-sm font-medium">${msg}</span>`;
-                
+                el.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span class="text-sm font-medium">${msg}</span>`;
                 hub.appendChild(el);
                 setTimeout(() => {
                     el.style.opacity = '0';
@@ -501,25 +464,19 @@
                 document.getElementById('add-slug').value = slug;
             },
             renderChart: (data) => {
-                // Tạo biểu đồ đơn giản bằng CSS
                 const cats = {};
                 data.forEach(i => cats[i.category] = (cats[i.category] || 0) + 1);
                 const max = Math.max(...Object.values(cats), 1);
                 const container = document.getElementById('category-chart');
                 container.innerHTML = '';
-                
-                const colors = ['bg-purple-500', 'bg-blue-500', 'bg-pink-500', 'bg-green-500', 'bg-orange-500', 'bg-slate-500'];
+                const colors = ['bg-purple-500', 'bg-blue-500', 'bg-pink-500', 'bg-green-500', 'bg-orange-500'];
                 let idx = 0;
-
                 for (const [cat, count] of Object.entries(cats)) {
                     const h = Math.round((count / max) * 100);
                     const bar = document.createElement('div');
                     bar.className = 'w-full mx-2 rounded-t-lg relative group chart-bar ' + (colors[idx++ % colors.length]);
                     bar.style.height = `${h}%`;
-                    bar.innerHTML = `
-                        <div class="chart-tooltip">${cat}: ${count} truyện</div>
-                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white/80 rotate-0 md:rotate-0 whitespace-nowrap">${cat}</div>
-                    `;
+                    bar.innerHTML = `<div class="chart-tooltip">${cat}: ${count}</div><div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white/80 whitespace-nowrap">${cat}</div>`;
                     container.appendChild(bar);
                 }
             }
@@ -529,9 +486,7 @@
             nav: (id) => {
                 document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
                 document.getElementById('view-' + id).classList.remove('hidden');
-                
                 document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('bg-primary-600/10', 'text-primary-500', 'border-l-4', 'border-primary-500'));
-                // Active logic...
                 if(id === 'dashboard') dataManager.loadStats();
                 if(id === 'list') dataManager.loadTable();
             }
@@ -548,47 +503,38 @@
         };
 
         // --- 3. SERVICES ---
-        
-        // >> YOUTUBE SERVICE
         const youtubeService = {
             parseUrl: async (mode = 'add', providedId = null) => {
                 let pid = providedId;
                 if(mode === 'add') {
                     const url = document.getElementById('add-url').value;
-                    if(!url.includes('list=')) return ui.toast('Link không hợp lệ! Phải chứa list=...', 'error');
+                    if(!url.includes('list=')) return ui.toast('Link không hợp lệ!', 'error');
                     try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
                     document.getElementById('add-pid').value = pid;
-                    ui.toast('Đang quét dữ liệu...', 'info');
+                    ui.toast('Đang quét...', 'info');
                 }
 
                 try {
                     const res = await fetch(CONFIG.PROXY_URL + encodeURIComponent('https://www.youtube.com/playlist?list=' + pid));
                     const html = await res.text();
-
-                    // Logic Regex cải tiến
                     let title = (html.match(/<meta property="og:title" content="(.*?)">/) || [])[1];
                     let img = (html.match(/<meta property="og:image" content="(.*?)">/) || [])[1];
-                    
                     if(title) title = title.replace(' - YouTube', '').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
                     if(img && img.includes('mqdefault')) img = img.replace('mqdefault.jpg', 'maxresdefault.jpg');
                     if(!img) img = `https://img.youtube.com/vi/${pid}/maxresdefault.jpg`;
 
-                    // Lấy số tập từ JSON ẩn của Youtube
                     let count = "?? tập";
                     const countMatch = html.match(/"text":"(\d+)\s+video/);
                     if(countMatch) count = countMatch[1] + " tập";
 
-                    // Clean Title
                     let clean = (title || "").replace(/^\[.*?\]\s*/g, '').replace(/Full/gi, '').trim();
                     let parts = clean.split(/[–|-]/).map(p => p.trim());
 
                     const result = {
                         name: parts[0] || clean,
                         author: (parts[1] && parts[1].length < 50) ? parts[1] : "Đang cập nhật",
-                        count: count, img: img,
-                        category: 'Khác',
-                        slug: utils.genSlug(parts[0] || clean),
-                        playlist_id: pid
+                        count: count, img: img, category: 'Khác',
+                        slug: utils.genSlug(parts[0] || clean), playlist_id: pid
                     };
 
                     if(mode === 'add') {
@@ -598,15 +544,10 @@
                         document.getElementById('add-img').value = result.img;
                         document.getElementById('add-slug').value = result.slug;
                         ui.updatePreview();
-                        ui.toast('Đã lấy dữ liệu thành công!');
+                        ui.toast('Đã lấy dữ liệu!');
                     }
                     return result;
-
-                } catch(e) {
-                    console.error(e);
-                    if(mode==='add') ui.toast('Lỗi khi lấy dữ liệu Youtube. Hãy nhập tay.', 'error');
-                    return null;
-                }
+                } catch(e) { console.error(e); if(mode==='add') ui.toast('Lỗi Youtube', 'error'); return null; }
             }
         };
 
@@ -615,107 +556,55 @@
             loadStats: async () => {
                 const { count } = await store.db.from('playlists').select('*', { count: 'exact', head: true });
                 document.getElementById('stat-total').innerText = count || 0;
-                
-                // Demo values - Real implementation would need specific queries or client-side calc
                 const { data } = await store.db.from('playlists').select('status, category, created_at, count, name, image_url');
-                
                 if(data) {
                     document.getElementById('stat-done').innerText = data.filter(i=>i.status==='Hoàn').length;
                     document.getElementById('stat-ongoing').innerText = data.filter(i=>i.status!=='Hoàn').length;
-                    
-                    let eps = 0;
-                    data.forEach(i => eps += parseInt(i.count) || 0);
+                    let eps = 0; data.forEach(i => eps += parseInt(i.count) || 0);
                     document.getElementById('stat-eps').innerText = eps.toLocaleString();
-
-                    // Chart & Recent
                     ui.renderChart(data);
-                    
                     const recentHtml = data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map(i => `
                         <div class="flex items-center gap-3 p-2 hover:bg-white/5 rounded transition">
                             <img src="${i.image_url}" class="w-10 h-10 rounded object-cover">
-                            <div class="overflow-hidden">
-                                <div class="text-sm font-bold truncate text-white">${i.name}</div>
-                                <div class="text-[10px] text-slate-400">${utils.formatDate(i.created_at)}</div>
-                            </div>
-                        </div>
-                    `).join('');
+                            <div class="overflow-hidden"><div class="text-sm font-bold truncate text-white">${i.name}</div><div class="text-[10px] text-slate-400">${utils.formatDate(i.created_at)}</div></div>
+                        </div>`).join('');
                     document.getElementById('recent-list').innerHTML = recentHtml;
                 }
             },
-
             loadTable: async (resetPage = false) => {
                 if(resetPage) store.page = 1;
                 store.selectedIds.clear();
                 dataManager.updateBulkUI();
-                
                 document.getElementById('table-loader').classList.remove('hidden');
-                
                 let query = store.db.from('playlists').select('*', { count: 'exact' });
-
-                // Filters
                 const search = document.getElementById('search-input').value;
                 const cat = document.getElementById('filter-cat').value;
                 const status = document.getElementById('filter-status').value;
-
                 if(search) query = query.ilike('name', `%${search}%`);
                 if(cat) query = query.eq('category', cat);
                 if(status) query = query.eq('status', status);
-
                 const from = (store.page - 1) * store.limit;
                 const to = from + store.limit - 1;
-
                 const { data, count, error } = await query.range(from, to).order('id', {ascending: false});
                 document.getElementById('table-loader').classList.add('hidden');
-
                 if(error) return ui.toast(error.message, 'error');
-
                 store.total = count;
                 document.getElementById('showing-range').innerText = `${from + 1}-${Math.min(to + 1, count)}`;
                 document.getElementById('total-count').innerText = count;
-
                 const tbody = document.getElementById('table-body');
                 tbody.innerHTML = '';
-
                 data.forEach(item => {
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-slate-800/30 transition group';
                     row.innerHTML = `
-                        <td class="p-4">
-                            <label class="custom-checkbox cursor-pointer">
-                                <input type="checkbox" class="hidden item-check" value="${item.id}" onchange="dataManager.toggleItem(${item.id})">
-                                <div class="w-4 h-4 border border-slate-600 rounded flex items-center justify-center bg-slate-800"><i class="fa-solid fa-check text-white text-[10px] hidden"></i></div>
-                            </label>
-                        </td>
-                        <td class="p-4">
-                            <div class="flex items-center gap-3">
-                                <img src="${item.image_url || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover border border-white/10" loading="lazy">
-                                <div>
-                                    <div class="font-bold text-white max-w-[250px] truncate" title="${item.name}">${item.name}</div>
-                                    <div class="text-xs text-slate-500 font-mono mt-1">${item.slug || 'no-slug'}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="p-4">
-                            <div class="text-xs text-slate-300"><i class="fa-solid fa-user-pen mr-1 text-slate-500"></i> ${item.author}</div>
-                            <div class="mt-1 inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 border border-slate-600">${item.category}</div>
-                        </td>
-                        <td class="p-4">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${item.status === 'Hoàn' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'}">
-                                <span class="w-1.5 h-1.5 rounded-full ${item.status === 'Hoàn' ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}"></span>
-                                ${item.status} (${item.count})
-                            </span>
-                        </td>
-                        <td class="p-4 text-right">
-                            <div class="opacity-0 group-hover:opacity-100 transition flex justify-end gap-2">
-                                <button onclick="dataManager.openEdit(${item.id})" class="w-8 h-8 rounded bg-slate-700 hover:bg-primary-600 text-slate-300 hover:text-white transition"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="dataManager.deleteItem(${item.id})" class="w-8 h-8 rounded bg-slate-700 hover:bg-red-600 text-slate-300 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </td>
-                    `;
+                        <td class="p-4"><label class="custom-checkbox cursor-pointer"><input type="checkbox" class="hidden item-check" value="${item.id}" onchange="dataManager.toggleItem(${item.id})"><div class="w-4 h-4 border border-slate-600 rounded flex items-center justify-center bg-slate-800"><i class="fa-solid fa-check text-white text-[10px] hidden"></i></div></label></td>
+                        <td class="p-4"><div class="flex items-center gap-3"><img src="${item.image_url || 'https://placehold.co/50'}" class="w-12 h-12 rounded-lg object-cover border border-white/10" loading="lazy"><div><div class="font-bold text-white max-w-[250px] truncate" title="${item.name}">${item.name}</div><div class="text-xs text-slate-500 font-mono mt-1">${item.slug || 'no-slug'}</div></div></div></td>
+                        <td class="p-4"><div class="text-xs text-slate-300"><i class="fa-solid fa-user-pen mr-1 text-slate-500"></i> ${item.author}</div><div class="mt-1 inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 border border-slate-600">${item.category}</div></td>
+                        <td class="p-4"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${item.status === 'Hoàn' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'}"><span class="w-1.5 h-1.5 rounded-full ${item.status === 'Hoàn' ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}"></span>${item.status} (${item.count})</span></td>
+                        <td class="p-4 text-right"><div class="opacity-0 group-hover:opacity-100 transition flex justify-end gap-2"><button onclick="dataManager.openEdit(${item.id})" class="w-8 h-8 rounded bg-slate-700 hover:bg-primary-600 text-slate-300 hover:text-white transition"><i class="fa-solid fa-pen"></i></button><button onclick="dataManager.deleteItem(${item.id})" class="w-8 h-8 rounded bg-slate-700 hover:bg-red-600 text-slate-300 hover:text-white transition"><i class="fa-solid fa-trash"></i></button></div></td>`;
                     tbody.appendChild(row);
                 });
             },
-
             changePage: (dir) => {
                 const max = Math.ceil(store.total / store.limit);
                 if (dir === 1 && store.page >= max) return;
@@ -723,7 +612,6 @@
                 store.page += dir;
                 dataManager.loadTable();
             },
-
             saveStory: async () => {
                 const d = {
                     name: document.getElementById('add-name').value,
@@ -735,18 +623,11 @@
                     status: document.getElementById('add-status').value,
                     slug: document.getElementById('add-slug').value
                 };
-
-                if(!d.name || !d.playlist_id) return ui.toast('Thiếu thông tin bắt buộc!', 'error');
-
+                if(!d.name || !d.playlist_id) return ui.toast('Thiếu thông tin!', 'error');
                 const { error } = await store.db.from('playlists').insert([d]);
                 if(error) ui.toast(error.message, 'error');
-                else {
-                    ui.toast('Đã thêm truyện thành công!');
-                    document.querySelectorAll('#view-add input').forEach(i => i.value = '');
-                    document.getElementById('prev-img').src = 'https://via.placeholder.com/400x225?text=Preview';
-                }
+                else { ui.toast('Đã lưu!'); document.querySelectorAll('#view-add input').forEach(i => i.value = ''); document.getElementById('prev-img').src = 'https://placehold.co/400x225/1e293b/FFF?text=Preview'; }
             },
-
             openEdit: async (id) => {
                 ui.toast('Đang tải...', 'info');
                 const { data } = await store.db.from('playlists').select('*').eq('id', id).single();
@@ -761,7 +642,6 @@
                     modals.open('edit');
                 }
             },
-
             updateStory: async () => {
                 const id = document.getElementById('edit-id').value;
                 const update = {
@@ -773,34 +653,24 @@
                     status: document.getElementById('edit-status').value
                 };
                 const { error } = await store.db.from('playlists').update(update).eq('id', id);
-                if(!error) {
-                    ui.toast('Cập nhật thành công!');
-                    modals.close('edit');
-                    dataManager.loadTable();
-                } else ui.toast(error.message, 'error');
+                if(!error) { ui.toast('Cập nhật xong!'); modals.close('edit'); dataManager.loadTable(); } else ui.toast(error.message, 'error');
             },
-
             deleteItem: async (id) => {
-                if(confirm('Xóa vĩnh viễn truyện này?')) {
+                if(confirm('Xóa vĩnh viễn?')) {
                     await store.db.from('playlists').delete().eq('id', id);
-                    ui.toast('Đã xóa');
-                    dataManager.loadTable();
+                    ui.toast('Đã xóa'); dataManager.loadTable();
                 }
             },
-
             // --- BULK ACTIONS ---
             toggleItem: (id) => {
-                if(store.selectedIds.has(id)) store.selectedIds.delete(id);
-                else store.selectedIds.add(id);
+                if(store.selectedIds.has(id)) store.selectedIds.delete(id); else store.selectedIds.add(id);
                 dataManager.updateBulkUI();
             },
             toggleAll: (checkbox) => {
-                const boxes = document.querySelectorAll('.item-check');
-                boxes.forEach(b => {
+                document.querySelectorAll('.item-check').forEach(b => {
                     b.checked = checkbox.checked;
                     const id = parseInt(b.value);
-                    if(checkbox.checked) store.selectedIds.add(id);
-                    else store.selectedIds.delete(id);
+                    if(checkbox.checked) store.selectedIds.add(id); else store.selectedIds.delete(id);
                 });
                 dataManager.updateBulkUI();
             },
@@ -808,17 +678,32 @@
                 const count = store.selectedIds.size;
                 document.getElementById('selected-count').innerText = count;
                 const bar = document.getElementById('bulk-actions');
-                if(count > 0) bar.classList.remove('hidden');
-                else bar.classList.add('hidden');
+                if(count > 0) bar.classList.remove('hidden'); else bar.classList.add('hidden');
             },
             bulkDelete: async () => {
-                if(confirm(`Bạn có chắc muốn xóa ${store.selectedIds.size} truyện đã chọn?`)) {
+                if(confirm(`Xóa ${store.selectedIds.size} truyện đã chọn?`)) {
                     const ids = Array.from(store.selectedIds);
                     const { error } = await store.db.from('playlists').delete().in('id', ids);
-                    if(!error) {
-                        ui.toast(`Đã xóa ${ids.length} truyện`);
-                        dataManager.loadTable();
-                    } else ui.toast(error.message, 'error');
+                    if(!error) { ui.toast(`Đã xóa ${ids.length} truyện`); dataManager.loadTable(); } else ui.toast(error.message, 'error');
+                }
+            },
+            // FIX ERROR: Added missing bulkSync function
+            bulkSync: async () => {
+                if(confirm(`Đồng bộ lại ${store.selectedIds.size} truyện? Sẽ mất thời gian.`)) {
+                     ui.toast('Đang đồng bộ hàng loạt...', 'info');
+                     const ids = Array.from(store.selectedIds);
+                     let success = 0;
+                     for (const id of ids) {
+                         const { data } = await store.db.from('playlists').select('playlist_id').eq('id', id).single();
+                         if(data && data.playlist_id) {
+                             const newData = await youtubeService.parseUrl('sync', data.playlist_id);
+                             if(newData) {
+                                 await store.db.from('playlists').update({ count: newData.count, status: 'Đang ra', image_url: newData.img }).eq('id', id);
+                                 success++;
+                             }
+                         }
+                     }
+                     ui.toast(`Đã đồng bộ xong ${success} truyện!`); dataManager.loadTable();
                 }
             }
         };
@@ -829,61 +714,35 @@
                 const txt = document.getElementById('batch-input').value;
                 const lines = txt.split('\n').filter(line => line.trim().length > 0);
                 if(lines.length === 0) return ui.toast('Danh sách trống', 'error');
-
                 const logs = document.getElementById('batch-logs');
                 logs.classList.remove('hidden');
-                logs.innerHTML = '<div class="text-blue-400">> Bắt đầu tiến trình...</div>';
-                
+                logs.innerHTML = '<div class="text-blue-400">> Bắt đầu...</div>';
                 const btn = document.getElementById('btn-batch-start');
-                btn.disabled = true;
-                btn.classList.add('opacity-50');
-
+                btn.disabled = true; btn.classList.add('opacity-50');
                 let success = 0;
-
                 for(let i=0; i<lines.length; i++) {
                     const url = lines[i].trim();
-                    let pid = "";
-                    try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
-
-                    if(!pid) {
-                        logs.innerHTML += `<div class="text-red-400">> [${i+1}] Lỗi link: ${url.substr(0, 30)}...</div>`;
-                        continue;
-                    }
-
-                    logs.innerHTML += `<div class="text-yellow-400">> [${i+1}] Đang quét: ${pid}</div>`;
+                    let pid = ""; try { pid = new URL(url).searchParams.get("list"); } catch { pid = url.split('list=')[1]?.split('&')[0]; }
+                    if(!pid) { logs.innerHTML += `<div class="text-red-400">> [${i+1}] Lỗi link</div>`; continue; }
+                    logs.innerHTML += `<div class="text-yellow-400">> [${i+1}] Quét: ${pid}</div>`;
                     logs.scrollTop = logs.scrollHeight;
-
-                    // Fetch data
                     const data = await youtubeService.parseUrl('batch', pid);
-                    
                     if(data) {
-                        // Insert DB
                         const { error } = await store.db.from('playlists').insert([data]);
-                        if(!error) {
-                            logs.innerHTML += `<div class="text-green-400">> [${i+1}] OK: ${data.name}</div>`;
-                            success++;
-                        } else {
-                            logs.innerHTML += `<div class="text-red-400">> [${i+1}] DB Error: ${error.message}</div>`;
-                        }
-                    } else {
-                        logs.innerHTML += `<div class="text-red-400">> [${i+1}] Youtube Fail</div>`;
-                    }
-                    
-                    // Delay nhẹ để tránh bị chặn
+                        if(!error) { logs.innerHTML += `<div class="text-green-400">> [${i+1}] OK: ${data.name}</div>`; success++; }
+                        else logs.innerHTML += `<div class="text-red-400">> [${i+1}] Lỗi DB</div>`;
+                    } else logs.innerHTML += `<div class="text-red-400">> [${i+1}] Lỗi Youtube</div>`;
                     await new Promise(r => setTimeout(r, 500));
                 }
-
-                logs.innerHTML += `<div class="text-white font-bold border-t border-white/10 mt-2 pt-2">> HOÀN TẤT: Thành công ${success}/${lines.length}</div>`;
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
-                dataManager.loadTable(); // Refresh list if behind
+                logs.innerHTML += `<div class="text-white font-bold border-t border-white/10 mt-2 pt-2">> XONG: ${success}/${lines.length}</div>`;
+                btn.disabled = false; btn.classList.remove('opacity-50'); dataManager.loadTable();
             }
         };
 
         // >> MAINTENANCE TOOLS
         const maintenance = {
             fixSlugs: async () => {
-                ui.toast('Đang quét database...', 'info');
+                ui.toast('Đang quét...', 'info');
                 const { data } = await store.db.from('playlists').select('id, name, slug');
                 let count = 0;
                 for(const item of data) {
@@ -893,26 +752,19 @@
                         count++;
                     }
                 }
-                ui.toast(`Đã sửa lỗi Slug cho ${count} truyện!`);
+                ui.toast(`Đã sửa lỗi ${count} truyện!`);
             }
         };
 
-        // --- INIT ---
         store.init();
-
-        // Auth Handler
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const pass = document.getElementById('auth-pass').value;
-            if(pass === 'hoiam20102003') {
+            if(document.getElementById('auth-pass').value === 'hoiam20102003') {
                 document.getElementById('auth-layer').classList.add('hidden');
                 document.getElementById('app-layer').classList.remove('hidden');
                 router.nav('dashboard');
-            } else {
-                ui.toast('Mật khẩu truy cập không đúng!', 'error');
-            }
+            } else ui.toast('Sai mật khẩu!', 'error');
         });
-
     </script>
 </body>
 </html>
